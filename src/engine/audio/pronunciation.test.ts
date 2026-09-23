@@ -30,6 +30,14 @@ describe('contrôle de prononciation', () => {
     const r = scorePronunciation(['กิน'], ['กีน']);
     expect(r.hints[0]).toMatch(/longueur/);
   });
+  it('sévérité : indulgente prend la meilleure hypothèse, normale la première, stricte plafonne à 7 sans exactitude', () => {
+    const alts = ['สวัสดีกิน', 'สวัสดีครับ'];
+    expect(scorePronunciation(alts, ['สวัสดีครับ'], words, 'lenient').score).toBe(10);
+    expect(scorePronunciation(alts, ['สวัสดีครับ'], words, 'normal').score).toBeLessThan(10);
+    const strict = scorePronunciation(alts, ['สวัสดีครับ'], words, 'strict');
+    expect(strict.score).toBeLessThanOrEqual(7);
+    expect(scorePronunciation(['สวัสดีครับ'], ['สวัสดีครับ'], words, 'strict').score).toBe(10);
+  });
   it('rien entendu : 0', () => {
     expect(scorePronunciation([], ['ขอบคุณ']).score).toBe(0);
     expect(scorePronunciation(['ไปไหน'], ['ขอบคุณ']).score).toBeLessThanOrEqual(3);

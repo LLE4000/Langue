@@ -60,8 +60,11 @@ export function Settings() {
       <label className="f">Avance automatique <span className="xs">(après une bonne réponse, la suite arrive seule ; après une erreur, on attend toujours « Continuer »)</span></label>
       <Segmented value={settings.autoAdvance !== false} options={[{ v: true, label: 'Oui' }, { v: false, label: 'Non, je touche Continuer' }]} onChange={(v) => update({ autoAdvance: v })} />
 
-      <div className="h2">Micro</div>
-      <div className="list" style={{ padding: '4px 14px' }}><div className="status"><i>{recorder.supported ? '✅' : '❌'}</i><span>Enregistrement de ma voix</span></div><div className="status"><i>{recognizer.supported ? '✅' : '❌'}</i><span>Reconnaissance vocale thaïe (th-TH){recognizer.supported ? '' : ' — non disponible sur ce navigateur'}</span></div></div>
+      <div className="h2">Micro et prononciation</div>
+      <div className="list" style={{ padding: '4px 14px' }}><div className="status"><i>{recorder.supported ? '✅' : '❌'}</i><span>Enregistrement de ma voix et analyse du ton</span></div><div className="status"><i>{recognizer.supported ? '✅' : '❌'}</i><span>Reconnaissance vocale thaïe (th-TH){recognizer.supported ? '' : ' — non disponible sur ce navigateur'}</span></div></div>
+      <label className="f">Sévérité du contrôle de prononciation</label>
+      <Segmented value={settings.pronStrictness ?? 'normal'} options={[{ v: 'lenient' as const, label: 'Indulgente' }, { v: 'normal' as const, label: 'Normale' }, { v: 'strict' as const, label: 'Stricte' }]} onChange={(v) => update({ pronStrictness: v })} />
+      <p className="sm mut" style={{ margin: '8px 2px 0' }}>{(settings.pronStrictness ?? 'normal') === 'lenient' ? 'Le moteur peut « deviner » : sa meilleure hypothèse compte, même si ce n’est pas la première.' : (settings.pronStrictness ?? 'normal') === 'normal' ? 'Seule la première hypothèse du moteur compte, comme dans une vraie conversation.' : 'Première hypothèse seulement, et rien d’approximatif : sans correspondance exacte, 7/10 au maximum.'}</p>
 
       <div className="h2">{t.profile.transliteration}</div>
       <Segmented value={settings.translit} options={[{ v: 'always', label: t.profile.translit.always }, { v: 'learning', label: t.profile.translit.learning }, { v: 'hidden', label: t.profile.translit.hidden }]} onChange={(v) => update({ translit: v })} />

@@ -10,7 +10,7 @@ import type { SourceLang, TargetLang } from '@/content/types';
 import type { SkillLevels } from '@/curriculum/path';
 import type { Goals } from '@/curriculum/types';
 import { activeProfileId, storageKeyFor, syncActiveName } from './profiles';
-import { updatePronStat, type PronStat } from '@/engine/audio/pronunciation';
+import { updatePronStat, type PronStat, type Strictness } from '@/engine/audio/pronunciation';
 import { rate as srsRate, qualityFromAnswer, type SrsState, type Quality } from '@/engine/srs';
 import type { Gender } from '@/engine/tokens';
 import { todayKey } from '@/engine/util';
@@ -56,6 +56,7 @@ export interface Settings {
   showModern: boolean; // afficher aussi la forme moderne (sans boucles)
   hapticsOff: boolean;
   autoAdvance: boolean; // après une bonne réponse, passer seul à la question suivante
+  pronStrictness: Strictness; // sévérité du contrôle de prononciation
 }
 
 export interface LessonRecord { done: boolean; best: number; tries: number; last: number; score?: number; total?: number }
@@ -98,7 +99,7 @@ export interface PersistedState {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  translit: 'learning', theme: 'auto', thaiSize: 1.15, autoAudio: true, slowRate: 0.6, voiceId: '', forceTTS: false, showModern: true, hapticsOff: false, autoAdvance: true,
+  translit: 'learning', theme: 'auto', thaiSize: 1.15, autoAudio: true, slowRate: 0.6, voiceId: '', forceTTS: false, showModern: true, hapticsOff: false, autoAdvance: true, pronStrictness: 'normal',
 };
 
 export const initialState = (): PersistedState => ({

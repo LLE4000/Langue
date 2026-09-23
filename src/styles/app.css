@@ -371,6 +371,17 @@ select.field { appearance: none; -webkit-appearance: none; background-image: lin
 .versus .vs { font-family: var(--f-display); font-style: italic; color: var(--ink2); font-size: 20px; }
 details.note summary { cursor: pointer; font-weight: 600; }
 
+/* ---------- « À l'oral d'abord » : phonétique en grand tant que le thaï n'est pas lisible ---------- */
+.oral-main { display: block; font-family: var(--f-rom); font-size: clamp(26px, 7.5vw, 34px); font-weight: 600; color: var(--jade); letter-spacing: .01em; line-height: 1.2; }
+.big.s4.oral-sub { font-size: clamp(24px, 6.5vw, 32px); color: var(--ink2); font-weight: 400; margin-top: 6px; }
+.choice .rom.main { font-size: 17px; font-weight: 600; } .choice .th.sub { font-size: calc(16px * var(--ths)); color: var(--ink2); }
+.pr .rom.main { font-size: 15px; font-weight: 600; } .pr .th.sub { font-size: calc(15px * var(--ths)); color: var(--ink2); }
+.tonecheck { margin-top: 12px; padding: 14px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); }
+.tonecheck svg { width: 100%; height: 96px; background: var(--surface2); border-radius: 12px; }
+.tonecheck svg path { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.tonecheck svg .me { stroke: var(--ink); stroke-dasharray: 5 4; }
+.tonecheck .legend { display: flex; gap: 14px; font-size: 12px; color: var(--ink2); margin-top: 6px; } .tonecheck .legend i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+
 /* ---------- Prononciation ---------- */
 .btn.listening { background: var(--red); color: #fff; animation: pulse 1.1s infinite; }
 .pron { display: flex; gap: 14px; align-items: flex-start; padding: 14px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); margin-top: 12px; animation: reveal .3s cubic-bezier(.2, .8, .2, 1); }

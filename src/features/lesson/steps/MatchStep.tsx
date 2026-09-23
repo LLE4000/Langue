@@ -6,8 +6,17 @@ import { useStore } from '@/app/store';
 import { useSpeaker } from '@/app/services/speech';
 import { shuffle } from '@/engine/util';
 import { T } from '@/i18n';
-import { Thai, Fr, useShowRom } from '@/components/ui';
+import { Thai, Fr, Rom, useShowRom, useOral } from '@/components/ui';
 import { StepFooter, ContinueButton } from '@/components/StepFooter';
+
+function LeftPair({ p, cls, showRom, byMeaning, onClick }: { p: { id: string; thai: string; rom: string }; cls: string; showRom: boolean; byMeaning: boolean; onClick: () => void }) {
+  const oral = useOral(p.thai);
+  return (
+    <button data-pair={p.id} className={`pr ${cls}`} style={{ marginTop: 0 }} onClick={onClick}>
+      {oral && byMeaning ? <><Rom text={p.rom} className="main" /><Thai text={p.thai} className="sub" /></> : <><Thai text={p.thai} />{showRom && byMeaning && <span className="rom xs">{p.rom}</span>}</>}
+    </button>
+  );
+}
 
 export function MatchStep({ step, onDone }: { step: RuntimeStep & { type: 'match' }; onDone: (r: StepResult) => void }) {
   const t = T();
@@ -39,7 +48,7 @@ export function MatchStep({ step, onDone }: { step: RuntimeStep & { type: 'match
       <p className="sm mut ctr" style={{ marginTop: -6, marginBottom: 10 }}>Touchez un mot à gauche, puis sa traduction à droite.</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <div className="stack" style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 0 }}>
-          {left.map((p) => <button key={p.id} data-pair={p.id} className={`pr ${cls(p.id, 'l', selL)}`} style={{ marginTop: 0 }} onClick={() => { setSelL(p.id); tryMatch(p.id, selR); }}><Thai text={p.thai} />{showRom && step.by === 'meaning' && <span className="rom xs">{p.rom}</span>}</button>)}
+          {left.map((p) => <LeftPair key={p.id} p={p} cls={cls(p.id, 'l', selL)} showRom={showRom} byMeaning={step.by === 'meaning'} onClick={() => { setSelL(p.id); tryMatch(p.id, selR); }} />)}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {right.map((p) => <button key={p.id} data-pair={p.id} className={`pr ${cls(p.id, 'r', selR)}`} onClick={() => { setSelR(p.id); tryMatch(selL, p.id); }}>{step.by === 'meaning' ? <Fr text={p.text} /> : <span className="rom">{p.rom}</span>}</button>)}

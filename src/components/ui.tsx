@@ -8,7 +8,7 @@ import { useSpeaker, useVoices } from '@/app/services/speech';
 import { resolveTokens } from '@/engine/tokens';
 import { visualLength } from '@/engine/thai/script';
 import { isReadable } from '@/engine/thai/reading';
-import { useKnown } from '@/app/hooks';
+import { useKnown, useGoals } from '@/app/hooks';
 import { L } from '@/i18n';
 import type { Localized } from '@/content/types';
 
@@ -88,6 +88,18 @@ export function useShowRom(thai?: string, force?: boolean): boolean {
   if (!thai) return true;
   // apprentissage : on masque quand le mot est lisible avec ce que l'apprenant a appris ET que ses signes sont bien maîtrisés
   return !(isReadable(thai, known.readable));
+}
+
+/**
+ * Ce thaï doit-il être présenté « à l'oral d'abord » (phonétique en grand, écriture en petit) ?
+ * Vrai tant que l'apprenant ne sait pas le lire : jamais de lecture imposée avant l'alphabet.
+ */
+export function useOral(thai?: string): boolean {
+  const goals = useGoals();
+  const known = useKnown();
+  if (!thai) return false;
+  if (!goals.read) return true;
+  return !isReadable(thai, known.concepts);
 }
 
 /* ---------- Audio ---------- */

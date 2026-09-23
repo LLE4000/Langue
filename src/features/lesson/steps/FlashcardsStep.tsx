@@ -6,7 +6,7 @@ import { ITEMS } from '@/content/th';
 import { useStore } from '@/app/store';
 import { useAutoSpeak } from '@/app/services/speech';
 import { T } from '@/i18n';
-import { AudioPair, Icon } from '@/components/ui';
+import { AudioPair, Icon, useOral } from '@/components/ui';
 import { StepFooter, ContinueButton, useDigitKeys } from '@/components/StepFooter';
 import { ItemBack, ItemFront } from '@/components/ItemCard';
 import { MicPanel } from '@/components/MicPanel';
@@ -21,7 +21,9 @@ export function FlashcardsStep({ step, onDone }: { step: RuntimeStep & { type: '
   const [stats, setStats] = useState({ n: 0, easy: 0 });
   const rateItem = useStore((s) => s.rateItem);
   const it = ITEMS[queue[i]];
-  useAutoSpeak(shown && it ? it.say : null, [i]);
+  // Pas encore lisible : la carte se présente à l'oral (phonétique + audio dès le recto)
+  const oral = useOral(it?.thai);
+  useAutoSpeak(it && (shown || oral) ? it.say : null, [i, oral ? 0 : shown]);
   const rate = (q: 0 | 1 | 2 | 3) => {
     if (!it) return;
     rateItem(it.id, q);
@@ -41,7 +43,7 @@ export function FlashcardsStep({ step, onDone }: { step: RuntimeStep & { type: '
       {step.knownOrally && !shown && <div className="note info sm" style={{ marginTop: 0 }}>Vous connaissez ce mot à l’oral : essayez de le LIRE avant de retourner la carte.</div>}
       <div className={`stage ${shown ? 'compact' : ''}`} onClick={() => !shown && setShown(true)} role={shown ? undefined : 'button'} style={{ cursor: shown ? 'default' : 'pointer' }}>
         {!useStore.getState().srs[it.id] && <span className="tag gold" style={{ left: '50%', transform: 'translateX(-50%)' }}>{t.common.new}</span>}
-        <ItemFront it={it} hideClass={!shown} modern={shown} />
+        <ItemFront it={it} hideClass={!shown} modern={shown} oral={oral && !shown} />
         {!shown && <span className="hint">Touchez la carte pour la retourner</span>}
       </div>
       <div className="audio"><AudioPair text={it.say} big /><button className="ib big" onClick={() => setMic(true)} aria-label="M'enregistrer"><Icon name="mic" /></button></div>

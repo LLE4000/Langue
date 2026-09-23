@@ -11,7 +11,7 @@ import type { StepResult } from '../LessonRunner';
 import { useStore } from '@/app/store';
 import { useSpeaker } from '@/app/services/speech';
 import { L, T } from '@/i18n';
-import { AudioPair, Thai, Rom, Fr, sizeClass, useShowRom, useTokens } from '@/components/ui';
+import { AudioPair, Thai, Rom, Fr, sizeClass, useShowRom, useTokens, useOral } from '@/components/ui';
 import { StepFooter, ContinueButton, useDigitKeys } from '@/components/StepFooter';
 import { ToneCurve } from '@/components/ToneCurve';
 import { WordByWord } from '@/components/WordByWord';
@@ -20,6 +20,9 @@ import { ITEMS } from '@/content/th';
 import type { ToneId } from '@/content/types';
 
 function ChoiceLabel({ c, lg }: { c: Question['choices'][number]; lg?: boolean }) {
+  const oral = useOral(c.thai);
+  // Pas encore lisible : la phonétique porte la réponse, le thaï reste visible en petit (exposition, pas lecture).
+  if (oral && c.thai && c.rom && !c.text) return <><Rom text={c.rom} className="main" /><Thai text={c.thai} className="sub" /></>;
   return (
     <>
       {c.tone && <ToneCurve tone={c.tone as ToneId} />}
@@ -33,6 +36,16 @@ function ChoiceLabel({ c, lg }: { c: Question['choices'][number]; lg?: boolean }
 function Stage({ q, done }: { q: Question; done: boolean }) {
   const tok = useTokens();
   const showRom = useShowRom(q.stage.thai, q.stage.showRom);
+  const oral = useOral(q.stage.thai);
+  if (oral && q.stage.thai && q.stage.rom && !q.stage.ear) {
+    return (
+      <div className={`stage ${q.stage.big ? '' : 'compact'}`}>
+        <span className="oral-main">{resolveTokens(q.stage.rom, tok)}</span>
+        <div className="big s4 oral-sub"><Thai text={q.stage.thai} /></div>
+        {q.stage.text && <div className="mut">{resolveTokens(q.stage.text, tok)}</div>}
+      </div>
+    );
+  }
   if (q.stage.ear && !done) return <div className="stage ear"><div style={{ fontSize: 52 }}>👂</div><div className="mut sm">Écoutez, puis choisissez</div></div>;
   if (q.stage.ear && done && q.reveal?.thai) {
     const long = /[\s]|.{8,}/.test(q.reveal.thai);

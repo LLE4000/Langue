@@ -30,8 +30,17 @@ export function ToneChips({ rom }: { rom: string }) {
   return <div className="tchips" aria-label="Tons syllabe par syllabe">{out.map((x, i) => { const t = TONE_BY_ID[x.y!.tone]; return <span key={i} className="tchip" style={{ ['--c' as string]: t.color }}><ToneCurve tone={t.id} /><b>{x.p}</b><i>{L(t.name)}</i></span>; })}</div>;
 }
 
-export function ItemFront({ it, hideClass, modern = true }: { it: LearnItem; hideClass?: boolean; modern?: boolean }) {
+export function ItemFront({ it, hideClass, modern = true, oral }: { it: LearnItem; hideClass?: boolean; modern?: boolean; oral?: boolean }) {
   const shown = it.kind === 'num' ? it.digits : it.thai;
+  if (oral && (it.kind === 'word' || it.kind === 'tone' || it.kind === 'clf')) {
+    return (
+      <>
+        <span className="tag">À l’oral</span>
+        <Rom text={it.rom} className="oral-main" />
+        <div className="big s4 oral-sub"><Thai text={it.thai} /></div>
+      </>
+    );
+  }
   return (
     <>
       {it.kind === 'cons' && !hideClass ? <span className={`tag ${it.ref.cls}`}>classe {classNameFr(it.ref.cls)}</span> : <span className="tag">{L({ fr: { cons: 'Consonne', vow: 'Voyelle', word: 'Mot', tone: 'Ton', num: 'Nombre', clf: 'Classificateur', rule: 'Règle', grammar: 'Grammaire' }[it.kind] })}</span>}

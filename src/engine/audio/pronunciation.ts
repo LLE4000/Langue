@@ -41,22 +41,32 @@ function bestWindow(word: string, heard: string): number {
   return best;
 }
 
-export function scorePronunciation(alts: string[], targets: string[], words: TargetWord[] = []): PronResult {
+/**
+ * Sévérité : indulgente = la meilleure des hypothèses du moteur compte (il « devine » pour vous) ;
+ * normale = seule sa première hypothèse compte ; stricte = idem, et rien d'approximatif n'est accepté
+ * (au mieux 7/10 sans correspondance exacte).
+ */
+export type Strictness = 'lenient' | 'normal' | 'strict';
+
+export function scorePronunciation(alts: string[], targets: string[], words: TargetWord[] = [], strictness: Strictness = 'normal'): PronResult {
+  const cands = strictness === 'lenient' ? alts : alts.slice(0, 1);
   let sim = 0, heard = alts[0] ?? '', bestTarget = targets[0] ?? '';
-  for (const a of alts) for (const t of targets) for (const na of forms(a)) for (const nt of forms(t)) {
+  for (const a of cands) for (const t of targets) for (const na of forms(a)) for (const nt of forms(t)) {
     const s = similarity(na, nt);
     if (s > sim) { sim = s; heard = a; bestTarget = t; }
   }
   const heardN = norm(heard);
+  const nearMin = strictness === 'strict' ? 0.85 : 0.7;
   const ws: WordCheck[] = (words.length ? words : [{ t: bestTarget, r: '' }]).filter((w) => w.t && !/[{…]/.test(w.t)).map((w) => {
     const wn = norm(w.t);
     const optional = POLITE_END.test(wn) && wn.replace(POLITE_END, '') === '';
     const s = optional && !heardN ? 1 : bestWindow(wn, heardN);
-    return { ...w, ok: s >= 0.999 || (optional && s < 0.5 && sim >= 0.999), near: s >= 0.7 && s < 0.999 };
+    return { ...w, ok: s >= 0.999 || (optional && s < 0.5 && sim >= 0.999), near: s >= nearMin && s < 0.999 };
   });
   const okWords = ws.filter((w) => w.ok).length;
-  const wordScore = ws.length ? (okWords + 0.5 * ws.filter((w) => w.near).length) / ws.length : sim;
-  const raw = sim >= 0.999 ? 10 : Math.round(10 * (0.6 * sim + 0.4 * wordScore));
+  const nearWeight = strictness === 'strict' ? 0.25 : 0.5;
+  const wordScore = ws.length ? (okWords + nearWeight * ws.filter((w) => w.near).length) / ws.length : sim;
+  const raw = sim >= 0.999 ? 10 : strictness === 'strict' ? Math.min(7, Math.round(8 * (0.5 * sim + 0.5 * wordScore))) : Math.round(10 * (0.6 * sim + 0.4 * wordScore));
   const score = Math.max(0, Math.min(10, alts.length ? raw : 0));
   const verdict: PronResult['verdict'] = score >= 9 ? 'ok' : score >= 6 ? 'near' : 'ko';
 
