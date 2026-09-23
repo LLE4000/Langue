@@ -45,11 +45,11 @@ export const fr = {
   review: {
     title: 'Réviser', due: 'à réviser', nothingDue: 'Rien à réviser pour l’instant', startReview: 'Lancer la révision', train: 'S’entraîner',
     modes: {
-      flashcards: 'Flashcards', listening: 'Écoute', speed: 'Lecture rapide', match: 'Associer', dictation: 'Dictée', tones: 'Tons', quiz: 'Quiz', timed: 'Défi chrono',
+      flashcards: 'Flashcards', listening: 'Écoute', speed: 'Lecture rapide', match: 'Associer', dictation: 'Dictée', tones: 'Tons', quiz: 'Quiz', timed: 'Défi chrono', pronunciation: 'Prononciation',
     },
     modesDesc: {
       flashcards: 'Revoir et noter ce que vous savez', listening: 'Lettres, mots et phrases à l’oreille', speed: 'Lire vite, sans phonétique', match: 'Relier thaï et sens',
-      dictation: 'Entendre, retrouver l’écrit', tones: 'Lire et entendre les tons', quiz: 'Un peu de tout', timed: 'Le plus de réponses en 60 secondes',
+      dictation: 'Entendre, retrouver l’écrit', tones: 'Lire et entendre les tons', quiz: 'Un peu de tout', timed: 'Le plus de réponses en 60 secondes', pronunciation: 'Dire le mot, vérifier que le thaï est compris',
     },
     weak: 'Points faibles', onlyLearned: 'Les entraînements n’utilisent que ce que vous avez déjà appris.',
   },

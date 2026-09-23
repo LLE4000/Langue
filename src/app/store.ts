@@ -10,6 +10,7 @@ import type { SourceLang, TargetLang } from '@/content/types';
 import type { SkillLevels } from '@/curriculum/path';
 import type { Goals } from '@/curriculum/types';
 import { activeProfileId, storageKeyFor, syncActiveName } from './profiles';
+import { updatePronStat, type PronStat } from '@/engine/audio/pronunciation';
 import { rate as srsRate, qualityFromAnswer, type SrsState, type Quality } from '@/engine/srs';
 import type { Gender } from '@/engine/tokens';
 import { todayKey } from '@/engine/util';
@@ -92,6 +93,8 @@ export interface PersistedState {
   session: LessonSession | null;
   lastVisit: number;
   challenges: ChallengeRecord[];
+  /** notes de prononciation (reconnaissance vocale) par élément */
+  pron: Record<string, PronStat>;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -100,7 +103,7 @@ export const DEFAULT_SETTINGS: Settings = {
 
 export const initialState = (): PersistedState => ({
   version: STORE_VERSION, profile: null, settings: { ...DEFAULT_SETTINGS }, srs: {}, lessons: {}, errors: {}, ruleStats: {}, seen: {}, days: {}, xp: 0,
-  badges: {}, favorites: {}, history: [], session: null, lastVisit: Date.now(), challenges: [],
+  badges: {}, favorites: {}, history: [], session: null, lastVisit: Date.now(), challenges: [], pron: {},
 });
 
 const idbStorage: StateStorage = {
@@ -136,6 +139,8 @@ export interface Actions {
   /** Enregistre ou met à jour un défi (par identifiant). */
   saveChallenge(c: ChallengeRecord): void;
   removeChallenge(id: string): void;
+  /** Note de prononciation 0–10 pour un élément (une bonne note compte aussi comme une réponse juste). */
+  recordPronunciation(itemId: string, score: number): void;
 }
 
 export type Store = PersistedState & Actions;
@@ -190,11 +195,16 @@ export const useStore = create<Store>()(
       },
       logHistory: (kind, label, score, total) => set((s) => ({ history: [{ t: Date.now(), kind, label, score, total }, ...s.history].slice(0, 200) })),
       awardBadge: (id) => set((s) => (s.badges[id] ? {} : { badges: { ...s.badges, [id]: Date.now() } })),
-      importState: (incoming) => { if (incoming.profile) syncActiveName(incoming.profile.name); set({ ...initialState(), ...incoming, version: STORE_VERSION, session: null, challenges: incoming.challenges ?? [] }); },
+      importState: (incoming) => { if (incoming.profile) syncActiveName(incoming.profile.name); set({ ...initialState(), ...incoming, version: STORE_VERSION, session: null, challenges: incoming.challenges ?? [], pron: incoming.pron ?? {} }); },
       resetAll: () => { syncActiveName(''); set({ ...initialState() }); },
       touch: () => set({ lastVisit: Date.now() }),
       saveChallenge: (c) => set((s) => ({ challenges: [c, ...s.challenges.filter((x) => x.id !== c.id)].slice(0, 50) })),
       removeChallenge: (id) => set((s) => ({ challenges: s.challenges.filter((x) => x.id !== id) })),
+      recordPronunciation: (itemId, score) => {
+        set((s) => ({ pron: { ...s.pron, [itemId]: updatePronStat(s.pron[itemId], score) } }));
+        if (score >= 9) get().answer(itemId, true);
+        get().addXp(score >= 9 ? 3 : score >= 6 ? 1 : 0);
+      },
     }),
     {
       name: STORE_KEY,
@@ -203,11 +213,11 @@ export const useStore = create<Store>()(
       // Les réglages ajoutés dans une nouvelle version prennent leur valeur par défaut chez les anciens utilisateurs.
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<PersistedState>;
-        return { ...current, ...p, settings: { ...DEFAULT_SETTINGS, ...(p.settings ?? {}) }, challenges: p.challenges ?? [] };
+        return { ...current, ...p, settings: { ...DEFAULT_SETTINGS, ...(p.settings ?? {}) }, challenges: p.challenges ?? [], pron: p.pron ?? {} };
       },
       partialize: (s) => {
-        const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version, challenges } = s;
-        return { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version, challenges } as Store;
+        const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version, challenges, pron } = s;
+        return { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version, challenges, pron } as Store;
       },
     },
   ),
@@ -216,8 +226,8 @@ export const useStore = create<Store>()(
 /** Sélection sérialisable de l'état pour l'export. */
 export function exportState(): PersistedState {
   const s = useStore.getState();
-  const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, lastVisit, challenges } = s;
-  return { version: STORE_VERSION, profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session: null, lastVisit, challenges };
+  const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, lastVisit, challenges, pron } = s;
+  return { version: STORE_VERSION, profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session: null, lastVisit, challenges, pron };
 }
 
 /** Objectifs effectifs d'un profil (les anciens profils n'en ont pas : les deux). */

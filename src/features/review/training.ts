@@ -12,7 +12,7 @@ import { shuffle, sample } from '@/engine/util';
 import { toneRule } from '@/engine/thai/toneRule';
 import { markTone } from '@/engine/thai/transcription';
 
-export type TrainingMode = 'flashcards' | 'listening' | 'speed' | 'match' | 'dictation' | 'tones' | 'quiz' | 'timed' | 'review' | 'weak';
+export type TrainingMode = 'flashcards' | 'listening' | 'speed' | 'match' | 'dictation' | 'tones' | 'quiz' | 'timed' | 'pronunciation' | 'review' | 'weak';
 
 /** Éléments rencontrés (dans la répétition espacée), hors règles. */
 const learned = (ctx: Ctx): LearnItem[] => Object.keys(ctx.srs).map((id) => ITEMS[id]).filter((x): x is LearnItem => !!x && x.kind !== 'rule' && x.kind !== 'grammar');
@@ -39,7 +39,7 @@ function syllables(ctx: Ctx): { thai: string; rom: string }[] {
 export function buildTraining(mode: TrainingMode, ctx: Ctx, opts: { theme?: string } = {}): LessonSession | null {
   const now = Date.now();
   const pool = learned(ctx);
-  const title: Record<TrainingMode, string> = { flashcards: 'Flashcards', listening: 'Écoute', speed: 'Lecture rapide', match: 'Associer', dictation: 'Dictée', tones: 'Tons', quiz: 'Quiz', timed: 'Défi chrono', review: 'Révision', weak: 'Points faibles' };
+  const title: Record<TrainingMode, string> = { flashcards: 'Flashcards', listening: 'Écoute', speed: 'Lecture rapide', match: 'Associer', dictation: 'Dictée', tones: 'Tons', quiz: 'Quiz', timed: 'Défi chrono', pronunciation: 'Prononciation', review: 'Révision', weak: 'Points faibles' };
   let steps: RuntimeStep[] = [];
   const themeWords = opts.theme ? WORD_ITEMS.filter((w) => w.ref.themes.includes(opts.theme!)) : null;
   switch (mode) {
@@ -107,6 +107,15 @@ export function buildTraining(mode: TrainingMode, ctx: Ctx, opts: { theme?: stri
       const qs = picks.map((it) => qForItem(it, ctx)).filter((q): q is Question => !!q);
       if (qs.length < 4) return null;
       steps = [Q('Quiz', qs)];
+      break;
+    }
+    case 'pronunciation': {
+      if (!ctx.micAvailable) return null;
+      // mots et phrases courtes déjà rencontrés, les moins bien prononcés d'abord
+      const src = (themeWords ?? pool.filter((p) => p.kind === 'word' || p.kind === 'num')).filter((p) => !/…/.test(p.thai) && p.thai.replace(/\{[^}]*\}/g, '').length <= 14);
+      if (src.length < 3) return null;
+      const items = shuffle(src).slice(0, 8);
+      steps = [{ type: 'repeat', items: items.map((p) => p.id), graded: true }];
       break;
     }
     case 'timed': {

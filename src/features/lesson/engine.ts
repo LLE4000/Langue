@@ -54,7 +54,7 @@ export type RuntimeStep =
   | { type: 'build'; items: { readingId: string; index: number }[] }
   | { type: 'dialog'; id: string }
   | { type: 'reading'; id: string }
-  | { type: 'repeat'; items: string[] }
+  | { type: 'repeat'; items: string[]; graded?: boolean }
   | { type: 'recap' };
 
 const L = (fr: string): Localized => ({ fr });

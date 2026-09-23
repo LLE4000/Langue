@@ -5,10 +5,11 @@ import { useDueItems, useLearnedItems, useGoals } from '@/app/hooks';
 import { useStore } from '@/app/store';
 import { T } from '@/i18n';
 import { Icon } from '@/components/ui';
+import { recognizer } from '@/app/services/speech';
 import type { TrainingMode } from './training';
 
-const MODES: { id: TrainingMode; icon: string; needsReading?: boolean }[] = [
-  { id: 'flashcards', icon: '🗂️' }, { id: 'listening', icon: '🎧' }, { id: 'speed', icon: '⏱️', needsReading: true }, { id: 'match', icon: '🔗' },
+const MODES: { id: TrainingMode; icon: string; needsReading?: boolean; needsMic?: boolean }[] = [
+  { id: 'pronunciation', icon: '🎙️', needsMic: true }, { id: 'flashcards', icon: '🗂️' }, { id: 'listening', icon: '🎧' }, { id: 'speed', icon: '⏱️', needsReading: true }, { id: 'match', icon: '🔗' },
   { id: 'dictation', icon: '✏️', needsReading: true }, { id: 'tones', icon: '🎵', needsReading: true }, { id: 'quiz', icon: '🎲' }, { id: 'timed', icon: '⚡' },
 ];
 
@@ -22,7 +23,7 @@ export function Review() {
   const pending = useStore((s) => s.challenges.filter((c) => c.dir === 'sent' && !c.theirs).length);
   const weak = Object.keys(errors).length;
   const nothingLearned = learned.length < 4;
-  const modes = MODES.filter((m) => goals.read || !m.needsReading);
+  const modes = MODES.filter((m) => (goals.read || !m.needsReading) && (!m.needsMic || recognizer.supported));
   return (
     <>
       <Link className="cta" to={due.length ? '/train/review' : '/train/quiz'} aria-disabled={nothingLearned} onClick={(e) => { if (nothingLearned) e.preventDefault(); }}>

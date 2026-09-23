@@ -370,6 +370,18 @@ select.field { appearance: none; -webkit-appearance: none; background-image: lin
 .versus .side.win { background: var(--acc-soft); } .versus .side .name { font-weight: 650; font-size: 14px; } .versus .side .big { font-family: var(--f-display); font-size: 46px; line-height: 1; } .versus .side .big small { font-size: 18px; color: var(--ink2); }
 .versus .vs { font-family: var(--f-display); font-style: italic; color: var(--ink2); font-size: 20px; }
 details.note summary { cursor: pointer; font-weight: 600; }
+
+/* ---------- Prononciation ---------- */
+.btn.listening { background: var(--red); color: #fff; animation: pulse 1.1s infinite; }
+.pron { display: flex; gap: 14px; align-items: flex-start; padding: 14px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); margin-top: 12px; animation: reveal .3s cubic-bezier(.2, .8, .2, 1); }
+.pron .cring { width: 66px; height: 66px; } .pron .cring b { font-size: 22px; } .pron .cring::before { inset: 5px; }
+.cring[data-tone="ok"] { background: conic-gradient(var(--ok) calc(var(--p) * 1%), color-mix(in srgb, var(--ok) 16%, transparent) 0); }
+.cring[data-tone="near"] { background: conic-gradient(var(--acc) calc(var(--p) * 1%), color-mix(in srgb, var(--acc) 16%, transparent) 0); }
+.cring[data-tone="ko"] { background: conic-gradient(var(--ko) calc(var(--p) * 1%), color-mix(in srgb, var(--ko) 16%, transparent) 0); }
+.pwords { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.pw { display: inline-flex; flex-direction: column; align-items: center; padding: 3px 9px 4px; border-radius: 10px; border: 1.5px solid currentColor; line-height: 1.25; }
+.pw b { font-family: var(--f-th); font-weight: 500; font-size: 18px; } .pw em { font-style: normal; font-family: var(--f-rom); font-size: 11.5px; font-weight: 600; }
+.pw.ok { color: var(--ok); background: var(--ok-soft); } .pw.near { color: var(--acc-deep); background: var(--acc-soft); } .pw.ko { color: var(--ko); background: var(--ko-soft); }
 .theory-title { font-family: var(--f-display); font-size: 30px; font-weight: 400; letter-spacing: -.02em; line-height: 1.1; margin: 6px 0 4px; }
 .kbd { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; background: var(--surface2); border-radius: 6px; padding: 1px 6px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } .btn .fill { display: none; } }
