@@ -1,6 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import '@fontsource-variable/bricolage-grotesque/index.css';
+import '@fontsource-variable/plus-jakarta-sans/wght.css';
+import '@fontsource/instrument-serif/latin-400.css';
+import '@fontsource/instrument-serif/latin-ext-400.css';
 import '@fontsource/sarabun/thai-400.css';
 import '@fontsource/sarabun/thai-500.css';
 import '@fontsource/sarabun/thai-600.css';

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildCurriculum } from './th-fr';
 import { computePath, grantedLessons, knownConcepts, nextLesson } from './path';
-import { ITEMS, DIALOG_BY_ID, READING_BY_ID } from '@/content/th';
+import { ITEMS, DIALOG_BY_ID, READING_BY_ID, th } from '@/content/th';
 import { readingRequirements } from '@/engine/thai/reading';
 
 const cur = buildCurriculum();
@@ -62,9 +62,9 @@ describe('curriculum', () => {
     const script = cur.lessons.filter((x) => x.track === 'script');
     expect(script.length).toBeGreaterThanOrEqual(20);
     for (const l of script.filter((x) => /^read-\d+$/.test(x.id))) expect(l.activities.filter((a) => a.type === 'read' && a.answer === 'meaning').length, l.id).toBeGreaterThanOrEqual(1);
-    // les 16 textes de lecture sont tous placés
+    // tous les textes de lecture sont placés
     const placed = script.flatMap((l) => l.activities.filter((a) => a.type === 'reading'));
-    expect(placed.length).toBe(16);
+    expect(placed.length).toBe(th.READINGS.length);
   });
   it('taille raisonnable du parcours', () => {
     expect(cur.lessons.length).toBeGreaterThan(80);

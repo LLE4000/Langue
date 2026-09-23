@@ -34,7 +34,7 @@ export const fr = {
     step: 'Étape', of: 'sur', theory: 'À retenir', discover: 'Découvrir', practice: 'S’entraîner', test: 'Défi', review: 'Révision',
     finished: 'Leçon terminée', score: 'Score', xpEarned: 'XP gagnés', newItems: 'Nouveautés', toReview: 'À retravailler', passed: 'Leçon validée',
     failed: 'Pas encore acquis : la leçon se refait', nextLesson: 'Leçon suivante', backHome: 'Retour à l’accueil', quitConfirm: 'Quitter la leçon ? Votre avancement est conservé.',
-    tapToReveal: 'Touchez pour voir la réponse', howWell: 'Vous la connaissiez ?', rate: ['Pas du tout', 'Difficile', 'Presque', 'Facile'],
+    tapToReveal: 'Touchez pour voir la réponse', howWell: 'Vous la connaissiez ?', rate: ['Encore', 'Difficile', 'Bien', 'Facile'],
     whichLetter: 'Quelle lettre entendez-vous ?', whichSound: 'Quel est le son de cette lettre ?', whichVowel: 'Quelle est cette voyelle ?',
     whichWord: 'Quel mot entendez-vous ?', meaningOf: 'Que veut dire…', howToSay: 'Comment dit-on…', readThis: 'Comment se lit…',
     whichTone: 'Quel est le ton de ce mot ?', whichToneHeard: 'Quel ton entendez-vous ?', liveOrDead: 'Cette syllabe est-elle vivante ou morte ?',

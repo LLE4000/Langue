@@ -1,5 +1,6 @@
 // Généré depuis la maquette d'origine par scripts/gen-content.mjs, puis maintenu à la main.
 import type { GrammarPoint } from '../types';
+import { EXTRA_GRAMMAR } from './grammarExtra';
 
 export const GRAMMAR: GrammarPoint[] = [
   {
@@ -331,3 +332,5 @@ export const GRAMMAR: GrammarPoint[] = [
     ],
   },
 ];
+
+GRAMMAR.push(...EXTRA_GRAMMAR);

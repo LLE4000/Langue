@@ -9,14 +9,15 @@ import type { ActivitySpec, LessonDef, UnitDef } from '../types';
 import { th, NUM_ITEMS, CLF_ITEMS } from '@/content/th';
 
 /** Niveau oral approximatif de chaque thème (0 débutant complet … 4). */
-const THEME_ORAL: Record<string, number> = {
+export const THEME_ORAL: Record<string, number> = {
   sal: 0, pres: 0, small: 1, num: 1, price: 1, food: 1, drink: 1, resto: 1, market: 2, taxi: 2, dir: 2, time: 1, date: 1, hotel: 2, hosp: 3,
   health: 2, sos: 2, work: 3, eng: 4, trans: 2, grab: 3, airport: 3, travel: 2, weather: 2, color: 1, shop: 2, fam: 1, friends: 2, out: 3, feel: 2,
   verbs: 1, adj: 1, body: 2, clothes: 2, places: 2, animals: 2, home: 2,
+  qw: 1, fruit: 1, adv: 2, tech: 3, nature: 2, money: 2, hobby: 2, culture: 3,
 };
 
 /** Ordre pédagogique des points de grammaire, greffés un par un sur les leçons de vocabulaire. */
-const GRAMMAR_ORDER = ['g:polite', 'g:order', 'g:noconj', 'g:pron', 'g:be', 'g:neg', 'g:qmai', 'g:mii', 'g:ask', 'g:soft', 'g:nums', 'g:clf', 'g:yaak', 'g:dai', 'g:tong', 'g:maak', 'g:qwords', 'g:past', 'g:future', 'g:prog', 'g:laeo', 'g:qtag', 'g:poss', 'g:comp', 'g:hai', 'g:link', 'g:thii', 'g:kan', 'g:loei', 'g:plural', 'g:levels'];
+const GRAMMAR_ORDER = ['g:polite', 'g:order', 'g:noconj', 'g:pron', 'g:be', 'g:neg', 'g:qmai', 'g:mii', 'g:ask', 'g:soft', 'g:nums', 'g:clf', 'g:yaak', 'g:dai', 'g:tong', 'g:maak', 'g:qwords', 'g:past', 'g:future', 'g:prog', 'g:laeo', 'g:qtag', 'g:poss', 'g:comp', 'g:hai', 'g:link', 'g:thii', 'g:kan', 'g:loei', 'g:yang', 'g:prob', 'g:when', 'g:plural', 'g:levels'];
 
 const CHUNK = 7;
 
@@ -25,15 +26,16 @@ export const TALK_UNITS: UnitDef[] = [
   { id: 'u-talk-2', track: 'talk', title: { fr: 'Manger et acheter' }, description: { fr: 'Nourriture, boissons, restaurant, marché, prix.' } },
   { id: 'u-talk-3', track: 'talk', title: { fr: 'Se déplacer et se loger' }, description: { fr: 'Taxi, directions, heure, dates, hôtel.' } },
   { id: 'u-talk-4', track: 'talk', title: { fr: 'Santé, urgences, travail' }, description: { fr: 'Hôpital, santé, urgences, travail, chantier.' } },
-  { id: 'u-talk-5', track: 'talk', title: { fr: 'Voyager et vivre sur place' }, description: { fr: 'Transports, aéroport, météo, couleurs, shopping, famille, amis.' } },
+  { id: 'u-talk-5', track: 'talk', title: { fr: 'Voyager et vivre sur place' }, description: { fr: 'Transports, téléphone, aéroport, nature, météo, shopping, argent, famille, amis, loisirs, culture.' } },
   { id: 'u-talk-6', track: 'talk', title: { fr: 'Élargir son vocabulaire' }, description: { fr: 'Verbes, adjectifs, corps, vêtements, lieux, animaux, maison.' } },
 ];
 const THEME_UNIT: Record<string, string> = {
-  sal: 'u-talk-1', pres: 'u-talk-1', small: 'u-talk-1', num: 'u-talk-1',
-  price: 'u-talk-2', food: 'u-talk-2', drink: 'u-talk-2', resto: 'u-talk-2', market: 'u-talk-2',
-  taxi: 'u-talk-3', dir: 'u-talk-3', time: 'u-talk-3', date: 'u-talk-3', hotel: 'u-talk-3',
+  sal: 'u-talk-1', pres: 'u-talk-1', small: 'u-talk-1', qw: 'u-talk-1', num: 'u-talk-1',
+  price: 'u-talk-2', food: 'u-talk-2', drink: 'u-talk-2', resto: 'u-talk-2', market: 'u-talk-2', fruit: 'u-talk-2',
+  taxi: 'u-talk-3', dir: 'u-talk-3', time: 'u-talk-3', date: 'u-talk-3', adv: 'u-talk-3', hotel: 'u-talk-3',
   hosp: 'u-talk-4', health: 'u-talk-4', sos: 'u-talk-4', work: 'u-talk-4', eng: 'u-talk-4',
   trans: 'u-talk-5', grab: 'u-talk-5', airport: 'u-talk-5', travel: 'u-talk-5', weather: 'u-talk-5', color: 'u-talk-5', shop: 'u-talk-5', fam: 'u-talk-5', friends: 'u-talk-5', out: 'u-talk-5', feel: 'u-talk-5',
+  tech: 'u-talk-5', nature: 'u-talk-5', money: 'u-talk-5', hobby: 'u-talk-5', culture: 'u-talk-5',
 };
 
 export function buildTalkTrack(): LessonDef[] {

@@ -1,16 +1,18 @@
 // Généré depuis la maquette d'origine par scripts/gen-content.mjs, puis maintenu à la main.
 import type { VocabTheme } from '../types';
+import { EXTRA_THEMES, EXTRA_EXAMPLES } from './vocabularyExtra';
 
 /** Ordre d'utilité des thèmes dans le parcours. */
-export const THEME_ORDER: string[] = ["sal","pres","small","num","price","food","drink","resto","market","taxi","dir","time","date","hotel","hosp","health","sos","work","eng","trans","grab","airport","travel","weather","color","shop","fam","friends","out","feel","verbs","adj","body","clothes","places","animals","home"];
+export const THEME_ORDER: string[] = ["sal","pres","small","qw","num","price","food","drink","resto","market","fruit","taxi","dir","time","date","adv","hotel","hosp","health","sos","work","eng","trans","grab","tech","airport","travel","nature","weather","color","shop","money","fam","friends","out","hobby","feel","culture","verbs","adj","body","clothes","places","animals","home"];
 
 /** Regroupement des thèmes dans la bibliothèque. */
 export const THEME_GROUPS: { title: { fr: string }; ids: string[] }[] = [
   { title: { fr: "Mes thèmes" }, ids: ["market","taxi","hosp","eng"] },
-  { title: { fr: "L'essentiel" }, ids: ["sal","pres","small","num","date","time"] },
+  { title: { fr: "L'essentiel" }, ids: ["sal","pres","small","qw","num","date","time","adv"] },
   { title: { fr: "Se déplacer" }, ids: ["dir","places","trans","grab","airport","travel","hotel"] },
-  { title: { fr: "Manger et acheter" }, ids: ["food","drink","resto","shop","price","clothes"] },
-  { title: { fr: "Personnes et quotidien" }, ids: ["fam","body","home","color","weather","animals","friends","out","feel"] },
+  { title: { fr: "Manger et acheter" }, ids: ["food","drink","resto","fruit","shop","price","money","clothes"] },
+  { title: { fr: "Personnes et quotidien" }, ids: ["fam","body","home","color","weather","animals","friends","out","feel","hobby"] },
+  { title: { fr: "Vivre sur place" }, ids: ["tech","nature","culture"] },
   { title: { fr: "Santé et urgences" }, ids: ["health","sos"] },
   { title: { fr: "Travail" }, ids: ["work"] },
   { title: { fr: "Verbes et adjectifs" }, ids: ["verbs","adj"] },
@@ -965,3 +967,7 @@ export const VOCAB_THEMES: VocabTheme[] = [
     ],
   },
 ];
+
+// Thèmes et phrases d'exemple ajoutés après la maquette (voir vocabularyExtra.ts).
+VOCAB_THEMES.push(...EXTRA_THEMES);
+for (const theme of VOCAB_THEMES) for (const item of theme.items) if (!item.example && EXTRA_EXAMPLES[item.id]) item.example = EXTRA_EXAMPLES[item.id];

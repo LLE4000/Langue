@@ -20,7 +20,8 @@ Application web progressive (PWA) d’apprentissage des langues, **guidée par u
 8. [Système de transcription](#système-de-transcription)
 9. [Guides : ajouter une leçon, une langue, une traduction, un type d’exercice](#guides)
 10. [Tests](#tests)
-11. [Données et vie privée](#données-et-vie-privée)
+11. [Identité visuelle](#identité-visuelle)
+12. [Données et vie privée](#données-et-vie-privée)
 
 ## Démarrer
 
@@ -36,16 +37,19 @@ npm run test:e2e     # tests de bout en bout (Playwright, lance le preview tout 
 npm run lint         # eslint
 ```
 
-Stack : **Vite + React 19 + TypeScript**, `zustand` (état) + `idb-keyval` (IndexedDB), `react-router-dom` (routage par hash, compatible GitHub Pages), `vite-plugin-pwa` (manifest + service worker Workbox), polices `@fontsource` (Sarabun traditionnelle, Kanit moderne) embarquées pour le hors-ligne.
+Stack : **Vite + React 19 + TypeScript**, `zustand` (état) + `idb-keyval` (IndexedDB), `react-router-dom` (routage par hash, compatible GitHub Pages), `vite-plugin-pwa` (manifest + service worker Workbox), polices `@fontsource` embarquées pour le hors-ligne : Sarabun (thaï traditionnel à boucles), Kanit (thaï moderne), Plus Jakarta Sans (interface), Instrument Serif (titres).
 
 ## Déployer
 
 L’application est un site statique : n’importe quel hébergement gratuit convient (GitHub Pages, Netlify, Cloudflare Pages…).
 
 **GitHub Pages (inclus)** : le workflow `.github/workflows/deploy.yml` construit et publie automatiquement à chaque push sur `main`.
-1. Dans les réglages du dépôt → *Pages* → *Source* : **GitHub Actions**.
-2. Pousser sur `main` (ou lancer le workflow à la main).
-3. L’application est servie sur `https://<utilisateur>.github.io/<dépôt>/`.
+1. GitHub Pages n’est gratuit que pour les dépôts **publics** : réglages du dépôt → *General* → *Danger Zone* → *Change visibility* → Public (ou passer à un forfait payant pour rester privé).
+2. Réglages du dépôt → *Pages* → *Source* : **GitHub Actions** (le workflow tente aussi de l’activer lui-même).
+3. Fusionner la branche de travail dans `main` (ou pousser sur `main`) : le workflow lance lint, tests, build et publication (≈ 2 minutes).
+4. L’application est servie sur `https://<utilisateur>.github.io/<dépôt>/`, par exemple `https://lle4000.github.io/Langue/`.
+
+**Installer sur le téléphone** : ouvrir ce lien dans Chrome (Android) → menu ⋮ → *Installer l’application* (ou *Ajouter à l’écran d’accueil*). Sur iPhone : Safari → Partager → *Sur l’écran d’accueil*. L’application se lance ensuite en plein écran, hors connexion, et se met à jour toute seule quand une nouvelle version est publiée.
 
 Le chemin de base est injecté par la variable `BASE_PATH` (`/<dépôt>/` sur Pages, `/` ailleurs) :
 
@@ -99,14 +103,16 @@ Tout le contenu de la maquette d’origine a été conservé et structuré (fich
 | `vowels.ts` | 42 formes de voyelles : transcription, API, durée, groupe, positions, forme fermée, exemple |
 | `tones.ts` | 5 tons, 4 marques, 124 mots analysés (classe, vivante/morte, longueur, marque), 27 séries « même syllabe » |
 | `numbers.ts` | chiffres thaïs, unités, nombres clés, remarques |
-| `vocabulary.ts` | 37 thèmes, ~760 mots et phrases avec exemples ; ordre d’utilité des thèmes |
-| `grammar.ts` | 31 fiches : règle, schéma, exemples, astuce |
-| `dialogs.ts` | 26 conversations ; dialogue associé à chaque thème |
-| `readings.ts` | 16 textes de lecture, 5 niveaux, mot à mot |
+| `vocabulary.ts` + `vocabularyExtra.ts` | 45 thèmes, ~890 mots et phrases, ~150 phrases d’exemple ; ordre d’utilité des thèmes, groupes de la bibliothèque |
+| `grammar.ts` + `grammarExtra.ts` | 34 fiches : règle, schéma, exemples, astuce |
+| `dialogs.ts` + `dialogsExtra.ts` | 30 conversations ; dialogue associé à chaque thème |
+| `readings.ts` + `readingsExtra.ts` | 19 textes de lecture, 5 niveaux, mot à mot |
 | `classifiers.ts` | 21 classificateurs, schémas d’emploi, exercice |
 | `gloss.ts` | 240 mots-outils pour le découpage mot à mot |
 | `phrasebook.ts` | phrases de voyage à montrer en grand, numéros d’urgence |
 | `alphabetExtras.ts`, `phonGuide.ts` | lettres sosies, sons voisins, conseils, guide de transcription |
+
+Les fichiers `*Extra.ts` contiennent le contenu ajouté après la maquette (thèmes Poser des questions, Fruits, Quand ?, Téléphone et internet, Nature, Argent et banque, Loisirs et sport, Fêtes et culture ; exemples des mots essentiels ; dialogues au marché aux fruits, au temple, loisirs, week-end ; lectures À la plage, Au temple, Les fruits du marché ; fiches ยัง, อาจจะ/คง/น่าจะ, ตอน/ก่อน/หลังจาก). Le test `content.test.ts` vérifie l’intégrité de l’ensemble (identifiants, alphabet de transcription, jetons de genre appariés, thèmes couverts par le parcours, dialogues et lectures complets).
 
 Chaque élément apprenable reçoit un **identifiant stable** (`c:ก`, `v:–า`, `w:สวัสดี{P}`, `t:มา`, `n:20`, `k:คน`, `g:polite`, `rule:hnam`, `m:1`) : c’est sur ces identifiants que portent la maîtrise, les prérequis et les leçons.
 
@@ -131,6 +137,7 @@ Changer ses niveaux (Profil › Mes niveaux) recalcule le parcours sans effacer 
 ## Le moteur pédagogique
 
 - **Leçon** (`features/lesson/engine.ts`) : les activités déclaratives d’une leçon (`theory`, `flashcard`, `listen`, `read`, `multipleChoice`, `dictation`, `spell`, `syllables`, `toneExercise`, `match`, `build`, `dialog`, `reading`, `repeat`, `review`, `recap`) sont transformées en **étapes sérialisables** avec des questions tirées au sort et des distracteurs cohérents (uniquement des éléments connus). La séance est persistée : après un rechargement, on reprend à la même étape. Une mauvaise réponse revient plus loin dans la série (au plus deux fois). Score ≥ 60 % (paramètre `minScore`) = leçon validée.
+- **Passer d’un exercice à l’autre** : chaque étape a la même barre d’action fixée en bas (`components/StepFooter.tsx`), avec le même mot, **Continuer** ; après une bonne réponse la suite arrive seule au bout d’une seconde (jauge visible, réglable dans Profil › Réglages › Avance automatique), après une erreur on lit la correction et on touche Continuer. Au clavier : Entrée ou Espace pour continuer, 1–4 pour choisir. Les flashcards se retournent d’un toucher ; les paires « Associer » se terminent seules.
 - **Maîtrise** (`engine/srs.ts`) : répétition espacée de type SM-2 (intervalle, facilité, échéance) alimentée par les exercices (juste/faux, rapidité) et par l’auto-évaluation des flashcards ; la **maîtrise 0–100 %** combine la note atteinte, la régularité des 8 dernières réponses, le nombre de répétitions et l’oubli estimé depuis la dernière révision. Les **règles** (tons, ห นำ, finales…) ont leur propre maîtrise via `ruleKey`.
 - **Révision** (`features/review/training.ts`) : la file des éléments dus, et 8 entraînements (Flashcards, Écoute, Lecture rapide, Associer, Dictée, Tons, Quiz, Défi chrono) qui n’utilisent que ce qui a été rencontré / est lisible.
 - **Translittération** : réglage *Toujours / Apprentissage / Masquée* ; en mode Apprentissage, la phonétique disparaît sur les mots lisibles avec les lettres déjà apprises et maîtrisées.
@@ -198,9 +205,14 @@ Une leçon est un objet `LessonDef` (`src/curriculum/types.ts`) : identifiant, p
 
 ## Tests
 
-- **Unitaires** (`npm test`) : transcription → API/RTGS, règle de ton (cohérence des 124 mots analysés), composition des nombres, SRS/maîtrise, jetons, reconnaissance vocale, **prérequis de lecture** (`reading.test.ts`), curriculum (identifiants, prérequis, cycles, éléments référencés, **jamais un signe non enseigné**, placement des 16 lectures), parcours personnalisé (débutant, locuteur non lecteur, lecteur non locuteur, déblocage), moteur de leçon (planification, distracteurs de la première leçon).
+- **Unitaires** (`npm test`, 45 tests) : transcription → API/RTGS, règle de ton (cohérence des 124 mots analysés), composition des nombres, SRS/maîtrise, jetons, reconnaissance vocale, **prérequis de lecture** (`reading.test.ts`), curriculum (identifiants, prérequis, cycles, éléments référencés, **jamais un signe non enseigné**, placement de toutes les lectures), parcours personnalisé (débutant, locuteur non lecteur, lecteur non locuteur, déblocage), moteur de leçon (planification, distracteurs de la première leçon), **intégrité du contenu** (`content.test.ts`).
 - **Bout en bout** (`npm run test:e2e`, Playwright sur Pixel 7, iPad Mini et PC) : onboarding → première leçon complète → validation → leçon suivante → rechargement → parcours → révision → exploration → export ; reprise d’une leçon après rechargement ; personnalisation du parcours.
 - Dans l’environnement de développement distant, Chromium est fourni : `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium npm run test:e2e`.
+- **Contrôle visuel** : `node scripts/shots.mjs <dossier>` (après `npm run preview`) prend une vingtaine de captures ; variables `DEVICE=phone|tablet|desktop`, `THEME=light|dark`, `LEVELS=0,0,0,0`.
+
+## Identité visuelle
+
+Papier chaud et encre profonde, un accent safran (robes des moines, guirlandes de soucis), un vert-bleu d’Andaman pour la phonétique ; titres en Instrument Serif, interface en Plus Jakarta Sans, thaï en Sarabun (formes traditionnelles à boucles, celles qu’on apprend à tracer) et Kanit (forme moderne, affichée à côté). Tous les jetons de couleur sont dans `src/styles/app.css` (`:root`), avec leur variante sombre (automatique ou forcée dans les réglages). L’icône source est `public/icons/icon.svg`.
 
 ## Données et vie privée
 

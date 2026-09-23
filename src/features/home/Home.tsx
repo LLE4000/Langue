@@ -34,7 +34,8 @@ export function Home() {
   const doneCount = path.filter((p) => p.status === 'done').length;
   const lessonNo = path.filter((p) => p.status !== 'granted').findIndex((p) => p.lesson.id === next?.lesson.id) + 1;
   const recent = learned.slice().sort((a, b) => (useStore.getState().srs[b.id]?.first ?? 0) - (useStore.getState().srs[a.id]?.first ?? 0)).slice(0, 8);
-  const resumable = session && !session.training ? session : null;
+  // Une séance arrêtée sur le bilan est terminée : on propose la leçon suivante, pas une « reprise ».
+  const resumable = session && !session.training && session.steps[session.index]?.type !== 'recap' ? session : null;
   const goalMin = profile.dailyGoalMinutes || 15;
 
   return (

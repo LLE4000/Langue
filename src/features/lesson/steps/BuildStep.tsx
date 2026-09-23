@@ -6,7 +6,8 @@ import { READING_BY_ID, sentenceThai, sentenceRom } from '@/content/th';
 import { useSpeaker } from '@/app/services/speech';
 import { shuffle } from '@/engine/util';
 import { T } from '@/i18n';
-import { AudioButton, Fr, Thai, Rom, Icon } from '@/components/ui';
+import { AudioButton, Fr, Thai, Rom } from '@/components/ui';
+import { StepFooter, ContinueButton } from '@/components/StepFooter';
 
 export function BuildStep({ step, onDone }: { step: RuntimeStep & { type: 'build' }; onDone: (r: StepResult) => void }) {
   const t = T();
@@ -24,17 +25,17 @@ export function BuildStep({ step, onDone }: { step: RuntimeStep & { type: 'build
   return (
     <>
       <p className="qprompt">{t.lesson.order}</p>
-      <div className="stage compact"><div className="frbig" style={{ fontSize: 21 }}><Fr text={cur.sent.tr} /></div></div>
+      <div className="stage compact"><div className="frbig" style={{ fontSize: 22 }}><Fr text={cur.sent.tr} /></div></div>
       <div className="audio"><AudioButton text={full} /><span className="xs mut">indice audio</span></div>
       <div className="tline">{pick.map((k, j) => <button key={j} className="tok" disabled={res !== null} onClick={() => setPick(pick.filter((_, x) => x !== j))}><Fr text={cur.toks[k].thai} /></button>)}</div>
       <div className="tline" style={{ border: 0, background: 'none', padding: '12px 0', justifyContent: 'center' }}>{cur.order.map((k) => <button key={k} className={`tok ${pick.includes(k) ? 'used' : ''}`} disabled={res !== null} onClick={() => setPick([...pick, k])}><Fr text={cur.toks[k].thai} /></button>)}</div>
       <div className="sp" />
-      <div className={`qfoot ${res === null ? '' : res ? 'ok' : 'ko'}`}>
-        {res === null ? <button className="btn" disabled={pick.length !== cur.toks.length} onClick={check}>{t.common.check}</button> : (
+      <StepFooter tone={res === null ? '' : res ? 'ok' : 'ko'} meta={res === null ? <><span>Touchez les mots dans l’ordre, puis vérifiez</span><span className="b">{i + 1} / {items.length}</span></> : undefined}>
+        {res === null ? <ContinueButton onClick={check} label={t.common.check} icon={false} disabled={pick.length !== cur.toks.length} /> : (
           <><div className="qfin"><span className={`verdict ${res ? 'ok' : 'ko'}`}>{res ? '✓ ' + t.common.correct : '✗ L’ordre attendu était :'}</span><div style={{ marginTop: 4 }}><Thai text={full} /><br /><Rom text={sentenceRom(cur.toks)} /></div></div>
-            <button className="btn" onClick={next}>{i + 1 >= items.length ? t.common.finish : t.common.next} <Icon name="next" size={18} /></button></>
+            <ContinueButton onClick={next} label={t.common.continue} auto={res} autoMs={1600} autoFocus /></>
         )}
-      </div>
+      </StepFooter>
     </>
   );
 }

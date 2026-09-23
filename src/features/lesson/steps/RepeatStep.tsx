@@ -5,7 +5,7 @@ import type { StepResult } from '../LessonRunner';
 import { ITEMS } from '@/content/th';
 import { T } from '@/i18n';
 import { MicPanel } from '@/components/MicPanel';
-import { Icon } from '@/components/ui';
+import { StepFooter, ContinueButton } from '@/components/StepFooter';
 
 export function RepeatStep({ step, onDone }: { step: RuntimeStep & { type: 'repeat' }; onDone: (r: StepResult) => void }) {
   const t = T();
@@ -18,10 +18,13 @@ export function RepeatStep({ step, onDone }: { step: RuntimeStep & { type: 'repe
       <p className="qprompt">{t.lesson.repeat}</p>
       <p className="sm mut ctr" style={{ marginTop: -6 }}>{t.lesson.repeatHint}</p>
       <MicPanel key={it.id} item={it} inline />
-      <div className="btns" style={{ marginTop: 14 }}>
-        <button className="btn ghost" onClick={() => onDone({ xp: i + 1 })}>{t.common.skip}</button>
-        <button className="btn" onClick={() => (i + 1 < items.length ? setI(i + 1) : onDone({ xp: items.length * 2 }))}>{i + 1 < items.length ? t.common.next : t.common.finish} <Icon name="next" size={18} /></button>
-      </div>
+      <div className="sp" />
+      <StepFooter meta={<><span>Facultatif : l’enregistrement n’est jamais noté.</span><span className="b">{i + 1} / {items.length}</span></>}>
+        <div className="btns">
+          <button className="btn ghost" onClick={() => onDone({ xp: i + 1 })}>{t.common.skip}</button>
+          <ContinueButton onClick={() => (i + 1 < items.length ? setI(i + 1) : onDone({ xp: items.length * 2 }))} label={t.common.continue} />
+        </div>
+      </StepFooter>
     </>
   );
 }

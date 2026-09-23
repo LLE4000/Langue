@@ -38,6 +38,7 @@ export interface Settings {
   forceTTS: boolean;
   showModern: boolean; // afficher aussi la forme moderne (sans boucles)
   hapticsOff: boolean;
+  autoAdvance: boolean; // après une bonne réponse, passer seul à la question suivante
 }
 
 export interface LessonRecord { done: boolean; best: number; tries: number; last: number; score?: number; total?: number }
@@ -77,7 +78,7 @@ export interface PersistedState {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  translit: 'learning', theme: 'auto', thaiSize: 1.15, autoAudio: true, slowRate: 0.6, voiceId: '', forceTTS: false, showModern: true, hapticsOff: false,
+  translit: 'learning', theme: 'auto', thaiSize: 1.15, autoAudio: true, slowRate: 0.6, voiceId: '', forceTTS: false, showModern: true, hapticsOff: false, autoAdvance: true,
 };
 
 export const initialState = (): PersistedState => ({
@@ -177,6 +178,11 @@ export const useStore = create<Store>()(
       name: STORE_KEY,
       version: STORE_VERSION,
       storage: createJSONStorage(() => idbStorage),
+      // Les réglages ajoutés dans une nouvelle version prennent leur valeur par défaut chez les anciens utilisateurs.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<PersistedState>;
+        return { ...current, ...p, settings: { ...DEFAULT_SETTINGS, ...(p.settings ?? {}) } };
+      },
       partialize: (s) => {
         const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version } = s;
         return { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version } as Store;

@@ -56,6 +56,10 @@ export function Settings() {
       <label className="f">{t.profile.autoAudio} <span className="xs">(réponse d’une carte, ouverture d’une fiche)</span></label>
       <Segmented value={settings.autoAudio} options={[{ v: true, label: 'Oui' }, { v: false, label: 'Non' }]} onChange={(v) => update({ autoAudio: v })} />
 
+      <div className="h2">Exercices</div>
+      <label className="f">Avance automatique <span className="xs">(après une bonne réponse, la suite arrive seule ; après une erreur, on attend toujours « Continuer »)</span></label>
+      <Segmented value={settings.autoAdvance !== false} options={[{ v: true, label: 'Oui' }, { v: false, label: 'Non, je touche Continuer' }]} onChange={(v) => update({ autoAdvance: v })} />
+
       <div className="h2">Micro</div>
       <div className="list" style={{ padding: '4px 14px' }}><div className="status"><i>{recorder.supported ? '✅' : '❌'}</i><span>Enregistrement de ma voix</span></div><div className="status"><i>{recognizer.supported ? '✅' : '❌'}</i><span>Reconnaissance vocale thaïe (th-TH){recognizer.supported ? '' : ' — non disponible sur ce navigateur'}</span></div></div>
 

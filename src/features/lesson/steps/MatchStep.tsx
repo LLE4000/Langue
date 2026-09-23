@@ -1,4 +1,4 @@
-/** Associer : relier chaque mot thaï à son sens (ou sa transcription). */
+/** Associer : relier chaque mot thaï à son sens (ou sa transcription). Se termine tout seul quand tout est relié. */
 import { useEffect, useMemo, useState } from 'react';
 import type { RuntimeStep } from '../engine';
 import type { StepResult } from '../LessonRunner';
@@ -7,6 +7,7 @@ import { useSpeaker } from '@/app/services/speech';
 import { shuffle } from '@/engine/util';
 import { T } from '@/i18n';
 import { Thai, Fr, useShowRom } from '@/components/ui';
+import { StepFooter, ContinueButton } from '@/components/StepFooter';
 
 export function MatchStep({ step, onDone }: { step: RuntimeStep & { type: 'match' }; onDone: (r: StepResult) => void }) {
   const t = T();
@@ -20,6 +21,7 @@ export function MatchStep({ step, onDone }: { step: RuntimeStep & { type: 'match
   const [bad, setBad] = useState<string | null>(null);
   const [errors, setErrors] = useState(0);
   const showRom = useShowRom(undefined);
+  const complete = step.pairs.length > 0 && matched.size === step.pairs.length;
   const tryMatch = (l: string | null, r: string | null) => {
     if (!l || !r) return;
     if (l === r) {
@@ -27,16 +29,14 @@ export function MatchStep({ step, onDone }: { step: RuntimeStep & { type: 'match
       const p = step.pairs.find((x) => x.id === l); if (p) sp.speak(p.thai);
     } else { setBad(l + '|' + r); setErrors(errors + 1); answer(l, false); setTimeout(() => { setBad(null); setSelL(null); setSelR(null); }, 500); }
   };
-  useEffect(() => {
-    if (matched.size !== step.pairs.length || !step.pairs.length) return;
-    const h = setTimeout(() => onDone({ ok: Math.max(0, step.pairs.length - errors), total: step.pairs.length, xp: Math.max(2, step.pairs.length * 2 - errors) }), 500);
-    return () => clearTimeout(h);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matched.size]);
+  const finish = () => onDone({ ok: Math.max(0, step.pairs.length - errors), total: step.pairs.length, xp: Math.max(2, step.pairs.length * 2 - errors) });
+  useEffect(() => { if (!step.pairs.length) onDone({}); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const cls = (id: string, side: 'l' | 'r', sel: string | null) => matched.has(id) ? 'ok' : bad && bad.split('|')[side === 'l' ? 0 : 1] === id ? 'ko' : sel === id ? 'on' : '';
   return (
     <>
       <p className="qprompt">{t.lesson.matchPairs}</p>
+      <p className="sm mut ctr" style={{ marginTop: -6, marginBottom: 10 }}>Touchez un mot à gauche, puis sa traduction à droite.</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <div className="stack" style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 0 }}>
           {left.map((p) => <button key={p.id} data-pair={p.id} className={`pr ${cls(p.id, 'l', selL)}`} style={{ marginTop: 0 }} onClick={() => { setSelL(p.id); tryMatch(p.id, selR); }}><Thai text={p.thai} />{showRom && step.by === 'meaning' && <span className="rom xs">{p.rom}</span>}</button>)}
@@ -45,6 +45,13 @@ export function MatchStep({ step, onDone }: { step: RuntimeStep & { type: 'match
           {right.map((p) => <button key={p.id} data-pair={p.id} className={`pr ${cls(p.id, 'r', selR)}`} onClick={() => { setSelR(p.id); tryMatch(selL, p.id); }}>{step.by === 'meaning' ? <Fr text={p.text} /> : <span className="rom">{p.rom}</span>}</button>)}
         </div>
       </div>
+      <div className="sp" />
+      {complete && (
+        <StepFooter tone="ok">
+          <div className="qfin"><span className="verdict ok">✓ Toutes les paires sont reliées</span>{errors > 0 && <span className="mut"> · {errors} essai{errors > 1 ? 's' : ''} manqué{errors > 1 ? 's' : ''}</span>}</div>
+          <ContinueButton onClick={finish} label={t.common.continue} auto autoMs={900} autoFocus />
+        </StepFooter>
+      )}
     </>
   );
 }

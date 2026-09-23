@@ -7,6 +7,7 @@ import { L } from '@/i18n';
 import { Icon, Thai, Rom, Fr, useShowRom } from './ui';
 import { WordByWord } from './WordByWord';
 import { MicPanel } from './MicPanel';
+import { StepFooter, ContinueButton } from './StepFooter';
 
 export function DialogView({ id, onDone, doneLabel }: { id: string; onDone?: () => void; doneLabel?: string }) {
   const d = DIALOG_BY_ID[id];
@@ -56,7 +57,7 @@ export function DialogView({ id, onDone, doneLabel }: { id: string; onDone?: () 
           </div>
         );
       })}
-      {onDone && <button className="btn" style={{ marginTop: 8 }} onClick={onDone}>{doneLabel ?? 'J’ai compris ce dialogue'}</button>}
+      {onDone && <StepFooter meta={<span>Écoutez, lisez, répétez les répliques « Vous » à voix haute.</span>}><ContinueButton onClick={onDone} label={doneLabel ?? 'J’ai compris ce dialogue'} /></StepFooter>}
       {mic && WORD_BY_THAI[mic.slice(2)] && <MicPanel item={WORD_BY_THAI[mic.slice(2)]} onClose={() => setMic(null)} />}
     </>
   );

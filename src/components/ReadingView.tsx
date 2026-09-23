@@ -4,6 +4,7 @@ import { useSpeaker } from '@/app/services/speech';
 import { READING_BY_ID, sentenceThai, sentenceRom } from '@/content/th';
 import { L } from '@/i18n';
 import { Icon, Thai, Rom, Fr } from './ui';
+import { StepFooter, ContinueButton } from './StepFooter';
 
 export function ReadingView({ id, onDone, doneLabel }: { id: string; onDone?: () => void; doneLabel?: string }) {
   const r = READING_BY_ID[id];
@@ -32,7 +33,7 @@ export function ReadingView({ id, onDone, doneLabel }: { id: string; onDone?: ()
           </div>
         );
       })}
-      {onDone && <button className="btn" onClick={onDone}>{doneLabel ?? 'J’ai lu ce texte'}</button>}
+      {onDone && <StepFooter meta={<span>Lisez chaque phrase à voix haute avant d’ouvrir les aides.</span>}><ContinueButton onClick={onDone} label={doneLabel ?? 'J’ai lu ce texte'} /></StepFooter>}
     </>
   );
 }

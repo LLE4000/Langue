@@ -1,6 +1,8 @@
 /**
  * Suite de questions (écoute, lecture, sens, dictée, tons, syllabes, épellation).
  * Une mauvaise réponse revient plus loin dans la série (maîtrise progressive, au plus deux fois).
+ * Après une bonne réponse, la suite arrive seule (réglage « avance automatique ») ; après une erreur,
+ * on prend le temps de lire la correction et on touche « Continuer ».
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Question, RuntimeStep } from '../engine';
@@ -9,7 +11,8 @@ import type { StepResult } from '../LessonRunner';
 import { useStore } from '@/app/store';
 import { useSpeaker } from '@/app/services/speech';
 import { L, T } from '@/i18n';
-import { AudioPair, Icon, Thai, Rom, Fr, sizeClass, useShowRom, useTokens } from '@/components/ui';
+import { AudioPair, Thai, Rom, Fr, sizeClass, useShowRom, useTokens } from '@/components/ui';
+import { StepFooter, ContinueButton, useDigitKeys } from '@/components/StepFooter';
 import { ToneCurve } from '@/components/ToneCurve';
 import { WordByWord } from '@/components/WordByWord';
 import { resolveTokens } from '@/engine/tokens';
@@ -30,10 +33,10 @@ function ChoiceLabel({ c, lg }: { c: Question['choices'][number]; lg?: boolean }
 function Stage({ q, done }: { q: Question; done: boolean }) {
   const tok = useTokens();
   const showRom = useShowRom(q.stage.thai, q.stage.showRom);
-  if (q.stage.ear && !done) return <div className="stage ear"><div style={{ fontSize: 56 }}>👂</div><div className="mut sm">Écoutez, puis choisissez</div></div>;
+  if (q.stage.ear && !done) return <div className="stage ear"><div style={{ fontSize: 52 }}>👂</div><div className="mut sm">Écoutez, puis choisissez</div></div>;
   if (q.stage.ear && done && q.reveal?.thai) {
     const long = /[\s]|.{8,}/.test(q.reveal.thai);
-    return <div className="stage compact">{long ? <WordByWord thai={q.reveal.thai} rom={q.reveal.rom ?? ''} big chips={false} /> : <><div className={`big ${sizeClass(q.reveal.thai)}`}><Thai text={q.reveal.thai} /></div>{q.reveal.rom && <span className="rom" style={{ fontSize: 22, fontWeight: 650 }}>{resolveTokens(q.reveal.rom, tok)}</span>}</>}{q.reveal.text && <span className="mut">{resolveTokens(q.reveal.text, tok)}</span>}</div>;
+    return <div className="stage compact">{long ? <WordByWord thai={q.reveal.thai} rom={q.reveal.rom ?? ''} big chips={false} /> : <><div className={`big ${sizeClass(q.reveal.thai)}`}><Thai text={q.reveal.thai} /></div>{q.reveal.rom && <span className="rom" style={{ fontSize: 22, fontWeight: 600 }}>{resolveTokens(q.reveal.rom, tok)}</span>}</>}{q.reveal.text && <span className="mut">{resolveTokens(q.reveal.text, tok)}</span>}</div>;
   }
   return (
     <div className={`stage ${q.stage.big ? '' : 'compact'}`}>
@@ -89,10 +92,8 @@ export function QuestionsStep({ step, onDone, timed }: { step: RuntimeStep & { t
     return () => clearInterval(h);
   }, [timed, done, q?.id]);
 
-  if (!q) return null;
-
   const grade = (isOk: boolean, idx: number | null) => {
-    if (done) return;
+    if (done || !q) return;
     const secs = (performance.now() - t0.current) / 1000;
     setPicked(idx); setOk(isOk);
     if (q.itemId) answer(q.itemId, isOk, secs, q.ruleKey);
@@ -102,6 +103,11 @@ export function QuestionsStep({ step, onDone, timed }: { step: RuntimeStep & { t
     if (isOk && q.sayAfter) setTimeout(() => sp.speak(q.sayAfter!), 250);
     if (!isOk && q.sayAfter) setTimeout(() => sp.speak(q.sayAfter!), 600);
   };
+  // Clavier : 1–4 pour répondre (hors épellation)
+  useDigitKeys(!q || done || q.kind === 'spell' ? 0 : q.choices.length, (k) => grade(!!q!.choices[k].ok, k));
+
+  if (!q) return null;
+
   const baseId = q.id.replace(/-r\d+$/, '');
   const canRetry = ok === false && (retries.current[baseId] ?? 0) < 2;
   const next = () => {
@@ -132,6 +138,7 @@ export function QuestionsStep({ step, onDone, timed }: { step: RuntimeStep & { t
         <div className={`choices ${twoCols ? 'c2' : ''} ${done ? 'lock' : ''}`}>
           {q.choices.map((c, k) => (
             <button key={k} className={`choice ${c.thai && !c.text && c.thai.length <= 2 ? 'lg' : ''} ${done ? (c.ok ? 'ok' : k === picked ? 'ko' : 'dim') : ''}`} onClick={() => grade(!!c.ok, k)} disabled={done}>
+              <span className="k" aria-hidden="true">{k + 1}</span>
               <ChoiceLabel c={c} lg={!!c.thai && c.thai.length <= 2 && !c.text} />
             </button>
           ))}
@@ -139,7 +146,7 @@ export function QuestionsStep({ step, onDone, timed }: { step: RuntimeStep & { t
       )}
       <div className="sp" />
       {done && (
-        <div className={`qfoot ${ok ? 'ok' : 'ko'}`}>
+        <StepFooter tone={ok ? 'ok' : 'ko'}>
           <div className="qfin">
             <span className={`verdict ${ok ? 'ok' : 'ko'}`}>{ok ? '✓ ' + t.common.correct : '✗ ' + t.common.wrong}</span>
             {!ok && good && q.kind !== 'spell' && <span className="good"> · {t.common.goodAnswer} : {good.thai && <Thai text={good.thai} />} {good.rom && <span className="rom">{good.rom}</span>} {good.text} {good.tone && <b>{good.text}</b>}</span>}
@@ -148,8 +155,8 @@ export function QuestionsStep({ step, onDone, timed }: { step: RuntimeStep & { t
             {q.reveal?.explain && <ol>{q.reveal.explain.map((e, k) => <li key={k}>{L(e)}</li>)}</ol>}
             {q.itemId && ITEMS[q.itemId]?.kind === 'cons' && q.kind === 'listen' && <div className="xs mut" style={{ marginTop: 4 }}>Astuce : le nom de la lettre commence par son propre son.</div>}
           </div>
-          <button className="btn" onClick={next} autoFocus>{i + 1 >= queue.length && !canRetry ? 'Terminer la série' : t.common.next} <Icon name="next" size={18} /></button>
-        </div>
+          <ContinueButton onClick={next} label={t.common.continue} auto={!!ok && !timed} autoMs={q.sayAfter ? 1700 : 1200} autoFocus />
+        </StepFooter>
       )}
     </>
   );

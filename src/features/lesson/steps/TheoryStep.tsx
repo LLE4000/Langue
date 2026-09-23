@@ -9,6 +9,7 @@ import { useSpeaker } from '@/app/services/speech';
 import { useStore } from '@/app/store';
 import { L } from '@/i18n';
 import { AudioButton, Fr, Icon, Thai, Rom, MasteryDot, useShowRom } from '@/components/ui';
+import { StepFooter, ContinueButton } from '@/components/StepFooter';
 import { ToneCurve } from '@/components/ToneCurve';
 import { useMastery } from '@/app/hooks';
 import type { ConsonantClass } from '@/content/types';
@@ -119,11 +120,13 @@ export function TheoryBlockView({ b, knownOrally }: { b: TheoryBlock; knownOrall
 export function TheoryStep({ step, onDone, title, subtitle }: { step: RuntimeStep & { type: 'theory' }; onDone: () => void; title: string; subtitle?: string }) {
   return (
     <>
-      <h2 style={{ fontSize: 24, letterSpacing: '-.02em', lineHeight: 1.15, margin: '4px 0 2px' }}>{step.title ? L(step.title) : title}</h2>
+      <h2 className="theory-title">{step.title ? L(step.title) : title}</h2>
       {subtitle && <p className="mut sm" style={{ marginBottom: 14 }}>{subtitle}</p>}
       {step.blocks.map((b, i) => <div className="theory-block" key={i}><TheoryBlockView b={b} /></div>)}
       <div className="gap" />
-      <button className="btn" style={{ marginTop: 16 }} onClick={onDone}>J’ai lu, on continue <Icon name="next" size={18} /></button>
+      <StepFooter meta={<><span>Rien à retenir par cœur : les exercices viennent tout de suite après.</span></>}>
+        <ContinueButton onClick={onDone} label="Continuer" />
+      </StepFooter>
     </>
   );
 }

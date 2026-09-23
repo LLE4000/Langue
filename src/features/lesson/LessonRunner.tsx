@@ -12,7 +12,7 @@ import { recognizer, recorder } from '@/app/services/speech';
 import { planLesson, planMinutes, type RuntimeStep } from './engine';
 import { isKnownOrally } from '@/curriculum/path';
 import { L, T } from '@/i18n';
-import { Bar, Icon, Sheet } from '@/components/ui';
+import { Icon, Sheet } from '@/components/ui';
 import { TheoryStep } from './steps/TheoryStep';
 import { FlashcardsStep } from './steps/FlashcardsStep';
 import { QuestionsStep } from './steps/QuestionsStep';
@@ -105,14 +105,14 @@ export function LessonRunner() {
   return (
     <FullScreen title={session.training ? session.title : `${lessonNo ? `Leçon ${lessonNo}` : 'Leçon'} · ${STEP_LABEL[step.type]}`} onBack={() => setQuitAsk(true)}
       right={<button className="tb" aria-label="Quitter" onClick={() => setQuitAsk(true)}><Icon name="close" /></button>} fit={step.type === 'questions' || step.type === 'flashcards'}>
-      <div className="sess"><Bar p={progress} thin /><span className="n">{session.index + 1} / {total}{step.type !== 'recap' ? ` · ≈ ${minutesLeft} min` : ''}</span></div>
+      <div className="sess"><div className="steps" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}>{session.steps.map((_, k) => <i key={k} className={k < session.index ? 'done' : k === session.index ? 'cur' : ''} />)}</div><span className="n">{session.index + 1} / {total}{step.type !== 'recap' ? ` · ≈ ${minutesLeft} min` : ''}</span></div>
       {step.type === 'theory' && <TheoryStep key={key} step={step} onDone={() => finish()} title={lesson ? L(lesson.title) : session.title} subtitle={lesson ? L(lesson.subtitle) : ''} />}
       {step.type === 'flashcards' && <FlashcardsStep key={key} step={step} onDone={finish} />}
       {step.type === 'questions' && <QuestionsStep key={key} step={step} onDone={finish} timed={session.mode === 'timed'} />}
       {step.type === 'match' && <MatchStep key={key} step={step} onDone={finish} />}
       {step.type === 'build' && <BuildStep key={key} step={step} onDone={finish} />}
-      {step.type === 'dialog' && <div key={key}><DialogView id={step.id} onDone={() => finish({ xp: 5 })} /></div>}
-      {step.type === 'reading' && <div key={key}><ReadingView id={step.id} onDone={() => finish({ xp: 5 })} /></div>}
+      {step.type === 'dialog' && <div key={key}><DialogView id={step.id} onDone={() => finish({ xp: 5 })} doneLabel={t.common.continue} /></div>}
+      {step.type === 'reading' && <div key={key}><ReadingView id={step.id} onDone={() => finish({ xp: 5 })} doneLabel={t.common.continue} /></div>}
       {step.type === 'repeat' && <RepeatStep key={key} step={step} onDone={finish} />}
       {step.type === 'recap' && <RecapStep key={key} session={session} lesson={lesson} next={next} onClose={quit} onNext={(nid) => { endSession(); nav(`/lesson/${nid}`, { replace: true }); }} onRetry={() => { endSession(); nav(`/lesson/${session.lessonId}`, { replace: true }); }} startedAt={startedAt.current} />}
       <Sheet open={quitAsk} onClose={() => setQuitAsk(false)} title={t.common.quit}>

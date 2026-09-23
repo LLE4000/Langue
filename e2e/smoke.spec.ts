@@ -14,14 +14,16 @@ async function onboard(page: Page, levels: number[] = [0, 0, 0, 0]) {
   await page.getByRole('button', { name: /^Continuer$/ }).click();
   await page.getByRole('button', { name: /Construire mon parcours/ }).click();
   await expect(page).toHaveURL(/#\/$/);
+  // Le test pilote lui-même le bouton « Continuer » : on coupe l'avance automatique pour éviter les courses.
+  await page.evaluate(() => (window as unknown as { __langueStore: { getState(): { updateSettings(p: object): void } } }).__langueStore.getState().updateSettings({ autoAdvance: false }));
 }
 
 /** Répond à toutes les questions d'une étape en choisissant la bonne réponse (les propositions justes portent .ok après clic). */
 async function completeLesson(page: Page) {
   for (let guard = 0; guard < 400; guard++) {
     if (await page.getByText(/Leçon validée|Entraînement terminé|Pas encore acquis/).isVisible().catch(() => false)) return;
-    // théorie
-    const readBtn = page.getByRole('button', { name: /J’ai lu, on continue/ });
+    // théorie, dialogue, lecture, correction d'une question : partout le même bouton « Continuer »
+    const readBtn = page.getByRole('button', { name: /^Continuer$/ });
     if (await readBtn.isVisible().catch(() => false)) { await readBtn.click(); continue; }
     // flashcards
     const reveal = page.getByRole('button', { name: /^Voir la réponse$/ });
@@ -80,8 +82,8 @@ async function completeLesson(page: Page) {
       await page.locator('.qfoot .btn').click();
       continue;
     }
-    // dialogue / lecture / répéter
-    for (const name of [/J’ai compris ce dialogue/, /J’ai lu ce texte/, /^Passer$/, /^Terminer$/, /Terminer la série/]) {
+    // répéter (facultatif)
+    for (const name of [/^Passer$/, /^Terminer$/]) {
       const b = page.getByRole('button', { name });
       if (await b.isVisible().catch(() => false)) { await b.click(); break; }
     }
@@ -104,7 +106,8 @@ test('onboarding, première leçon, déblocage, reprise, révision', async ({ pa
   if (await nextBtn.isVisible().catch(() => false)) await page.getByRole('button', { name: /Retour à l’accueil/ }).click();
   else { await expect(retry).toBeVisible(); await page.getByRole('button', { name: /Retour à l’accueil/ }).click(); }
   await expect(page).toHaveURL(/#\/$/);
-  // progression persistée
+  // progression persistée (on laisse l'écriture IndexedDB se terminer avant de recharger)
+  await page.waitForTimeout(500);
   await page.reload();
   await expect(page.getByText('Prochaine leçon')).toBeVisible();
   const secondTitle = await page.locator('a.cta .t').innerText();
@@ -132,7 +135,7 @@ test('reprise d’une leçon après rechargement', async ({ page }) => {
   // parle déjà : la première leçon est une leçon d'écriture
   await expect(page.locator('a.cta .t')).toContainText(/consonnes/i);
   await page.locator('a.cta').click();
-  await page.getByRole('button', { name: /J’ai lu, on continue/ }).click();
+  await page.getByRole('button', { name: /^Continuer$/ }).click();
   await expect(page.locator('.sess .n')).toContainText('2 /');
   await page.reload();
   await expect(page.locator('.sess .n')).toContainText('2 /');

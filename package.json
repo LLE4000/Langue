@@ -16,7 +16,8 @@
     "content:extract": "node scripts/extract-mockup.mjs"
   },
   "dependencies": {
-    "@fontsource-variable/bricolage-grotesque": "^5.2.0",
+    "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
+    "@fontsource/instrument-serif": "^5.3.0",
     "@fontsource/kanit": "^5.2.0",
     "@fontsource/sarabun": "^5.2.0",
     "idb-keyval": "^6.2.1",
