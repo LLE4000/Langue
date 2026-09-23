@@ -4,7 +4,7 @@
  *   - l'ordre personnalisé des leçons (les pistes s'entrelacent selon les besoins),
  *   - la prochaine leçon à faire.
  */
-import type { Curriculum, LessonDef, Level, Skill, Track } from './types';
+import { trackAllowed, type Curriculum, type Goals, type LessonDef, type Level, type Skill, type Track } from './types';
 
 export interface SkillLevels { listening: Level; speaking: Level; reading: Level; writing: Level }
 
@@ -12,6 +12,8 @@ export interface PathInput {
   curriculum: Curriculum;
   levels: SkillLevels;
   completed: ReadonlySet<string>; // leçons validées par l'apprenant
+  /** objectifs : sans « lire et écrire », la piste d'écriture disparaît du parcours (elle reste dans Explorer) */
+  goals?: Goals;
 }
 
 export interface PathLesson {
@@ -81,7 +83,8 @@ export function orderedPath(cur: Curriculum, levels: SkillLevels, granted: Reado
 }
 
 export function computePath(input: PathInput): PathLesson[] {
-  const { curriculum, levels, completed } = input;
+  const { levels, completed, goals } = input;
+  const curriculum: Curriculum = goals ? { ...input.curriculum, lessons: input.curriculum.lessons.filter((l) => trackAllowed(l.track, goals)) } : input.curriculum;
   const granted = grantedLessons(curriculum, levels);
   const order = orderedPath(curriculum, levels, granted);
   const done = new Set([...completed, ...granted]);

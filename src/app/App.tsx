@@ -30,6 +30,11 @@ import { DataScreen } from '@/features/profile/DataScreen';
 import { LevelsScreen } from '@/features/profile/LevelsScreen';
 import { ShareScreen } from '@/features/profile/ShareScreen';
 import { StatsScreen } from '@/features/profile/StatsScreen';
+import { PeopleScreen } from '@/features/profile/PeopleScreen';
+import { PlayHub } from '@/features/play/PlayHub';
+import { Duel } from '@/features/play/Duel';
+import { Turns } from '@/features/play/Turns';
+import { ChallengeHub, ChallengeNew, ChallengePlay } from '@/features/play/Challenge';
 
 function useHydrated() {
   const [h, setH] = useState(useStore.persist.hasHydrated());
@@ -105,7 +110,14 @@ export function App() {
           <Route path="profile/levels" element={<LevelsScreen />} />
           <Route path="profile/share" element={<ShareScreen />} />
           <Route path="profile/stats" element={<StatsScreen />} />
+          <Route path="profile/people" element={<PeopleScreen />} />
+          <Route path="play" element={<PlayHub />} />
+          <Route path="play/defi" element={<ChallengeHub />} />
         </Route>
+        <Route path="/play/duel" element={<RequireProfile><Duel /></RequireProfile>} />
+        <Route path="/play/turns" element={<RequireProfile><Turns /></RequireProfile>} />
+        <Route path="/play/defi/new" element={<RequireProfile><ChallengeNew /></RequireProfile>} />
+        <Route path="/play/defi/:code" element={<RequireProfile><ChallengePlay /></RequireProfile>} />
         <Route path="/lesson/:id" element={<RequireProfile><LessonRunner /></RequireProfile>} />
         <Route path="/train/:mode" element={<RequireProfile><TrainingStart /></RequireProfile>} />
         <Route path="*" element={<Navigate to="/" replace />} />

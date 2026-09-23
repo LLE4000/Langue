@@ -10,6 +10,14 @@ export const SKILLS: Skill[] = ['listening', 'speaking', 'reading', 'writing'];
 /** Niveau déclaré par compétence : 0 débutant complet … 4 avancé (≈ B2+). */
 export type Level = 0 | 1 | 2 | 3 | 4;
 
+/** Objectifs de l'apprenant : parler et comprendre, lire et écrire, ou les deux. */
+export interface Goals { speak: boolean; read: boolean }
+export const ALL_GOALS: Goals = { speak: true, read: true };
+/** Compétences concernées par des objectifs. */
+export const goalSkills = (g: Goals): Skill[] => [...(g.speak ? (['listening', 'speaking'] as Skill[]) : []), ...(g.read ? (['reading', 'writing'] as Skill[]) : [])];
+/** Une piste du curriculum sert-elle ces objectifs ? */
+export const trackAllowed = (t: Track, g: Goals) => (!g.speak && !g.read ? true : t === 'script' || t === 'tones' ? g.read : g.speak);
+
 export type Track = 'script' | 'talk' | 'tones' | 'numbers';
 
 export interface TheoryBlock {

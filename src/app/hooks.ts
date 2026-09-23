@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { useStore } from './store';
 import { curriculum } from '@/content/packs';
 import { computePath, grantedLessons, knownConcepts, nextLesson, type PathLesson, type SkillLevels } from '@/curriculum/path';
+import { ALL_GOALS, type Goals } from '@/curriculum/types';
 import { ITEMS, CONS_ITEMS, TAUGHT_VOWELS, MAIN_WORDS, TONE_ITEMS, NUM_ITEMS, CLF_ITEMS, type LearnItem } from '@/content/th';
 import { isDue, mastery, type SrsState } from '@/engine/srs';
 import { scriptUnits } from '@/engine/thai/script';
@@ -20,10 +21,15 @@ export function useCompleted(): Set<string> {
   return useMemo(() => new Set(Object.keys(lessons).filter((id) => lessons[id].done)), [lessons]);
 }
 
+export function useGoals(): Goals {
+  return useStore((s) => s.profile?.goals) ?? ALL_GOALS;
+}
+
 export function usePath(): PathLesson[] {
   const levels = useLevels();
   const completed = useCompleted();
-  return useMemo(() => computePath({ curriculum: curriculum(), levels, completed }), [levels, completed]);
+  const goals = useGoals();
+  return useMemo(() => computePath({ curriculum: curriculum(), levels, completed, goals }), [levels, completed, goals]);
 }
 
 export function useNextLesson(): PathLesson | null {

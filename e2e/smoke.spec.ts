@@ -4,13 +4,21 @@
  */
 import { test, expect, type Page } from '@playwright/test';
 
-async function onboard(page: Page, levels: number[] = [0, 0, 0, 0]) {
+async function onboard(page: Page, levels: number[] = [0, 0, 0, 0], goal: 'both' | 'speak' | 'read' = 'both') {
   await page.goto('/#/onboarding');
   await page.getByPlaceholder('Prénom').fill('Lucien');
   await page.getByRole('button', { name: /Un homme/ }).click();
   await page.getByRole('button', { name: /Continuer/ }).click();
+  // objectif
+  await expect(page.getByText('Votre objectif')).toBeVisible();
+  await page.getByRole('radio', { name: goal === 'both' ? /Parler, lire et écrire/ : goal === 'speak' ? /Parler et comprendre/ : /^Lire et écrire/ }).click();
+  await page.getByRole('button', { name: /^Continuer$/ }).click();
+  // niveaux : seulement les compétences concernées par l'objectif
   const groups = page.getByRole('radiogroup');
-  for (let i = 0; i < 4; i++) await groups.nth(i).getByRole('radio').nth(levels[i]).click();
+  const n = goal === 'both' ? 4 : 2;
+  await expect(groups).toHaveCount(n);
+  const wanted = goal === 'both' ? levels : goal === 'speak' ? levels.slice(0, 2) : levels.slice(2);
+  for (let i = 0; i < n; i++) await groups.nth(i).getByRole('radio').nth(wanted[i]).click();
   await page.getByRole('button', { name: /^Continuer$/ }).click();
   await page.getByRole('button', { name: /Construire mon parcours/ }).click();
   await expect(page).toHaveURL(/#\/$/);
@@ -147,4 +155,66 @@ test('lecteur confirmé : l’écriture est acquise, on commence par parler', as
   await onboard(page, [0, 0, 4, 4]);
   await expect(page.locator('a.cta .k')).toContainText('Prochaine leçon');
   await expect(page.locator('a.cta .t')).toContainText('Salutations');
+});
+
+test('objectif « parler » : aucune leçon d’écriture dans le parcours, phonétique toujours affichée', async ({ page }) => {
+  await onboard(page, [0, 0, 0, 0], 'speak');
+  await expect(page.locator('a.cta .t')).toContainText('Salutations');
+  await page.getByRole('link', { name: /Mon parcours/ }).click();
+  await expect(page.locator('.lrow').first()).toBeVisible();
+  await expect(page.getByText(/consonnes et la voyelle/)).toHaveCount(0);
+  await page.goto('/#/profile/settings');
+  await expect(page.locator('.seg button.on', { hasText: 'Toujours' })).toBeVisible();
+  // l'objectif se change dans Profil
+  await page.goto('/#/profile/levels');
+  await page.getByRole('radio', { name: /Parler, lire et écrire/ }).click();
+  await expect(page.getByRole('radiogroup')).toHaveCount(5);
+  await page.getByRole('button', { name: /Recalculer mon parcours/ }).click();
+  await page.getByRole('link', { name: /Mon parcours/ }).click();
+  await expect(page.getByText(/consonnes et la voyelle/).first()).toBeVisible();
+});
+
+test('duel sur un écran : deux moitiés, le point va au premier qui touche juste', async ({ page }) => {
+  await onboard(page);
+  await page.goto('/#/play/duel');
+  await expect(page.getByText(/Deux personnes, un appareil/)).toBeVisible();
+  await page.getByRole('button', { name: /Lancer le duel/ }).click();
+  await expect(page.locator('.duel .half')).toHaveCount(2);
+  const score0 = page.locator('.half.p0 .score-pill');
+  await expect(score0).toHaveText('0');
+  await page.locator('.half.p0 .choice[data-ok="1"]').dispatchEvent('pointerdown');
+  await expect(score0).toHaveText('1');
+  await expect(page.locator('.half.p0')).toHaveClass(/won/);
+  // manche suivante après la pause
+  await expect(page.locator('.duel .mid')).toContainText('2 /', { timeout: 4000 });
+  // une erreur bloque le joueur pour la manche, l'autre peut encore marquer
+  await page.locator('.half.p0 .choice[data-ok="0"]').first().dispatchEvent('pointerdown');
+  await page.locator('.half.p1 .choice[data-ok="1"]').dispatchEvent('pointerdown');
+  await expect(page.locator('.half.p1 .score-pill')).toHaveText('1');
+});
+
+test('défi à distance : le lien rejoue exactement la même série', async ({ page }) => {
+  await onboard(page);
+  await page.goto('/#/play/defi/new');
+  await page.getByRole('button', { name: /Je joue ma série/ }).click();
+  for (let k = 0; k < 40; k++) {
+    if (await page.getByText('Défi prêt').isVisible().catch(() => false)) break;
+    const cont = page.getByRole('button', { name: /^Continuer$/ });
+    if (await cont.isVisible().catch(() => false)) { await cont.click(); continue; }
+    const ch = page.locator('.choices:not(.lock) .choice');
+    if (await ch.count()) { await ch.first().click(); continue; }
+    await page.waitForTimeout(100);
+  }
+  await expect(page.getByText('Défi prêt')).toBeVisible();
+  const code = ((await page.locator('details code').textContent()) ?? '').trim();
+  expect(code.startsWith('1')).toBe(true);
+  // le défi apparaît dans « Mes défis », en attente
+  await page.goto('/#/play/defi');
+  await expect(page.getByText(/en attente de réponse/)).toBeVisible();
+  // ouvrir le lien comme le ferait l'autre personne
+  await page.goto(`/#/play/defi/${encodeURIComponent(code)}`);
+  await expect(page.getByText(/C’est votre propre défi/)).toBeVisible();
+  await page.getByRole('button', { name: /Relever le défi/ }).click();
+  await expect(page.locator('.stage')).toBeVisible();
+  await expect(page.locator('.choices .choice')).toHaveCount(4);
 });

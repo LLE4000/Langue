@@ -1,25 +1,27 @@
 /**
- * Premier démarrage : couple de langues, prénom, particules de politesse, niveau par compétence
- * (avec un petit test de lecture facultatif), objectif quotidien.
+ * Premier démarrage : couple de langues, prénom, particules de politesse, OBJECTIF (parler / lire et écrire /
+ * les deux), niveau par compétence concernée (avec un petit test de lecture facultatif), objectif quotidien.
+ * Si d'autres personnes utilisent déjà l'appareil, on peut reprendre leur profil.
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '@/app/store';
 import { PACKS } from '@/content/packs';
+import { readRegistry, reloadToHome, switchProfile } from '@/app/profiles';
 import { T } from '@/i18n';
-import { SKILLS, type Level, type Skill } from '@/curriculum/types';
+import { SKILLS, goalSkills, type Goals, type Level, type Skill } from '@/curriculum/types';
 import type { SkillLevels } from '@/curriculum/path';
 import { Icon, Thai } from '@/components/ui';
 import { PlacementTest } from './PlacementTest';
 
 const LEVEL_KEYS: Record<Skill, 'listening' | 'speaking' | 'reading' | 'writing'> = { listening: 'listening', speaking: 'speaking', reading: 'reading', writing: 'writing' };
 
-export function LevelPicker({ levels, onChange }: { levels: SkillLevels; onChange: (l: SkillLevels) => void }) {
+export function LevelPicker({ levels, onChange, skills = SKILLS }: { levels: SkillLevels; onChange: (l: SkillLevels) => void; skills?: Skill[] }) {
   const t = T();
   const [placement, setPlacement] = useState(false);
   return (
     <>
-      {SKILLS.map((sk) => (
+      {skills.map((sk) => (
         <div className="skillcard" key={sk}>
           <h3>{t.skills[sk]}<small>{t.levels.generic[levels[sk]]}</small></h3>
           <p>{t.levels[LEVEL_KEYS[sk]][levels[sk]]}</p>
@@ -36,22 +38,53 @@ export function LevelPicker({ levels, onChange }: { levels: SkillLevels; onChang
   );
 }
 
+export const GOAL_OPTIONS: { key: 'speak' | 'read' | 'both'; icon: string; title: string; desc: string; goals: Goals }[] = [
+  { key: 'both', icon: '🎯', title: 'Parler, lire et écrire', desc: 'Le parcours complet : conversation et écriture s’entrelacent. Recommandé.', goals: { speak: true, read: true } },
+  { key: 'speak', icon: '💬', title: 'Parler et comprendre', desc: 'Uniquement l’oral : mots, phrases, conversations, avec la phonétique. Pas de leçon d’écriture (elle reste consultable dans Explorer).', goals: { speak: true, read: false } },
+  { key: 'read', icon: '📖', title: 'Lire et écrire', desc: 'Pour qui parle déjà : l’alphabet, les tons, la lecture de mots et de textes.', goals: { speak: false, read: true } },
+];
+export const goalKey = (g: Goals) => (g.speak && g.read ? 'both' : g.speak ? 'speak' : 'read');
+
+export function GoalPicker({ value, onChange }: { value: Goals; onChange: (g: Goals) => void }) {
+  const cur = goalKey(value);
+  return (
+    <div className="stack" role="radiogroup" aria-label="Objectif">
+      {GOAL_OPTIONS.map((o) => (
+        <button key={o.key} role="radio" aria-checked={cur === o.key} className={`opt ${cur === o.key ? 'on' : ''}`} style={{ marginTop: 0, alignItems: 'flex-start', padding: '14px' }} onClick={() => onChange(o.goals)}>
+          <span className="e">{o.icon}</span>
+          <span><span style={{ display: 'block', fontSize: 16 }}>{o.title}</span><small>{o.desc}</small></span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function Onboarding() {
   const t = T();
   const nav = useNavigate();
   const setProfile = useStore((s) => s.setProfile);
+  const updateSettings = useStore((s) => s.updateSettings);
   const [step, setStep] = useState(0);
   const [pack, setPack] = useState(PACKS[0].id);
   const [name, setName] = useState('');
   const [gender, setGender] = useState<'m' | 'f' | ''>('');
+  const [goals, setGoals] = useState<Goals>({ speak: true, read: true });
   const [levels, setLevels] = useState<SkillLevels>({ listening: 0, speaking: 0, reading: 0, writing: 0 });
   const [goal, setGoal] = useState(15);
+  const reg = readRegistry();
+  const others = reg.list.filter((p) => p.name && p.id !== reg.active);
 
   const finish = () => {
     const p = PACKS.find((x) => x.id === pack)!;
-    setProfile({ name: name.trim(), gender: gender || 'm', source: p.source, target: p.target, levels, createdAt: Date.now(), dailyGoalMinutes: goal });
+    const skills = goalSkills(goals);
+    const lv: SkillLevels = { ...levels };
+    SKILLS.forEach((sk) => { if (!skills.includes(sk)) lv[sk] = 0; });
+    setProfile({ name: name.trim(), gender: gender || 'm', source: p.source, target: p.target, levels: lv, createdAt: Date.now(), dailyGoalMinutes: goal, goals });
+    if (!goals.read) updateSettings({ translit: 'always' });
     nav('/', { replace: true });
   };
+  const steps = 4;
+  const Dots = () => <div className="steps" style={{ margin: '0 0 18px', maxWidth: 160 }} aria-hidden="true">{Array.from({ length: steps }, (_, k) => <i key={k} className={k < step ? 'done' : k === step ? 'cur' : ''} />)}</div>;
 
   return (
     <div className="app">
@@ -61,6 +94,12 @@ export function Onboarding() {
             <div className="logo" lang="th">ภาษาไทย</div>
             <h2>{t.app.tagline}</h2>
             <p className="lead">{t.onboarding.intro}</p>
+            {others.length > 0 && (
+              <div className="note plain sm" style={{ marginTop: 0 }}>
+                <b>Déjà un profil sur cet appareil ?</b>
+                <div className="chips" style={{ paddingBottom: 0, marginTop: 6 }}>{others.map((p) => <button key={p.id} className="chip" onClick={() => { switchProfile(p.id); reloadToHome(); }}>{p.name}</button>)}</div>
+              </div>
+            )}
             <label className="f">{t.onboarding.pair}</label>
             {PACKS.map((p) => (
               <button key={p.id} className={`opt ${pack === p.id ? 'on' : ''}`} onClick={() => setPack(p.id)}><span className="e">{p.flag}</span><span>{p.label.fr}<small>Interface en français</small></span></button>
@@ -78,10 +117,11 @@ export function Onboarding() {
         )}
         {step === 1 && (
           <>
-            <h2 style={{ fontSize: 24 }}>{t.onboarding.levelsTitle}</h2>
-            <p className="lead">{t.onboarding.levelsIntro}</p>
-            <LevelPicker levels={levels} onChange={setLevels} />
-            <div className="gap" />
+            <Dots />
+            <h2 style={{ fontSize: 30 }}>Votre objectif</h2>
+            <p className="lead">Le thaï se parle et s’écrit très différemment. On peut très bien apprendre à parler sans lire une seule lettre, ou apprendre à lire quand on parle déjà. Vous pourrez changer d’avis plus tard.</p>
+            <GoalPicker value={goals} onChange={setGoals} />
+            <div className="sp gap" />
             <div className="btns" style={{ marginTop: 12 }}>
               <button className="btn ghost" onClick={() => setStep(0)}>{t.common.back}</button>
               <button className="btn" onClick={() => setStep(2)}>{t.common.continue}</button>
@@ -90,17 +130,31 @@ export function Onboarding() {
         )}
         {step === 2 && (
           <>
-            <h2 style={{ fontSize: 24 }}>{t.onboarding.dailyGoal}</h2>
+            <Dots />
+            <h2 style={{ fontSize: 30 }}>{t.onboarding.levelsTitle}</h2>
+            <p className="lead">{goals.read && goals.speak ? t.onboarding.levelsIntro : goals.speak ? 'Où en êtes-vous à l’oral ? Soyez précis : le parcours saute ce que vous savez déjà.' : 'Où en êtes-vous en lecture ? Le petit test peut vous aider à vous situer.'}</p>
+            <LevelPicker levels={levels} onChange={setLevels} skills={goalSkills(goals)} />
+            <div className="gap" />
+            <div className="btns" style={{ marginTop: 12 }}>
+              <button className="btn ghost" onClick={() => setStep(1)}>{t.common.back}</button>
+              <button className="btn" onClick={() => setStep(3)}>{t.common.continue}</button>
+            </div>
+          </>
+        )}
+        {step === 3 && (
+          <>
+            <Dots />
+            <h2 style={{ fontSize: 30 }}>{t.onboarding.dailyGoal}</h2>
             <p className="lead">Une leçon dure 5 à 15 minutes. Vous pourrez toujours en faire plus : rien ne bloque la suivante.</p>
             <div className="seg">
               {[5, 10, 15, 30].map((g) => <button key={g} className={goal === g ? 'on' : ''} onClick={() => setGoal(g)}>{g} min</button>)}
             </div>
             <div className="note info" style={{ marginTop: 18 }}>
-              <b>Ce que l’application fait de vos réponses.</b> Elle construit un parcours à partir de vos niveaux : ce que vous savez déjà est considéré acquis, ce qui manque vient dans l’ordre logique (on ne vous demandera jamais de lire une lettre qui n’a pas été enseignée). Vous pourrez ajuster vos niveaux à tout moment dans Profil.
+              <b>Ce que l’application fait de vos réponses.</b> Elle construit un parcours à partir de votre objectif et de vos niveaux : ce que vous savez déjà est considéré acquis, ce qui manque vient dans l’ordre logique (on ne vous demandera jamais de lire une lettre qui n’a pas été enseignée). Tout est modifiable dans Profil.
             </div>
             <div className="sp gap" />
             <div className="btns">
-              <button className="btn ghost" onClick={() => setStep(1)}>{t.common.back}</button>
+              <button className="btn ghost" onClick={() => setStep(2)}>{t.common.back}</button>
               <button className="btn" onClick={finish}>{t.onboarding.done}</button>
             </div>
           </>

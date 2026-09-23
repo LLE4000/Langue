@@ -1,15 +1,15 @@
-/** Réviser : répétition espacée en tête, puis les huit modes d'entraînement. */
+/** Réviser : répétition espacée en tête, jeux à plusieurs, puis les modes d'entraînement. */
 import { Link } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
-import { useDueItems, useLearnedItems } from '@/app/hooks';
+import { useDueItems, useLearnedItems, useGoals } from '@/app/hooks';
 import { useStore } from '@/app/store';
 import { T } from '@/i18n';
 import { Icon } from '@/components/ui';
 import type { TrainingMode } from './training';
 
-const MODES: { id: TrainingMode; icon: string }[] = [
-  { id: 'flashcards', icon: '🗂️' }, { id: 'listening', icon: '🎧' }, { id: 'speed', icon: '⏱️' }, { id: 'match', icon: '🔗' },
-  { id: 'dictation', icon: '✏️' }, { id: 'tones', icon: '🎵' }, { id: 'quiz', icon: '🎲' }, { id: 'timed', icon: '⚡' },
+const MODES: { id: TrainingMode; icon: string; needsReading?: boolean }[] = [
+  { id: 'flashcards', icon: '🗂️' }, { id: 'listening', icon: '🎧' }, { id: 'speed', icon: '⏱️', needsReading: true }, { id: 'match', icon: '🔗' },
+  { id: 'dictation', icon: '✏️', needsReading: true }, { id: 'tones', icon: '🎵', needsReading: true }, { id: 'quiz', icon: '🎲' }, { id: 'timed', icon: '⚡' },
 ];
 
 export function Review() {
@@ -17,9 +17,12 @@ export function Review() {
   usePage(t.review.title);
   const due = useDueItems();
   const learned = useLearnedItems();
+  const goals = useGoals();
   const errors = useStore((s) => s.errors);
+  const pending = useStore((s) => s.challenges.filter((c) => c.dir === 'sent' && !c.theirs).length);
   const weak = Object.keys(errors).length;
   const nothingLearned = learned.length < 4;
+  const modes = MODES.filter((m) => goals.read || !m.needsReading);
   return (
     <>
       <Link className="cta" to={due.length ? '/train/review' : '/train/quiz'} aria-disabled={nothingLearned} onClick={(e) => { if (nothingLearned) e.preventDefault(); }}>
@@ -28,10 +31,18 @@ export function Review() {
         {!nothingLearned && <span className="go">{due.length ? t.review.startReview : 'Quiz'}</span>}
       </Link>
       {weak > 0 && <div className="list" style={{ marginTop: 12 }}><Link className="row" to="/train/weak"><span className="ico">🎯</span><span className="mid"><span className="t">{t.review.weak}</span><span className="s">{weak} élément{weak > 1 ? 's' : ''} souvent raté{weak > 1 ? 's' : ''} · à retravailler en priorité</span></span><span className="end"><span className="chev">›</span></span></Link></div>}
+
+      <div className="h2">À plusieurs <span className="sp" /><Link to="/play">Tout voir ›</Link></div>
+      <div className="tiles">
+        <Link to="/play/duel" className="tile gold"><span className="e">⚔️</span><span className="t">Duel sur un écran</span><span className="s">Deux joueurs, un appareil, le plus rapide marque</span></Link>
+        <Link to="/play/turns" className="tile"><span className="e">🔁</span><span className="t">Tour à tour</span><span className="s">2 à 6 joueurs, même série, chrono</span></Link>
+        <Link to="/play/defi" className="tile wide indigo"><span className="e">📨</span><span><span className="t">Défi à distance</span><span className="s" style={{ display: 'block' }}>Envoyez une série par lien, recevez le score en retour{pending ? ` · ${pending} en attente` : ''}</span></span></Link>
+      </div>
+
       <div className="h2">{t.review.train}</div>
       <p className="lead" style={{ marginTop: -4 }}>{t.review.onlyLearned}</p>
       <div className="tiles">
-        {MODES.map((m, i) => (
+        {modes.map((m, i) => (
           <Link key={m.id} to={`/train/${m.id}`} className={`tile ${['', 'gold', 'red', 'indigo', 'plum', 'orange'][i % 6]}`}>
             <span className="e">{m.icon}</span><span className="t">{t.review.modes[m.id as keyof typeof t.review.modes]}</span><span className="s">{t.review.modesDesc[m.id as keyof typeof t.review.modesDesc]}</span>
           </Link>

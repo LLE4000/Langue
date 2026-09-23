@@ -4,7 +4,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
 import { useStore, streakDays, levelFromXp } from '@/app/store';
-import { useDueItems, useMetrics, useNextLesson, usePath, useLearnedItems } from '@/app/hooks';
+import { useDueItems, useMetrics, useNextLesson, usePath, useLearnedItems, useGoals } from '@/app/hooks';
 import { curriculum } from '@/content/packs';
 import { T, L } from '@/i18n';
 import { Bar, Icon, Thai, VoiceStatusNote } from '@/components/ui';
@@ -36,6 +36,8 @@ export function Home() {
   const recent = learned.slice().sort((a, b) => (useStore.getState().srs[b.id]?.first ?? 0) - (useStore.getState().srs[a.id]?.first ?? 0)).slice(0, 8);
   // Une séance arrêtée sur le bilan est terminée : on propose la leçon suivante, pas une « reprise ».
   const resumable = session && !session.training && session.steps[session.index]?.type !== 'recap' ? session : null;
+  const goals = useGoals();
+  const pendingChallenges = useStore((s) => s.challenges.filter((c) => c.dir === 'sent' && !c.theirs).length);
   const goalMin = profile.dailyGoalMinutes || 15;
 
   return (
@@ -72,10 +74,15 @@ export function Home() {
 
       <div className="h2">Où j’en suis <span className="sp" /><Link to="/path">{t.home.path} ›</Link></div>
       <div className="prog">
-        <Link to="/explore/alphabet"><div className="k"><span>Lettres</span><b>{m.letters.known} / {m.letters.total}</b></div><Bar p={m.letters.progress} thin /></Link>
-        <Link to="/explore/vowels"><div className="k"><span>Voyelles</span><b>{m.vowels.known} / {m.vowels.total}</b></div><Bar p={m.vowels.progress} thin /></Link>
+        {goals.read && <Link to="/explore/alphabet"><div className="k"><span>Lettres</span><b>{m.letters.known} / {m.letters.total}</b></div><Bar p={m.letters.progress} thin /></Link>}
+        {goals.read && <Link to="/explore/vowels"><div className="k"><span>Voyelles</span><b>{m.vowels.known} / {m.vowels.total}</b></div><Bar p={m.vowels.progress} thin /></Link>}
         <Link to="/explore/vocab"><div className="k"><span>Mots</span><b>{m.words.known}</b></div><Bar p={Math.min(1, m.words.known / 300)} thin /></Link>
-        <Link to="/explore/tones"><div className="k"><span>Tons</span><b>{Math.round(m.tones.progress * 100)} %</b></div><Bar p={m.tones.progress} thin /></Link>
+        {goals.read ? <Link to="/explore/tones"><div className="k"><span>Tons</span><b>{Math.round(m.tones.progress * 100)} %</b></div><Bar p={m.tones.progress} thin /></Link>
+          : <Link to="/explore/dialogs"><div className="k"><span>Leçons</span><b>{doneCount}</b></div><Bar p={doneCount / Math.max(1, path.filter((p) => p.status !== 'granted').length)} thin /></Link>}
+      </div>
+
+      <div className="list" style={{ marginTop: 14 }}>
+        <Link className="row" to="/play"><span className="ico" style={{ background: 'var(--acc-soft)' }}>⚔️</span><span className="mid"><span className="t">Jouer à plusieurs</span><span className="s">Duel sur un écran, tour à tour, défi à distance{pendingChallenges ? ` · ${pendingChallenges} défi${pendingChallenges > 1 ? 's' : ''} en attente` : ''}</span></span><span className="end"><span className="chev">›</span></span></Link>
       </div>
 
       {recent.length > 0 && (

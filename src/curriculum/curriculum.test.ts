@@ -98,6 +98,17 @@ describe('parcours personnalisé', () => {
     expect(path.filter((p) => p.lesson.track === 'script' && p.status !== 'granted').length).toBeLessThanOrEqual(1);
     expect(nextLesson(path)?.lesson.track).toBe('talk');
   });
+  it('objectif « parler » : aucune leçon d’écriture ; objectif « lire » : aucune leçon de conversation', () => {
+    const levels = { listening: 0, speaking: 0, reading: 0, writing: 0 } as const;
+    const speak = computePath({ curriculum: cur, levels, completed: new Set(), goals: { speak: true, read: false } });
+    expect(speak.some((p) => p.lesson.track === 'script')).toBe(false);
+    expect(nextLesson(speak)?.lesson.track).toBe('talk');
+    const read = computePath({ curriculum: cur, levels: { listening: 3, speaking: 3, reading: 0, writing: 0 }, completed: new Set(), goals: { speak: false, read: true } });
+    expect(read.every((p) => p.lesson.track === 'script' || p.lesson.track === 'tones')).toBe(true);
+    expect(nextLesson(read)?.lesson.id).toBe('read-01');
+    const both = computePath({ curriculum: cur, levels, completed: new Set(), goals: { speak: true, read: true } });
+    expect(both.length).toBe(cur.lessons.length);
+  });
   it('déblocage : terminer une leçon rend la suivante disponible', () => {
     const levels = { listening: 0, speaking: 0, reading: 0, writing: 0 } as const;
     const p1 = computePath({ curriculum: cur, levels, completed: new Set() });

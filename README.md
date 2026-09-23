@@ -16,7 +16,8 @@ Application web progressive (PWA) d’apprentissage des langues, **guidée par u
 4. [Architecture](#architecture)
 5. [Le contenu](#le-contenu)
 6. [Le curriculum et le parcours](#le-curriculum-et-le-parcours)
-7. [Le moteur pédagogique](#le-moteur-pédagogique)
+7. [Objectifs, profils, jouer à plusieurs](#objectifs-profils-jouer-à-plusieurs)
+8. [Le moteur pédagogique](#le-moteur-pédagogique)
 8. [Système de transcription](#système-de-transcription)
 9. [Guides : ajouter une leçon, une langue, une traduction, un type d’exercice](#guides)
 10. [Tests](#tests)
@@ -134,6 +135,18 @@ Le **moteur de parcours** (`curriculum/path.ts`) :
 
 Changer ses niveaux (Profil › Mes niveaux) recalcule le parcours sans effacer la maîtrise acquise.
 
+## Objectifs, profils, jouer à plusieurs
+
+**Objectif** (choisi à l’onboarding, modifiable dans Profil › Objectif et niveaux) : *Parler, lire et écrire* (parcours complet), *Parler et comprendre* (aucune leçon d’écriture dans le parcours, phonétique toujours affichée, entraînements de lecture masqués ; Explorer reste complet) ou *Lire et écrire* (pour qui parle déjà : alphabet, tons, lecture). Le moteur de parcours filtre les pistes (`trackAllowed`, `curriculum/types.ts`) ; seuls les niveaux des compétences concernées sont demandés.
+
+**Plusieurs personnes sur un appareil** (Profil › Personnes sur cet appareil) : un registre `localStorage` (`app/profiles.ts`) indique le profil actif, chaque profil a sa base IndexedDB (`langue-v1`, puis `langue-v1:<id>`). Changer de profil recharge l’application ; l’écran de bienvenue propose les profils existants.
+
+**Jouer à plusieurs** (`features/play/`, entrée depuis Réviser et l’accueil) — sans compte, sans serveur, sans classement permanent (on se mesure à quelqu’un qu’on connaît, pas à un tableau mondial) :
+- **Duel sur un écran** : deux joueurs, un appareil posé entre eux, la moitié haute retournée (ou côte à côte) ; même question des deux côtés, le premier qui touche la bonne réponse marque, une erreur bloque pour la manche.
+- **Tour à tour** : 2 à 6 joueurs, on se passe l’appareil, même série chronométrée, résultats à la fin.
+- **Défi à distance** : je joue une série, j’envoie un **lien** (partage natif ou copie) ; l’autre l’ouvre dans son application, joue exactement la même série, voit la comparaison et me renvoie un lien-résultat d’un geste. Le défi tient dans l’URL (`quiz.ts` : numéros stables des éléments + signature du contenu + résultats), l’historique est dans « Mes défis ».
+- Les mots du jeu : ce que le joueur a appris, un thème au choix, ou les nombres — un débutant peut donc défier quelqu’un d’avancé sur un thème qu’il vient de voir.
+
 ## Le moteur pédagogique
 
 - **Leçon** (`features/lesson/engine.ts`) : les activités déclaratives d’une leçon (`theory`, `flashcard`, `listen`, `read`, `multipleChoice`, `dictation`, `spell`, `syllables`, `toneExercise`, `match`, `build`, `dialog`, `reading`, `repeat`, `review`, `recap`) sont transformées en **étapes sérialisables** avec des questions tirées au sort et des distracteurs cohérents (uniquement des éléments connus). La séance est persistée : après un rechargement, on reprend à la même étape. Une mauvaise réponse revient plus loin dans la série (au plus deux fois). Score ≥ 60 % (paramètre `minScore`) = leçon validée.
@@ -205,8 +218,8 @@ Une leçon est un objet `LessonDef` (`src/curriculum/types.ts`) : identifiant, p
 
 ## Tests
 
-- **Unitaires** (`npm test`, 45 tests) : transcription → API/RTGS, règle de ton (cohérence des 124 mots analysés), composition des nombres, SRS/maîtrise, jetons, reconnaissance vocale, **prérequis de lecture** (`reading.test.ts`), curriculum (identifiants, prérequis, cycles, éléments référencés, **jamais un signe non enseigné**, placement de toutes les lectures), parcours personnalisé (débutant, locuteur non lecteur, lecteur non locuteur, déblocage), moteur de leçon (planification, distracteurs de la première leçon), **intégrité du contenu** (`content.test.ts`).
-- **Bout en bout** (`npm run test:e2e`, Playwright sur Pixel 7, iPad Mini et PC) : onboarding → première leçon complète → validation → leçon suivante → rechargement → parcours → révision → exploration → export ; reprise d’une leçon après rechargement ; personnalisation du parcours.
+- **Unitaires** (`npm test`, 52 tests) : parcours selon l’objectif, registre des profils, questions et codage des défis, ainsi que transcription → API/RTGS, règle de ton (cohérence des 124 mots analysés), composition des nombres, SRS/maîtrise, jetons, reconnaissance vocale, **prérequis de lecture** (`reading.test.ts`), curriculum (identifiants, prérequis, cycles, éléments référencés, **jamais un signe non enseigné**, placement de toutes les lectures), parcours personnalisé (débutant, locuteur non lecteur, lecteur non locuteur, déblocage), moteur de leçon (planification, distracteurs de la première leçon), **intégrité du contenu** (`content.test.ts`).
+- **Bout en bout** (`npm run test:e2e`, Playwright sur Pixel 7, iPad Mini et PC) : onboarding → première leçon complète → validation → leçon suivante → rechargement → parcours → révision → exploration → export ; reprise d’une leçon après rechargement ; personnalisation du parcours ; objectif « parler » ; duel sur un écran ; défi à distance (création, code, réouverture).
 - Dans l’environnement de développement distant, Chromium est fourni : `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium npm run test:e2e`.
 - **Contrôle visuel** : `node scripts/shots.mjs <dossier>` (après `npm run preview`) prend une vingtaine de captures ; variables `DEVICE=phone|tablet|desktop`, `THEME=light|dark`, `LEVELS=0,0,0,0`.
 

@@ -64,7 +64,7 @@ function SpellInput({ q, onAnswer, done }: { q: Question; onAnswer: (ok: boolean
   );
 }
 
-export function QuestionsStep({ step, onDone, timed }: { step: RuntimeStep & { type: 'questions' }; onDone: (r: StepResult) => void; timed?: boolean }) {
+export function QuestionsStep({ step, onDone, timed, noRetry }: { step: RuntimeStep & { type: 'questions' }; onDone: (r: StepResult) => void; timed?: boolean; noRetry?: boolean }) {
   const t = T();
   const sp = useSpeaker();
   const answer = useStore((s) => s.answer);
@@ -109,7 +109,7 @@ export function QuestionsStep({ step, onDone, timed }: { step: RuntimeStep & { t
   if (!q) return null;
 
   const baseId = q.id.replace(/-r\d+$/, '');
-  const canRetry = ok === false && (retries.current[baseId] ?? 0) < 2;
+  const canRetry = !noRetry && ok === false && (retries.current[baseId] ?? 0) < 2;
   const next = () => {
     let nq = queue;
     if (canRetry) {

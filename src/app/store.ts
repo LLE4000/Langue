@@ -8,13 +8,16 @@ import { persist, createJSONStorage, type StateStorage } from 'zustand/middlewar
 import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
 import type { SourceLang, TargetLang } from '@/content/types';
 import type { SkillLevels } from '@/curriculum/path';
+import type { Goals } from '@/curriculum/types';
+import { activeProfileId, storageKeyFor, syncActiveName } from './profiles';
 import { rate as srsRate, qualityFromAnswer, type SrsState, type Quality } from '@/engine/srs';
 import type { Gender } from '@/engine/tokens';
 import { todayKey } from '@/engine/util';
 import type { RuntimeStep } from '@/features/lesson/engine';
 
 export const STORE_VERSION = 1;
-export const STORE_KEY = 'langue-v1';
+/** Clé de stockage du profil actif (voir profiles.ts). */
+export const STORE_KEY = storageKeyFor(activeProfileId());
 
 export interface Profile {
   name: string;
@@ -24,6 +27,19 @@ export interface Profile {
   levels: SkillLevels;
   createdAt: number;
   dailyGoalMinutes: number;
+  /** objectifs (absent chez les anciens profils = les deux) */
+  goals?: Goals;
+}
+
+/** Un défi à distance envoyé ou reçu (voir features/play). */
+export interface ChallengeRecord {
+  id: string; // partie « questions » du code : identifie le défi des deux côtés
+  code: string; // dernier code connu (avec les résultats)
+  dir: 'sent' | 'received';
+  from: string; // prénom de l'auteur du défi
+  createdAt: number;
+  mine?: { score: number; total: number; secs: number };
+  theirs?: { name: string; score: number; total: number; secs: number };
 }
 
 export type TranslitMode = 'always' | 'learning' | 'hidden';
@@ -75,6 +91,7 @@ export interface PersistedState {
   history: { t: number; kind: string; label: string; score?: number; total?: number }[];
   session: LessonSession | null;
   lastVisit: number;
+  challenges: ChallengeRecord[];
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -83,7 +100,7 @@ export const DEFAULT_SETTINGS: Settings = {
 
 export const initialState = (): PersistedState => ({
   version: STORE_VERSION, profile: null, settings: { ...DEFAULT_SETTINGS }, srs: {}, lessons: {}, errors: {}, ruleStats: {}, seen: {}, days: {}, xp: 0,
-  badges: {}, favorites: {}, history: [], session: null, lastVisit: Date.now(),
+  badges: {}, favorites: {}, history: [], session: null, lastVisit: Date.now(), challenges: [],
 });
 
 const idbStorage: StateStorage = {
@@ -116,6 +133,9 @@ export interface Actions {
   importState(s: PersistedState): void;
   resetAll(): void;
   touch(): void;
+  /** Enregistre ou met à jour un défi (par identifiant). */
+  saveChallenge(c: ChallengeRecord): void;
+  removeChallenge(id: string): void;
 }
 
 export type Store = PersistedState & Actions;
@@ -124,9 +144,9 @@ export const useStore = create<Store>()(
   persist(
     (set, get) => ({
       ...initialState(),
-      setProfile: (profile) => set({ profile }),
+      setProfile: (profile) => { syncActiveName(profile.name); set({ profile }); },
       setLevels: (levels) => set((s) => (s.profile ? { profile: { ...s.profile, levels } } : {})),
-      updateProfile: (patch) => set((s) => (s.profile ? { profile: { ...s.profile, ...patch } } : {})),
+      updateProfile: (patch) => set((s) => { if (!s.profile) return {}; const profile = { ...s.profile, ...patch }; syncActiveName(profile.name); return { profile }; }),
       updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
       answer: (itemId, ok, seconds, ruleKey) => {
         const s = get();
@@ -170,9 +190,11 @@ export const useStore = create<Store>()(
       },
       logHistory: (kind, label, score, total) => set((s) => ({ history: [{ t: Date.now(), kind, label, score, total }, ...s.history].slice(0, 200) })),
       awardBadge: (id) => set((s) => (s.badges[id] ? {} : { badges: { ...s.badges, [id]: Date.now() } })),
-      importState: (incoming) => set({ ...initialState(), ...incoming, version: STORE_VERSION, session: null }),
-      resetAll: () => set({ ...initialState() }),
+      importState: (incoming) => { if (incoming.profile) syncActiveName(incoming.profile.name); set({ ...initialState(), ...incoming, version: STORE_VERSION, session: null, challenges: incoming.challenges ?? [] }); },
+      resetAll: () => { syncActiveName(''); set({ ...initialState() }); },
       touch: () => set({ lastVisit: Date.now() }),
+      saveChallenge: (c) => set((s) => ({ challenges: [c, ...s.challenges.filter((x) => x.id !== c.id)].slice(0, 50) })),
+      removeChallenge: (id) => set((s) => ({ challenges: s.challenges.filter((x) => x.id !== id) })),
     }),
     {
       name: STORE_KEY,
@@ -181,11 +203,11 @@ export const useStore = create<Store>()(
       // Les réglages ajoutés dans une nouvelle version prennent leur valeur par défaut chez les anciens utilisateurs.
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<PersistedState>;
-        return { ...current, ...p, settings: { ...DEFAULT_SETTINGS, ...(p.settings ?? {}) } };
+        return { ...current, ...p, settings: { ...DEFAULT_SETTINGS, ...(p.settings ?? {}) }, challenges: p.challenges ?? [] };
       },
       partialize: (s) => {
-        const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version } = s;
-        return { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version } as Store;
+        const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version, challenges } = s;
+        return { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version, challenges } as Store;
       },
     },
   ),
@@ -194,9 +216,12 @@ export const useStore = create<Store>()(
 /** Sélection sérialisable de l'état pour l'export. */
 export function exportState(): PersistedState {
   const s = useStore.getState();
-  const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, lastVisit } = s;
-  return { version: STORE_VERSION, profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session: null, lastVisit };
+  const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, lastVisit, challenges } = s;
+  return { version: STORE_VERSION, profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session: null, lastVisit, challenges };
 }
+
+/** Objectifs effectifs d'un profil (les anciens profils n'en ont pas : les deux). */
+export const goalsOf = (p: Profile | null | undefined): Goals => p?.goals ?? { speak: true, read: true };
 
 export function isValidExport(o: unknown): o is PersistedState {
   return !!o && typeof o === 'object' && 'srs' in o && 'settings' in o && 'lessons' in o;
