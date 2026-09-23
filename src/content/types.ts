@@ -123,6 +123,8 @@ export interface Dialog {
   title: Localized;
   icon: string;
   other: Localized; // rôle de l'interlocuteur
+  /** Genre de l'interlocuteur (voix) ; sinon déduit de ses particules de politesse puis du rôle. */
+  otherGender?: 'm' | 'f';
   lines: DialogLine[];
 }
 

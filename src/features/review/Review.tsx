@@ -37,6 +37,7 @@ export function Review() {
       <div className="tiles">
         <Link to="/play/duel" className="tile gold"><span className="e">⚔️</span><span className="t">Duel sur un écran</span><span className="s">Deux joueurs, un appareil, le plus rapide marque</span></Link>
         <Link to="/play/turns" className="tile"><span className="e">🔁</span><span className="t">Tour à tour</span><span className="s">2 à 6 joueurs, même série, chrono</span></Link>
+        {recognizer.supported && <Link to="/play/voice" className="tile wide red"><span className="e">🎙️</span><span><span className="t">Duel de prononciation</span><span className="s" style={{ display: 'block' }}>Les mêmes mots pour tous, chacun les dit à son tour : le plus clair gagne</span></span></Link>}
         <Link to="/play/defi" className="tile wide indigo"><span className="e">📨</span><span><span className="t">Défi à distance</span><span className="s" style={{ display: 'block' }}>Envoyez une série par lien, recevez le score en retour{pending ? ` · ${pending} en attente` : ''}</span></span></Link>
       </div>
 
@@ -49,6 +50,7 @@ export function Review() {
           </Link>
         ))}
       </div>
+      <div className="list" style={{ marginTop: 12 }}><Link className="row" to="/explore/listen"><span className="ico">🎧</span><span className="mid"><span className="t">Écoute en boucle, sans les mains</span><span className="s">Lettres, voyelles ou vos mots, normal puis lent, en continu · en voiture, en marchant</span></span><span className="end"><span className="chev">›</span></span></Link></div>
       <p className="xs mut ctr" style={{ marginTop: 16 }}>{learned.length} élément{learned.length > 1 ? 's' : ''} dans votre mémoire de révision.</p>
     </>
   );

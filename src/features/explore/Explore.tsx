@@ -16,6 +16,9 @@ export function Explore() {
   return (
     <>
       <p className="lead">Tout le contenu, librement. Le parcours reste le fil conducteur : ici, vous approfondissez.</p>
+      <div className="tiles" style={{ marginBottom: 4 }}>
+        <Link to="/explore/listen" className="tile wide jade-fill"><span className="e">🎧</span><span><span className="t">Écoute en boucle · mode voiture</span><span className="s" style={{ display: 'block' }}>Lettres, voyelles ou vos mots, l’un après l’autre, normal puis lent, sans toucher l’écran. Choisissez deux lettres proches pour entendre la différence.</span></span></Link>
+      </div>
       <div className="h2">L’écriture</div>
       <div className="tiles">
         <Tile to="/explore/alphabet" glyph="ก ข ค" thai title={t.explore.alphabet} sub="44 consonnes, 3 classes" p={m.letters.progress} />

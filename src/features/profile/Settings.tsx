@@ -3,9 +3,56 @@ import { useState } from 'react';
 import { usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { tts, useSpeaker, useVoices, recognizer, recorder } from '@/app/services/speech';
-import { WebSpeechProvider } from '@/engine/audio/tts';
+import { WebSpeechProvider, chooseVoice, type VoiceGender } from '@/engine/audio/tts';
+import { activePack } from '@/content/packs';
 import { T } from '@/i18n';
 import { Segmented, Thai, useToast } from '@/components/ui';
+
+/** Choix homme / femme de la voix, et attribution manuelle d'un genre aux voix inconnues. */
+function VoiceGenderSection() {
+  const settings = useStore((s) => s.settings);
+  const update = useStore((s) => s.updateSettings);
+  const profile = useStore((s) => s.profile)!;
+  const sp = useSpeaker();
+  const target = tts.targetVoices();
+  if (!target.length) return null;
+  const wanted: VoiceGender = settings.voiceGender === 'auto' ? profile.gender : settings.voiceGender;
+  const pick = chooseVoice(target, { voiceId: settings.voiceId, gender: wanted, voiceGenders: settings.voiceGenders, speechLang: activePack().speechLang });
+  const genderOf = (v: { id: string; name: string; gender?: VoiceGender }) => settings.voiceGenders?.[v.id] ?? v.gender;
+  const unknown = target.filter((v) => !genderOf(v));
+  const label = (g: VoiceGender) => (g === 'm' ? 'homme' : 'femme');
+  return (
+    <>
+      <label className="f">Je préfère entendre</label>
+      <Segmented value={settings.voiceGender ?? 'auto'} options={[{ v: 'auto' as const, label: `Comme moi (${label(profile.gender)})` }, { v: 'm' as const, label: 'Un homme' }, { v: 'f' as const, label: 'Une femme' }]} onChange={(v) => update({ voiceGender: v })} />
+      {pick.approx ? (
+        <>
+          <div className="note warn sm" style={{ marginTop: 10 }}>Aucune voix thaïe <b>{label(wanted)}</b> n’est installée sur cet appareil. {settings.voiceApprox !== false ? `La voix disponible est ${wanted === 'm' ? 'rendue plus grave' : 'rendue plus aiguë'} pour s’en approcher : c’est une approximation, pas une vraie voix ${label(wanted)}.` : 'La voix disponible est lue telle quelle.'}</div>
+          <label className="f">Approcher la voix voulue (plus grave / plus aiguë)</label>
+          <Segmented value={settings.voiceApprox !== false} options={[{ v: true, label: 'Oui' }, { v: false, label: 'Non, voix d’origine' }]} onChange={(v) => update({ voiceApprox: v })} />
+          <p className="xs mut" style={{ margin: '8px 2px 0' }}>Pour une vraie voix {label(wanted)} : sur PC, Microsoft Edge propose les voix thaïes « Niwat » (homme) et « Premwadee » (femme), très naturelles. Sur Android et iPhone, les voix thaïes fournies par Google et Apple sont pour l’instant féminines.</p>
+        </>
+      ) : (
+        <p className="sm mut" style={{ margin: '8px 2px 0' }}>Voix utilisée : <b>{pick.voice?.name}</b>{pick.gender ? ` (${label(pick.gender)})` : ''}. Dans les conversations, l’interlocuteur a une voix de l’autre genre quand c’est possible.</p>
+      )}
+      {unknown.length > 0 && (
+        <>
+          <label className="f">Cette voix est celle d’un homme ou d’une femme ? <span className="xs">(l’application ne le devine pas d’après son nom)</span></label>
+          <div className="stack">
+            {unknown.map((v) => (
+              <div key={v.id} className="row-flex">
+                <button className="ib sm" onClick={() => tts.speak('สวัสดีครับ ยินดีที่ได้รู้จัก', { voiceId: v.id, force: true })} aria-label={`Écouter ${v.name}`}>▶</button>
+                <span className="sm" style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.name}</span>
+                <div className="seg" style={{ width: 170 }}>{(['m', 'f'] as const).map((g) => <button key={g} className={settings.voiceGenders?.[v.id] === g ? 'on' : ''} onClick={() => update({ voiceGenders: { ...settings.voiceGenders, [v.id]: g } })}>{g === 'm' ? 'Homme' : 'Femme'}</button>)}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+      <div className="btns" style={{ marginTop: 10 }}><button className="btn soft sm" onClick={() => sp.speak('สวัสดี{P} ยินดีที่ได้รู้จัก')}>▶ Ma voix</button><button className="btn ghost sm" onClick={() => sp.speak('สวัสดี{P} ยินดีที่ได้รู้จัก', { speaker: wanted === 'm' ? 'f' : 'm' })}>▶ L’interlocuteur</button></div>
+    </>
+  );
+}
 
 export function Settings() {
   const t = T();
@@ -47,7 +94,8 @@ export function Settings() {
         <Segmented value={settings.forceTTS} options={[{ v: false, label: 'Non' }, { v: true, label: 'Oui, forcer th-TH' }]} onChange={(v) => update({ forceTTS: v })} />
       </>}
       {(status === 'unknown' || status === 'searching') && <p className="sm mut" style={{ margin: '0 2px 8px' }}>Pour installer la voix sur Android : Paramètres › Système › Langues et saisie › Synthèse vocale › ⚙ du moteur Google › Installer les données vocales › Thaï. Sur iPhone : Réglages › Accessibilité › Contenu énoncé › Voix › Thaï.</p>}
-      <div className="btns"><button className="btn soft sm" onClick={() => sp.speak(sample)}>▶ Tester la voix</button><button className="btn soft sm" onClick={() => sp.speak(sample, { slow: true })}>🐢 Lentement</button></div>
+      <VoiceGenderSection />
+      <div className="btns" style={{ marginTop: 10 }}><button className="btn soft sm" onClick={() => sp.speak(sample)}>▶ Tester la voix</button><button className="btn soft sm" onClick={() => sp.speak(sample, { slow: true })}>🐢 Lentement</button></div>
       <div className="btns" style={{ marginTop: 8 }}><button className="btn ghost sm" onClick={() => { tts.rescan(); toast('Détection des voix relancée.'); }}>🔄 Relancer la détection</button><button className="btn ghost sm" onClick={() => { const rep = tts instanceof WebSpeechProvider ? tts.report() : 'Synthèse vocale indisponible'; navigator.clipboard?.writeText(rep).then(() => toast('Liste des voix copiée.'), () => toast('Copie impossible.')); }}>Copier le diagnostic</button></div>
       <label className="f">Voix détectées · {voices.length}</label>
       <div className="vlist">{voices.length ? voices.slice().sort((a, b) => Number(b.isTarget) - Number(a.isTarget)).map((v) => <div key={v.id} className={`v ${v.isTarget ? 'is' : ''}`}><span>{v.isTarget ? '✓ ' : ''}{v.name}</span><code>{v.lang || '(vide)'}</code></div>) : <div className="v"><span className="mut">Liste vide pour l’instant.</span></div>}</div>

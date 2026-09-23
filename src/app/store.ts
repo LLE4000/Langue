@@ -11,6 +11,7 @@ import type { SkillLevels } from '@/curriculum/path';
 import type { Goals } from '@/curriculum/types';
 import { activeProfileId, storageKeyFor, syncActiveName } from './profiles';
 import { updatePronStat, type PronStat, type Strictness } from '@/engine/audio/pronunciation';
+import type { VoiceGender } from '@/engine/audio/tts';
 import { rate as srsRate, qualityFromAnswer, type SrsState, type Quality } from '@/engine/srs';
 import type { Gender } from '@/engine/tokens';
 import { todayKey } from '@/engine/util';
@@ -57,7 +58,25 @@ export interface Settings {
   hapticsOff: boolean;
   autoAdvance: boolean; // après une bonne réponse, passer seul à la question suivante
   pronStrictness: Strictness; // sévérité du contrôle de prononciation
+  /** Voix souhaitée : comme mon profil, homme ou femme. */
+  voiceGender: 'auto' | VoiceGender;
+  /** Genre attribué à la main à des voix que l'application ne sait pas classer (id → genre). */
+  voiceGenders: Record<string, VoiceGender>;
+  /** Sans voix du genre voulu : approcher en rendant la voix plus grave / plus aiguë. */
+  voiceApprox: boolean;
+  /** Préférences du mode Écoute en boucle. */
+  listen: ListenPrefs;
 }
+
+export interface ListenPrefs {
+  set: 'cons' | 'vow' | 'words' | 'custom';
+  custom: string[]; // identifiants d'éléments
+  what: 'sound' | 'name' | 'both';
+  speeds: 1 | 2 | 3; // normal · + lent · + très lent
+  order: 'order' | 'shuffle';
+  guess: boolean; // deviner d'abord (le caractère apparaît après la première lecture)
+}
+export const DEFAULT_LISTEN: ListenPrefs = { set: 'cons', custom: [], what: 'name', speeds: 2, order: 'order', guess: false };
 
 export interface LessonRecord { done: boolean; best: number; tries: number; last: number; score?: number; total?: number }
 export interface DayStats { minutes: number; answers: number; correct: number; lessons: number; xp: number; reviews: number }
@@ -100,6 +119,7 @@ export interface PersistedState {
 
 export const DEFAULT_SETTINGS: Settings = {
   translit: 'learning', theme: 'auto', thaiSize: 1.15, autoAudio: true, slowRate: 0.6, voiceId: '', forceTTS: false, showModern: true, hapticsOff: false, autoAdvance: true, pronStrictness: 'normal',
+  voiceGender: 'auto', voiceGenders: {}, voiceApprox: true, listen: DEFAULT_LISTEN,
 };
 
 export const initialState = (): PersistedState => ({

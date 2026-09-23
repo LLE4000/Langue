@@ -3,9 +3,9 @@
  * et des hooks React pour parler / observer l'état des voix.
  */
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
-import { NullSpeechProvider, WebSpeechProvider, type SpeechProvider, type TtsStatus } from '@/engine/audio/tts';
+import { NullSpeechProvider, WebSpeechProvider, type SpeechProvider, type TtsStatus, type VoiceGender } from '@/engine/audio/tts';
 import { Recognizer, Recorder } from '@/engine/audio/mic';
-import { speakable } from '@/engine/tokens';
+import { speakable, type Gender } from '@/engine/tokens';
 import { useStore } from '../store';
 import { activePack } from '@/content/packs';
 
@@ -25,22 +25,46 @@ export function useVoices(): { status: TtsStatus; version: number } {
   return { status: tts.status(), version: v };
 }
 
-export interface Speaker {
-  speak(text: string, opts?: { slow?: boolean; onend?: () => void }): boolean;
-  cancel(): void;
-  status: TtsStatus;
+export interface SpeakOpts {
+  slow?: boolean;
+  /** Vitesse explicite (mode Écoute) ; prime sur slow. */
+  rate?: number;
+  /**
+   * Qui parle : un autre locuteur (dialogues). Ses particules de politesse et sa voix suivent ce genre.
+   * Absent = l'apprenant : particules selon le profil, voix selon la préférence des réglages.
+   */
+  speaker?: Gender;
+  onend?: () => void;
 }
 
-/** Parle dans la langue cible en résolvant les jetons de politesse selon le profil. */
+export interface Speaker {
+  speak(text: string, opts?: SpeakOpts): boolean;
+  cancel(): void;
+  status: TtsStatus;
+  /** Voix effectivement souhaitée pour l'apprenant (préférence ou genre du profil). */
+  gender: VoiceGender;
+}
+
+/** Parle dans la langue cible en résolvant les jetons de politesse selon le profil (ou le locuteur indiqué). */
 export function useSpeaker(): Speaker {
   const profile = useStore((s) => s.profile);
   const settings = useStore((s) => s.settings);
   const { status } = useVoices();
+  const me: Gender = profile?.gender ?? 'm';
+  const pref: VoiceGender = settings.voiceGender === 'auto' || !settings.voiceGender ? me : settings.voiceGender;
   return useMemo(() => ({
-    speak: (text, opts) => tts.speak(speakable(text, { gender: profile?.gender ?? 'm', name: profile?.name ?? '' }), { slow: opts?.slow, slowRate: settings.slowRate, voiceId: settings.voiceId, force: settings.forceTTS, onend: opts?.onend }),
+    speak: (text, opts) => {
+      const who = opts?.speaker ?? me;
+      const voiceGender = opts?.speaker ?? pref;
+      return tts.speak(speakable(text, { gender: who, name: profile?.name ?? '' }), {
+        slow: opts?.slow, slowRate: settings.slowRate, rate: opts?.rate, voiceId: settings.voiceId, force: settings.forceTTS,
+        gender: voiceGender, voiceGenders: settings.voiceGenders, approxGender: settings.voiceApprox !== false, onend: opts?.onend,
+      });
+    },
     cancel: () => tts.cancel(),
     status,
-  }), [profile?.gender, profile?.name, settings.slowRate, settings.voiceId, settings.forceTTS, status]);
+    gender: pref,
+  }), [me, pref, profile?.name, settings.slowRate, settings.voiceId, settings.forceTTS, settings.voiceGenders, settings.voiceApprox, status]);
 }
 
 /** Lit un texte à l'affichage (si l'audio automatique est activé). */

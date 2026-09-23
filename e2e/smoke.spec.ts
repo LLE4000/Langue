@@ -130,7 +130,9 @@ test('onboarding, première leçon, déblocage, reprise, révision', async ({ pa
   await page.getByRole('link', { name: 'Explorer' }).click();
   await page.getByRole('link', { name: /Alphabet/ }).click();
   await expect(page.locator('.cell').first()).toBeVisible();
-  await page.locator('.cell').first().click();
+  await page.locator('.cell').first().click(); // premier toucher : le son et l'aperçu
+  await expect(page.locator('.peek')).toBeVisible();
+  await page.locator('.cell').first().click(); // second toucher : la fiche
   await expect(page.locator('.sheet')).toBeVisible();
   // profil et export
   await page.goto('/#/profile/data');
@@ -217,4 +219,81 @@ test('défi à distance : le lien rejoue exactement la même série', async ({ p
   await page.getByRole('button', { name: /Relever le défi/ }).click();
   await expect(page.locator('.stage')).toBeVisible();
   await expect(page.locator('.choices .choice')).toHaveCount(4);
+});
+
+test('alphabet : un toucher lit la lettre et montre l’aperçu, un second ouvre la fiche', async ({ page }) => {
+  await onboard(page);
+  await page.goto('/#/explore/alphabet');
+  const cell = page.locator('.lgrid .cell', { hasText: 'ก' }).first();
+  await cell.click();
+  await expect(page.locator('.peek')).toBeVisible();
+  await expect(page.locator('.peek')).toContainText('poulet');
+  await expect(page.locator('.sheet')).toHaveCount(0);
+  await cell.click();
+  await expect(page.locator('.sheet')).toBeVisible();
+  await expect(page.locator('.sheet .rate')).toBeVisible();
+});
+
+test('écoute en boucle : sélection de deux lettres proches depuis l’alphabet, réglages persistants', async ({ page }) => {
+  await onboard(page);
+  await page.goto('/#/explore/alphabet');
+  await page.getByRole('link', { name: /b · p · ph/ }).click();
+  await expect(page).toHaveURL(/explore\/listen/);
+  await expect(page.locator('.listen-stage .tag')).toHaveText('1 / 4');
+  await expect(page.locator('.chip.on')).toContainText('Ma sélection · 4');
+  // ne garder que ป et พ
+  await page.locator('.lgrid .cell.sel', { hasText: 'บ' }).click();
+  await page.locator('.lgrid .cell.sel', { hasText: 'ผ' }).click();
+  await expect(page.locator('.listen-stage .tag')).toHaveText('1 / 2');
+  await page.locator('.seg button', { hasText: 'Le son seul' }).click();
+  await page.locator('.seg button', { hasText: 'Normal, lent, très lent' }).click();
+  await expect(page.locator('.takes .take')).toHaveCount(3);
+  await page.getByTestId('listen-play').click();
+  await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible();
+  await page.getByRole('button', { name: 'Pause' }).click();
+  // les réglages sont mémorisés
+  await page.reload();
+  await expect(page.locator('.listen-stage .tag')).toHaveText('1 / 2');
+  await expect(page.locator('.takes .take')).toHaveCount(3);
+  // suivant / précédent
+  await page.getByRole('button', { name: 'Suivant' }).click();
+  await expect(page.locator('.listen-stage .tag')).toHaveText('2 / 2');
+});
+
+test('duel de prononciation : chacun dit le mot à son tour, résultats mot par mot', async ({ page, context }) => {
+  // Moteur de reconnaissance simulé : il « entend » exactement le mot affiché.
+  await context.addInitScript(() => {
+    class FakeSR {
+      lang = ''; maxAlternatives = 1; interimResults = false; continuous = false;
+      onresult: ((e: unknown) => void) | null = null; onerror: ((e: unknown) => void) | null = null; onend: (() => void) | null = null;
+      start() {
+        setTimeout(() => {
+          const heard = (document.querySelector('.stage .th')?.textContent ?? '').trim();
+          const alt = { transcript: heard, confidence: 0.9 };
+          const res = Object.assign([alt], { item: () => alt, isFinal: true });
+          this.onresult?.({ results: Object.assign([res], { item: () => res }) });
+          this.onend?.();
+        }, 150);
+      }
+      stop() { this.onend?.(); }
+    }
+    (window as unknown as { SpeechRecognition: unknown }).SpeechRecognition = FakeSR;
+    (window as unknown as { webkitSpeechRecognition: unknown }).webkitSpeechRecognition = FakeSR;
+  });
+  await onboard(page);
+  await page.goto('/#/play');
+  await page.getByRole('link', { name: /Duel de prononciation/ }).click();
+  await expect(page.getByText(/le plus clair/)).toBeVisible();
+  await page.locator('.seg button', { hasText: /^3$/ }).click();
+  await page.getByRole('button', { name: /À vos micros/ }).click();
+  for (let round = 0; round < 6; round++) {
+    await page.getByTestId('voice-go').click();
+    await page.getByTestId('voice-say').click();
+    await expect(page.locator('.pron .cring b')).toHaveText('10');
+    await page.getByTestId('voice-next').click();
+  }
+  await expect(page.getByText('Résultats')).toBeVisible();
+  await expect(page.locator('.vgrid .vscore')).toHaveCount(6);
+  await expect(page.locator('.vgrid .vscore.ok')).toHaveCount(6);
+  await expect(page.getByText('à égalité')).toBeVisible();
 });

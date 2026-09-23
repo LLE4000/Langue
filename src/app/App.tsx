@@ -13,6 +13,8 @@ import { TrainingStart } from '@/features/review/TrainingStart';
 import { Explore } from '@/features/explore/Explore';
 import { Alphabet } from '@/features/explore/Alphabet';
 import { Vowels } from '@/features/explore/Vowels';
+import { Listen } from '@/features/explore/Listen';
+import { VoiceDuel } from '@/features/play/VoiceDuel';
 import { Tones } from '@/features/explore/Tones';
 import { Numbers } from '@/features/explore/Numbers';
 import { Vocabulary, VocabTheme } from '@/features/explore/Vocabulary';
@@ -88,6 +90,7 @@ export function App() {
           <Route path="explore" element={<Explore />} />
           <Route path="explore/alphabet" element={<Alphabet />} />
           <Route path="explore/vowels" element={<Vowels />} />
+          <Route path="explore/listen" element={<Listen />} />
           <Route path="explore/tones/*" element={<Tones />} />
           <Route path="explore/numbers" element={<Numbers />} />
           <Route path="explore/vocab" element={<Vocabulary />} />
@@ -116,6 +119,7 @@ export function App() {
         </Route>
         <Route path="/play/duel" element={<RequireProfile><Duel /></RequireProfile>} />
         <Route path="/play/turns" element={<RequireProfile><Turns /></RequireProfile>} />
+        <Route path="/play/voice" element={<RequireProfile><VoiceDuel /></RequireProfile>} />
         <Route path="/play/defi/new" element={<RequireProfile><ChallengeNew /></RequireProfile>} />
         <Route path="/play/defi/:code" element={<RequireProfile><ChallengePlay /></RequireProfile>} />
         <Route path="/lesson/:id" element={<RequireProfile><LessonRunner /></RequireProfile>} />

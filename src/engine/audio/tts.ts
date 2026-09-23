@@ -12,20 +12,66 @@
 
 export type TtsStatus = 'ok' | 'searching' | 'unknown' | 'none' | 'unsupported';
 
+export type VoiceGender = 'm' | 'f';
+
 export interface VoiceInfo {
   id: string;
   name: string;
   lang: string;
   local: boolean;
   isTarget: boolean;
+  /** Genre deviné d'après le nom de la voix (absent si inconnu). */
+  gender?: VoiceGender;
 }
 
 export interface SpeakOptions {
   slow?: boolean;
   slowRate?: number;
+  /** Vitesse explicite (0.1–2) ; prime sur slow/slowRate. */
+  rate?: number;
   force?: boolean; // essayer même sans voix cible listée
   voiceId?: string;
+  /** Voix d'homme ou de femme souhaitée (dialogues, préférence de l'apprenant). */
+  gender?: VoiceGender;
+  /** Genre attribué à la main par l'utilisateur à certaines voix (id → genre). */
+  voiceGenders?: Record<string, VoiceGender>;
+  /** Quand aucune voix du genre voulu n'existe : rendre la voix plus grave / plus aiguë (approximation). */
+  approxGender?: boolean;
   onend?: () => void;
+}
+
+/** Noms de voix thaïes connus (Apple, Google, Microsoft, Samsung…) → genre. */
+const FEMALE_RE = /kanya|narisa|premwadee|achara|female|femme|หญิง|\bf\b|woman/i;
+const MALE_RE = /niwat|pattara|(^|[^e])male\b|homme|ชาย|\bm\b|\bman\b/i;
+
+/** Devine le genre d'une voix d'après son nom ; undefined si on ne sait pas. */
+export function guessVoiceGender(name: string): VoiceGender | undefined {
+  if (FEMALE_RE.test(name)) return 'f';
+  if (MALE_RE.test(name)) return 'm';
+  return undefined;
+}
+
+/**
+ * Choisit une voix pour un genre voulu parmi les voix cibles : voix explicitement choisie d'abord,
+ * puis une voix du bon genre (locale de préférence), sinon la meilleure voix disponible.
+ * `approx` dit si la voix retenue devra être ajustée en hauteur pour approcher le genre voulu.
+ */
+export function chooseVoice<V extends { id: string; name: string; local: boolean; lang: string }>(
+  voices: V[], want: { voiceId?: string; gender?: VoiceGender; voiceGenders?: Record<string, VoiceGender>; speechLang: string },
+): { voice: V | null; gender?: VoiceGender; approx: boolean } {
+  const genderOf = (v: V) => want.voiceGenders?.[v.id] ?? want.voiceGenders?.[v.name] ?? guessVoiceGender(v.name);
+  const re = new RegExp('^' + want.speechLang.replace('-', '[-_]') + '$', 'i');
+  const rank = (v: V) => (re.test(v.lang || '') ? 0 : 1) + (v.local ? 0 : 2);
+  const sorted = [...voices].sort((a, b) => rank(a) - rank(b));
+  const explicit = want.voiceId ? voices.find((v) => v.id === want.voiceId || v.name === want.voiceId) : undefined;
+  if (explicit) { const g = genderOf(explicit); return { voice: explicit, gender: g, approx: !!want.gender && !!g && g !== want.gender }; }
+  if (want.gender) {
+    const same = sorted.find((v) => genderOf(v) === want.gender);
+    if (same) return { voice: same, gender: want.gender, approx: false };
+  }
+  const v = sorted[0] ?? null;
+  const g = v ? genderOf(v) : undefined;
+  return { voice: v, gender: g, approx: !!v && !!want.gender && g !== want.gender };
 }
 
 export interface SpeechProvider {
@@ -145,14 +191,14 @@ export class WebSpeechProvider implements SpeechProvider {
     return !this.supported ? 'unsupported' : this.target.length ? 'ok' : this.scanning ? 'searching' : this.list.length ? 'none' : 'unknown';
   }
 
-  private info = (v: SpeechSynthesisVoice): VoiceInfo => ({ id: v.voiceURI || v.name, name: v.name, lang: v.lang, local: v.localService, isTarget: matchesLang(v, this.langBase, this.nameRe) });
+  private info = (v: SpeechSynthesisVoice): VoiceInfo => ({ id: v.voiceURI || v.name, name: v.name, lang: v.lang, local: v.localService, isTarget: matchesLang(v, this.langBase, this.nameRe), gender: guessVoiceGender(v.name) });
   voices() { return this.list.map(this.info); }
   targetVoices() { return this.target.map(this.info); }
 
-  private pick(voiceId?: string): SpeechSynthesisVoice | null {
-    const t = this.target;
-    const re = new RegExp('^' + this.speechLang.replace('-', '[-_]') + '$', 'i');
-    return (voiceId && t.find((v) => v.voiceURI === voiceId || v.name === voiceId)) || t.find((v) => re.test(v.lang || '') && v.localService) || t.find((v) => v.localService) || t[0] || null;
+  private pick(opts: SpeakOptions): { voice: SpeechSynthesisVoice | null; approx: boolean } {
+    const wrapped = this.target.map((v) => ({ id: v.voiceURI || v.name, name: v.name, local: v.localService, lang: v.lang, raw: v }));
+    const r = chooseVoice(wrapped, { voiceId: opts.voiceId, gender: opts.gender, voiceGenders: opts.voiceGenders, speechLang: this.speechLang });
+    return { voice: r.voice?.raw ?? null, approx: r.approx };
   }
 
   speak(text: string, opts: SpeakOptions = {}): boolean {
@@ -164,10 +210,11 @@ export class WebSpeechProvider implements SpeechProvider {
     }
     const u = new SpeechSynthesisUtterance(text);
     u.lang = this.speechLang;
-    const v = this.pick(opts.voiceId);
-    if (v) u.voice = v;
-    u.rate = opts.slow ? (opts.slowRate ?? 0.6) : 0.95;
-    u.pitch = 1;
+    const { voice, approx } = this.pick(opts);
+    if (voice) u.voice = voice;
+    u.rate = opts.rate ?? (opts.slow ? (opts.slowRate ?? 0.6) : 0.95);
+    // Pas de voix du genre voulu : on assombrit (homme) ou éclaircit (femme) la voix disponible, si demandé.
+    u.pitch = approx && opts.approxGender !== false ? (opts.gender === 'm' ? 0.72 : 1.25) : 1;
     u.volume = 1;
     let done = false;
     const fin = () => { if (!done) { done = true; opts.onend?.(); } };

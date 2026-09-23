@@ -4,6 +4,7 @@ import { useSpeaker } from '@/app/services/speech';
 import { useStore } from '@/app/store';
 import { DIALOG_BY_ID, WORD_BY_THAI } from '@/content/th';
 import { L } from '@/i18n';
+import { dialogOtherGender } from '@/engine/speakers';
 import { Icon, Thai, Rom, Fr, useShowRom } from './ui';
 import { WordByWord } from './WordByWord';
 import { MicPanel } from './MicPanel';
@@ -24,10 +25,13 @@ export function DialogView({ id, onDone, doneLabel }: { id: string; onDone?: () 
   useEffect(() => () => { playing.current = false; sp.cancel(); }, [sp]);
   if (!d) return null;
   const on = (i: number, k: string) => (one[i + k] != null ? one[i + k] : k === 'rom' ? rom : k === 'tr' ? tr : false);
+  // Deux voix : l'apprenant (sa voix préférée) et l'interlocuteur (homme ou femme selon le dialogue).
+  const other = dialogOtherGender(d, sp.gender === 'm' ? 'f' : 'm');
+  const say = (l: { who: 'me' | 'other'; thai: string }, opts: { slow?: boolean; onend?: () => void } = {}) => sp.speak(l.thai, { ...opts, speaker: l.who === 'other' ? other : undefined });
   const playAll = () => {
     playing.current = true;
     let i = 0;
-    const next = () => { if (!playing.current || i >= d.lines.length) { playing.current = false; return; } sp.speak(d.lines[i++].thai, { onend: () => setTimeout(next, 450) }); };
+    const next = () => { if (!playing.current || i >= d.lines.length) { playing.current = false; return; } say(d.lines[i++], { onend: () => setTimeout(next, 450) }); };
     next();
   };
   return (
@@ -42,12 +46,12 @@ export function DialogView({ id, onDone, doneLabel }: { id: string; onDone?: () 
         const it = WORD_BY_THAI[l.thai];
         return (
           <div key={i} className={`bub ${l.who === 'me' ? 'me' : ''}`}>
-            <div className="who">{l.who === 'me' ? 'Vous' : L(d.other)}</div>
+            <div className="who">{l.who === 'me' ? 'Vous' : L(d.other)} <span aria-label={l.who === 'me' ? (sp.gender === 'f' ? 'voix de femme' : 'voix d’homme') : other === 'f' ? 'voix de femme' : 'voix d’homme'} title="Voix">{(l.who === 'me' ? sp.gender : other) === 'f' ? '♀' : '♂'}</span></div>
             {on(i, 'w') ? <WordByWord thai={l.thai} rom={l.rom} /> : <><Thai text={l.thai} />{on(i, 'rom') && <Rom text={l.rom} style={{ display: 'block' }} />}</>}
             {on(i, 'tr') && <span className="tr"><Fr text={l.tr} /></span>}
             <div className="acts">
-              <button className="mini" onClick={() => sp.speak(l.thai)} aria-label="Écouter"><Icon name="speaker" /></button>
-              <button className="mini" onClick={() => sp.speak(l.thai, { slow: true })} aria-label="Lentement"><Icon name="turtle" /></button>
+              <button className="mini" onClick={() => say(l)} aria-label="Écouter"><Icon name="speaker" /></button>
+              <button className="mini" onClick={() => say(l, { slow: true })} aria-label="Lentement"><Icon name="turtle" /></button>
               <button className={`mini ${on(i, 'rom') ? 'on' : ''}`} onClick={() => setOne({ ...one, [i + 'rom']: !on(i, 'rom') })} aria-label="Phonétique"><Icon name="eye" /></button>
               <button className={`mini ${on(i, 'tr') ? 'on' : ''}`} onClick={() => setOne({ ...one, [i + 'tr']: !on(i, 'tr') })} aria-label="Traduction">🇫🇷</button>
               <button className={`mini ${on(i, 'w') ? 'on' : ''}`} onClick={() => setOne({ ...one, [i + 'w']: !on(i, 'w') })} aria-label="Mot à mot">🎨</button>
