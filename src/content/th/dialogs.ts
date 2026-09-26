@@ -1,6 +1,7 @@
 // Généré depuis la maquette d'origine par scripts/gen-content.mjs, puis maintenu à la main.
 import type { Dialog } from '../types';
 import { EXTRA_DIALOGS, EXTRA_DIALOG_FOR_THEME } from './dialogsExtra';
+import { LONG_DIALOGS } from './longDialogs';
 import { DIALOG_QUESTIONS } from './dialogQuestions';
 
 /** Dialogue rattaché à un thème de vocabulaire dans le parcours. */
@@ -352,7 +353,7 @@ export const DIALOGS: Dialog[] = [
   },
 ];
 
-DIALOGS.push(...EXTRA_DIALOGS);
+DIALOGS.push(...EXTRA_DIALOGS, ...LONG_DIALOGS);
 Object.assign(DIALOG_FOR_THEME, EXTRA_DIALOG_FOR_THEME);
 // Questions de compréhension orale rédigées, rattachées à chaque dialogue
 for (const d of DIALOGS) if (DIALOG_QUESTIONS[d.id]) d.questions = DIALOG_QUESTIONS[d.id];

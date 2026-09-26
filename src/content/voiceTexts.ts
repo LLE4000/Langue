@@ -22,7 +22,7 @@ export function collectVoiceTexts(): string[] {
     if (it.kind === 'word') add(it.ref.example?.thai);
     if (it.kind === 'clf') add(it.ref.example.thai);
   }
-  for (const d of th.DIALOGS) for (const l of d.lines) add(l.thai);
+  for (const d of th.DIALOGS) { for (const l of d.lines) add(l.thai); for (const q of d.questions ?? []) { add(q.qTh); q.choicesTh?.forEach(add); } }
   for (const r of th.READINGS) for (const s of r.sentences) { add(sentenceThai(s.tokens)); for (const t of s.tokens) add(t.thai); }
   for (const g of th.GRAMMAR) for (const e of g.examples) add(e.thai);
   for (const t of TONES) add(t.example.thai);

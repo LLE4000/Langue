@@ -885,6 +885,16 @@ pre.note { white-space: pre-wrap; font-family: inherit; }
 .lr-sub { display: flex; gap: var(--s-4); justify-content: center; }
 .lr-app.paused .lr-text { opacity: .5; }
 
+/* Écoute longue : icône, vitesse, reprise à une réplique, questions en thaï */
+.comp-ic { width: 64px; height: 64px; border-radius: 20px; display: grid; place-items: center; margin: 0 auto; background: var(--jade-soft); color: var(--jade); }
+.comp-ic svg { width: 32px; height: 32px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.comp-speed { max-width: 240px; margin: var(--s-2) auto var(--s-3); }
+.takes button.take { border: 0; cursor: pointer; font: inherit; }
+.qth { display: flex; align-items: center; gap: var(--s-3); }
+.qth .qprompt.th { font-family: var(--f-th); font-size: 26px; line-height: 1.45; flex: 1; }
+.choice .cth { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; }
+.choice .cth .th { font-family: var(--f-th); font-size: 20px; line-height: 1.4; }
+
 /* ---------- Utilitaires : en dernier, pour primer sur les marges par défaut des composants ---------- */
 /* Utilitaires d'espacement (grille de 4 px) */
 .note-under { margin: calc(-1 * var(--s-1)) 2px var(--s-3); font-size: var(--fs-2); color: var(--ink2); }

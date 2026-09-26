@@ -6,7 +6,11 @@
 import type { Dialog, DialogLine } from '@/content/types';
 import { L } from '@/i18n';
 
-export interface CQuestion { q: string; choices: string[]; answer: number; kind: 'authored' | 'reply' | 'who' }
+export interface CQuestion {
+  q: string; choices: string[]; answer: number; kind: 'authored' | 'reply' | 'who';
+  /** écoute longue : langue de la question, version thaïe de la question et des propositions */
+  lang?: 'fr' | 'mixed' | 'th'; qTh?: string; choicesTh?: string[];
+}
 
 function rng(seed: number) { let s = seed >>> 0 || 1; return () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; }; }
 function shuffle<T>(a: T[], r: () => number): T[] { const o = [...a]; for (let i = o.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; } return o; }
@@ -15,7 +19,7 @@ const clean = (s: string) => s.replace(/\s*\(.*?\)\s*/g, ' ').replace(/\{n\}/g, 
 /** Mélange les propositions d'une question en gardant l'index de la bonne réponse. */
 export function shuffleChoices(q: CQuestion, r: () => number): CQuestion {
   const idx = shuffle(q.choices.map((_, k) => k), r);
-  return { ...q, choices: idx.map((k) => q.choices[k]), answer: idx.indexOf(q.answer) };
+  return { ...q, choices: idx.map((k) => q.choices[k]), choicesTh: q.choicesTh ? idx.map((k) => q.choicesTh![k]) : undefined, answer: idx.indexOf(q.answer) };
 }
 
 /** Questions « que répond … ? » : la bonne réponse est la réplique suivante, les leurres d'autres répliques du même locuteur. */
@@ -44,7 +48,9 @@ export function whoQuestions(d: Dialog, other: string): CQuestion[] {
 export function buildComprehensionQuiz(d: Dialog, seed = Date.now(), total = 5): CQuestion[] {
   const r = rng(seed);
   const other = L(d.other);
-  const authored: CQuestion[] = (d.questions ?? []).map((q) => ({ q: L(q.q), choices: q.choices.map((c) => L(c)), answer: q.answer, kind: 'authored' as const }));
+  const authored: CQuestion[] = (d.questions ?? []).map((q) => ({ q: L(q.q), choices: q.choices.map((c) => L(c)), answer: q.answer, kind: 'authored' as const, lang: q.lang, qTh: q.qTh, choicesTh: q.choicesTh }));
+  // écoute longue : seulement les questions rédigées, dans l'ordre de la conversation
+  if (d.level) return authored.map((q) => shuffleChoices(q, r));
   const generated = shuffle([...shuffle(replyQuestions(d, other), r).slice(0, 2), ...shuffle(whoQuestions(d, other), r).slice(0, 1)], r);
   const picked = [...authored, ...generated].slice(0, Math.max(total, authored.length));
   return picked.map((q) => shuffleChoices(q, r));

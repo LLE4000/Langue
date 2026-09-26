@@ -16,6 +16,8 @@ import { StepFooter, ContinueButton, useDigitKeys } from '@/components/StepFoote
 import { buildComprehensionQuiz, dialogSeconds, type CQuestion } from './comprehension';
 
 const KIND = 'comprehension';
+const LEVELS = ['A1', 'A2', 'B1'] as const;
+const LEVEL_NOTE: Record<(typeof LEVELS)[number], string> = { A1: 'questions en français', A2: 'réponses en thaï', B1: 'tout en thaï' };
 
 /** Liste des conversations à écouter, avec le meilleur score. */
 export function ComprehensionHub() {
@@ -28,9 +30,27 @@ export function ComprehensionHub() {
     <>
       <p className="lead">Une conversation, deux voix, pas de texte. Écoutez autant de fois que vous voulez, puis répondez en français : qui a dit quoi, combien, quand. Le texte s’affiche seulement à la fin.</p>
       <button className="btn" onClick={random}><Icon name="play" size={18} /> Une conversation au hasard</button>
-      <div className="h2">Choisir une conversation</div>
+      {LEVELS.map((lv) => {
+        const list = th.DIALOGS.filter((d) => d.level === lv);
+        if (!list.length) return null;
+        return (
+          <section key={lv} aria-label={`Écoute longue ${lv}`}>
+            <div className="h2">Écoute longue · {lv} <span className="sp" /><span className="sm mut">{LEVEL_NOTE[lv]}</span></div>
+            <div className="list">
+              {list.map((d) => (
+                <Link key={d.id} className="row" to={`/explore/comprehension/${encodeURIComponent(d.id)}`}>
+                  <span className="ico jade"><Icon name={d.icon} /></span>
+                  <span className="mid"><span className="t">{L(d.title)}</span><span className="s">≈ {Math.max(1, Math.round(dialogSeconds(d) / 60))} min · {d.lines.length} répliques · {d.questions?.length ?? 0} questions</span></span>
+                  <span className="end">{best[d.id] ? <span className="tag ok">{best[d.id]}</span> : <span className="chev">›</span>}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+      <div className="h2">Conversations courtes</div>
       <div className="list">
-        {th.DIALOGS.map((d) => (
+        {th.DIALOGS.filter((d) => !d.level).map((d) => (
           <Link key={d.id} className="row" to={`/explore/comprehension/${encodeURIComponent(d.id)}`}>
             <span className="ico">{d.icon}</span>
             <span className="mid"><span className="t">{L(d.title)}</span><span className="s">≈ {dialogSeconds(d)} s · {d.lines.length} répliques · {(d.questions?.length ?? 0) + 2} questions</span></span>
@@ -63,17 +83,19 @@ export function ComprehensionRun() {
   const other = d ? dialogOtherGender(d, sp.gender === 'm' ? 'f' : 'm') : 'f';
   const stop = () => { token.current++; setLine(null); sp.cancel(); };
   useEffect(() => () => { token.current++; sp.cancel(); }, [sp]);
-  const play = () => {
+  const [slow, setSlow] = useState(false);
+  const play = (from = 0) => {
     if (!d) return;
-    if (line !== null) { stop(); return; }
+    if (line !== null && from === 0) { stop(); return; }
+    sp.cancel();
     const tok = ++token.current;
-    let i = 0;
+    let i = from;
     const next = () => {
       if (tok !== token.current) return;
       if (i >= d.lines.length) { setLine(null); setPlays((p) => p + 1); return; }
       setLine(i);
       const l = d.lines[i++];
-      const ok = sp.speak(l.thai, { speaker: l.who === 'other' ? other : undefined, onend: () => setTimeout(next, 500) });
+      const ok = sp.speak(l.thai, { speaker: l.who === 'other' ? other : undefined, slow, onend: () => setTimeout(next, 500) });
       if (!ok) setLine(null);
     };
     next();
@@ -95,15 +117,16 @@ export function ComprehensionRun() {
     return (
       <>
         <div className="stage">
-          <div style={{ fontSize: 56 }}>{d.icon}</div>
+          {d.level ? <span className="comp-ic"><Icon name={d.icon} /></span> : <div style={{ fontSize: 56 }}>{d.icon}</div>}
           <div className="title-xl mt-2">{L(d.title)}</div>
           <div className="mut sm mt-1">Vous et {L(d.other).toLowerCase()} · {d.lines.length} répliques · ≈ {dialogSeconds(d)} s</div>
-          <div className="takes" aria-label="Répliques">{d.lines.map((l, k) => <span key={k} className={`take ${line === k ? 'on' : line !== null && k < line ? 'done' : ''}`}>{l.who === 'me' ? <Icon name="user" size={12} /> : '●'}</span>)}</div>
+          <div className="takes" aria-label="Répliques : touchez-en une pour reprendre de là">{d.lines.map((l, k) => <button key={k} className={`take ${line === k ? 'on' : line !== null && k < line ? 'done' : ''}`} onClick={() => play(k)} aria-label={`Reprendre à la réplique ${k + 1}`}>{l.who === 'me' ? <Icon name="user" size={12} /> : '●'}</button>)}</div>
         </div>
-        <div className="audio"><button className={`ib big pri listen-play ${line !== null ? 'speaking' : ''}`} onClick={play} aria-label={line !== null ? 'Arrêter' : 'Écouter'} data-testid="comp-play"><Icon name={line !== null ? 'pause' : 'play'} /></button></div>
+        <div className="audio"><button className={`ib big pri listen-play ${line !== null ? 'speaking' : ''}`} onClick={() => play()} aria-label={line !== null ? 'Arrêter' : 'Écouter'} data-testid="comp-play"><Icon name={line !== null ? 'pause' : 'play'} /></button></div>
+        <div className="seg compact comp-speed" role="group" aria-label="Vitesse"><button className={slow ? '' : 'on'} onClick={() => setSlow(false)}>Normal</button><button className={slow ? 'on' : ''} onClick={() => setSlow(true)}><Icon name="turtle" size={16} /> Lent</button></div>
         <p className="xs mut ctr mt-n1 mb-2">{line !== null ? `Réplique ${line + 1} / ${d.lines.length}` : plays ? `Écouté ${plays} fois. Réécoutez ou passez aux questions.` : 'Sans le texte : essayez de saisir la situation, les nombres, les décisions.'}</p>
         <div className="note plain sm">Deux voix : la vôtre ({sp.gender === 'f' ? 'femme' : 'homme'}) et celle de l’interlocuteur ({other === 'f' ? 'femme' : 'homme'}). Vous pouvez écouter autant de fois que vous voulez.</div>
-        <StepFooter meta={<span>{quiz.length} questions en français suivront.</span>}>
+        <StepFooter meta={<span>{quiz.length} questions {d.level === 'B1' ? 'en thaï' : d.level === 'A2' ? '(réponses en thaï pour certaines)' : 'en français'} suivront.</span>}>
           <ContinueButton onClick={() => { stop(); setPhase('quiz'); }} label={plays ? 'Passer aux questions' : 'Passer aux questions sans avoir tout écouté'} className={plays ? 'btn' : 'btn ghost'} />
         </StepFooter>
       </>
@@ -114,17 +137,23 @@ export function ComprehensionRun() {
     return (
       <>
         <div className="sess mb-2"><span className="tag jade">Compréhension</span><span className="sp" /><span className="n">Question {qi + 1} / {quiz.length}</span></div>
-        <p className="qprompt">{q.q}</p>
-        <div className="btns mb-3"><button className="btn ghost sm" onClick={play}><Icon name={line !== null ? 'pause' : 'speaker'} size={16} /> {line !== null ? 'Arrêter' : 'Réécouter la conversation'}</button></div>
+        {q.lang === 'th' && q.qTh ? (
+          <div className="qth">
+            <p className="qprompt th" lang="th">{q.qTh}</p>
+            <button className="ib" aria-label="Écouter la question" onClick={() => sp.speak(q.qTh!)}><Icon name="speaker" /></button>
+          </div>
+        ) : <p className="qprompt">{q.q}</p>}
+        {done && q.lang === 'th' && <p className="note-under">{q.q}</p>}
+        <div className="btns mb-3"><button className="btn ghost sm" onClick={() => play()}><Icon name={line !== null ? 'pause' : 'speaker'} size={16} /> {line !== null ? 'Arrêter' : 'Réécouter la conversation'}</button></div>
         <div className={`choices ${done ? 'lock' : ''}`}>
           {q.choices.map((c, k) => (
-            <button key={k} className={`choice ${done ? (k === q.answer ? 'ok' : k === picked ? 'ko' : 'dim') : ''}`} onClick={() => answer(k)} disabled={done}><span className="k" aria-hidden="true">{k + 1}</span><span>{c}</span></button>
+            <button key={k} className={`choice ${done ? (k === q.answer ? 'ok' : k === picked ? 'ko' : 'dim') : ''}`} onClick={() => answer(k)} disabled={done}><span className="k" aria-hidden="true">{k + 1}</span>{q.choicesTh && q.lang !== 'fr' ? <span className="cth"><span className="th" lang="th">{q.choicesTh[k]}</span>{done && <span className="xs mut">{c}</span>}</span> : <span>{c}</span>}</button>
           ))}
         </div>
         <div className="sp" />
         {done && (
           <StepFooter tone={picked === q.answer ? 'ok' : 'ko'}>
-            <div className="qfin"><span className={`verdict ${picked === q.answer ? 'ok' : 'ko'}`}><Icon name={picked === q.answer ? 'check' : 'close'} />{picked === q.answer ? 'Correct' : 'Pas tout à fait'}</span>{picked !== q.answer && <span className="good"> · Bonne réponse : {q.choices[q.answer]}</span>}</div>
+            <div className="qfin"><span className={`verdict ${picked === q.answer ? 'ok' : 'ko'}`}><Icon name={picked === q.answer ? 'check' : 'close'} />{picked === q.answer ? 'Correct' : 'Pas tout à fait'}</span>{picked !== q.answer && <span className="good"> · Bonne réponse : {q.choicesTh && q.lang !== 'fr' ? `${q.choicesTh[q.answer]} (${q.choices[q.answer]})` : q.choices[q.answer]}</span>}</div>
             <ContinueButton onClick={nextQ} label={qi + 1 < quiz.length ? 'Continuer' : 'Voir le résultat'} auto={picked === q.answer} autoMs={1200} autoFocus />
           </StepFooter>
         )}

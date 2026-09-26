@@ -118,11 +118,18 @@ export interface DialogLine {
   tr: Localized;
 }
 
-/** Question de compréhension orale sur un dialogue : posée en français, après écoute sans texte. */
+/**
+ * Question de compréhension orale sur un dialogue, après écoute sans texte. `lang` (écoute longue) : « fr » tout en
+ * français, « mixed » question en français et propositions en thaï, « th » tout en thaï (les traductions `q` et
+ * `choices` s'affichent après la réponse).
+ */
 export interface DialogQuestion {
   q: Localized;
   choices: Localized[];
   answer: number; // index de la bonne réponse dans `choices`
+  lang?: 'fr' | 'mixed' | 'th';
+  qTh?: string;
+  choicesTh?: string[];
 }
 
 export interface Dialog {
@@ -135,6 +142,8 @@ export interface Dialog {
   lines: DialogLine[];
   /** Questions rédigées (complétées par des questions générées à partir des répliques). */
   questions?: DialogQuestion[];
+  /** Écoute longue (1 à 2 minutes) : niveau, et icône du jeu d'icônes de l'application (au lieu d'un émoji). */
+  level?: 'A1' | 'A2' | 'B1';
 }
 
 export interface ReadingToken {
