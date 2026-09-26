@@ -20,10 +20,15 @@ function ProfileTab() {
   const profile = useStore((s) => s.profile)!;
   const updateProfile = useStore((s) => s.updateProfile);
   const [name, setName] = useState(profile.name);
+  const [thaiName, setThaiName] = useState(profile.thaiName ?? '');
+  const sp = useSpeaker();
   return (
     <>
       <label className="f" htmlFor="pname">Prénom</label>
       <input id="pname" className="field" value={name} onChange={(e) => setName(e.target.value)} onBlur={() => name.trim() && updateProfile({ name: name.trim() })} />
+      <label className="f" htmlFor="pthai">Mon prénom en thaï <span className="xs">· facultatif</span></label>
+      <div className="row-flex"><input id="pthai" className="field grow" lang="th" value={thaiName} placeholder="ex. ลูเซียง" onChange={(e) => setThaiName(e.target.value)} onBlur={() => updateProfile({ thaiName: thaiName.trim() || undefined })} />{thaiName.trim() && <button className="ib" aria-label="Écouter mon prénom" onClick={() => sp.speak(`{I}ชื่อ{N}{P}`)}><Icon name="speaker" /></button>}</div>
+      <p className="foot-note">C’est ce prénom que la voix dit dans les dialogues (« ผมชื่อ… ») ; sans lui, une courte pause le remplace.</p>
       <label className="f">Je suis</label>
       <Segmented value={profile.gender} options={[{ v: 'm', label: <>Un homme · <Thai text="ครับ" /></> }, { v: 'f', label: <>Une femme · <Thai text="ค่ะ" /></> }]} onChange={(g) => updateProfile({ gender: g })} />
       <label className="f">Objectif par jour</label>

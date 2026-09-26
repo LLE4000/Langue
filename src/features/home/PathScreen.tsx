@@ -3,10 +3,10 @@ import { useEffect, useRef } from 'react';
 import { usePage } from '@/app/Shell';
 import { useNextLesson, usePath, useProgress } from '@/app/hooks';
 import { curriculum } from '@/content/packs';
-import { remainingLine, tierLine } from '@/engine/progress';
 import { L, T } from '@/i18n';
 import { Bar, Icon } from '@/components/ui';
 import { LessonRow } from '@/components/LessonCard';
+import { TierHero } from '@/components/Progress';
 
 export function PathScreen() {
   const t = T();
@@ -17,7 +17,6 @@ export function PathScreen() {
   const prog = useProgress();
   const visible = path.filter((p) => p.status !== 'granted');
   const granted = path.length - visible.length;
-  const done = visible.filter((p) => p.status === 'done').length;
   const curRef = useRef<HTMLAnchorElement>(null);
   useEffect(() => { curRef.current?.scrollIntoView({ block: 'center' }); }, []);
   // Le parcours entrelace les pistes : on le découpe en étapes de huit leçons, chacune nommée par les unités qu'elle parcourt
@@ -32,10 +31,9 @@ export function PathScreen() {
   });
   return (
     <>
-      <div className="chead">
-        <div className="cring" style={{ ['--p' as string]: Math.round((done / Math.max(1, visible.length)) * 100) }}><b>{done}</b><small>/ {visible.length}</small></div>
-        <div className="mid"><div className="name">{done} leçon{done > 1 ? 's' : ''} validée{done > 1 ? 's' : ''} sur {visible.length}</div><div className="sm b">{tierLine(prog)}</div><div className="sm mut">{remainingLine(prog)}</div><div className="xs mut">{granted ? `${granted} leçon${granted > 1 ? 's' : ''} déjà acquise${granted > 1 ? 's' : ''} d’après votre niveau · ` : ''}Suivez l’ordre conseillé, ou piochez librement.</div></div>
-      </div>
+      {/* En tête : le palier et sa jauge, calculés sur la maîtrise réelle ; pas de total de leçons (il grandit avec les mises à jour) */}
+      <TierHero p={prog} />
+      {granted > 0 && <p className="note-under mt-2">{granted} leçon{granted > 1 ? 's' : ''} déjà acquise{granted > 1 ? 's' : ''} d’après votre niveau. Suivez l’ordre conseillé, ou piochez librement.</p>}
       {groups.map((g) => {
         const unitDoneN = g.items.filter((p) => p.status === 'done').length;
         const unitDone = unitDoneN === g.items.length;

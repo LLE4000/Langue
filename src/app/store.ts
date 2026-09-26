@@ -32,6 +32,8 @@ export interface Profile {
   dailyGoalMinutes: number;
   /** objectifs (absent chez les anciens profils = les deux) */
   goals?: Goals;
+  /** prénom écrit en thaï (facultatif) : c'est lui que la voix prononce dans les dialogues (« ผมชื่อ … ») */
+  thaiName?: string;
 }
 
 /** Un défi à distance envoyé ou reçu (voir features/play). */

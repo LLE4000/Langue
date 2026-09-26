@@ -854,6 +854,19 @@ pre.note { white-space: pre-wrap; font-family: inherit; }
 .ra-actions { display: flex; flex-direction: column; gap: var(--s-2); margin-top: var(--s-5); }
 .h2 .seg { margin-left: auto; } .h2 .seg button { min-height: 32px; padding: 2px 10px; font-size: var(--fs-1); }
 
+/* Palier en grand (Mon parcours) : A0 → A1, jauge épaisse, pourcentage de maîtrise */
+.tierhero { display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-5); border-radius: var(--r-lg); background: linear-gradient(150deg, var(--acc-soft), var(--surface) 72%); border: 1px solid var(--line); box-shadow: var(--e1); color: inherit; text-decoration: none; margin-top: var(--s-1); }
+.tierhero .th-ends { display: flex; align-items: center; }
+.tierhero .tier { font-weight: 800; font-size: var(--fs-2); padding: 4px 10px; border-radius: var(--r-pill); background: var(--surface); border: 1px solid var(--line); color: var(--ink2); letter-spacing: .02em; }
+.tierhero .tier.cur { background: var(--acc); border-color: var(--acc); color: var(--on-acc); }
+.th-gauge { height: 14px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--acc) 16%, var(--surface2)); overflow: hidden; }
+.th-gauge i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--acc), color-mix(in srgb, var(--acc) 70%, var(--ok))); transition: width .6s var(--ease); }
+.th-line { display: flex; align-items: baseline; gap: var(--s-2); margin-top: 2px; }
+.th-line b { font-family: var(--f-display); font-weight: 400; font-size: 40px; line-height: 1; letter-spacing: -.02em; }
+.th-line span { color: var(--ink2); font-weight: 600; }
+.th-story { color: var(--ink2); font-size: var(--fs-2); line-height: 1.45; }
+.th-more { font-size: var(--fs-2); font-weight: 700; color: var(--acc-deep); }
+
 /* ---------- Utilitaires : en dernier, pour primer sur les marges par défaut des composants ---------- */
 /* Utilitaires d'espacement (grille de 4 px) */
 .note-under { margin: calc(-1 * var(--s-1)) 2px var(--s-3); font-size: var(--fs-2); color: var(--ink2); }

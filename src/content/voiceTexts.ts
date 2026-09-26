@@ -1,7 +1,7 @@
 /**
  * Tous les textes thaïs que l'application fait lire : c'est la liste à synthétiser une fois pour toutes
  * avec des voix natives (scripts/gen-voices.ts). Les jetons de politesse sont résolus pour un homme ET pour
- * une femme (deux variantes), les textes avec un prénom {N} sont laissés à la voix de l'appareil.
+ * une femme (deux variantes) ; pour les textes avec un prénom {N}, les morceaux autour du prénom (joués bout à bout).
  */
 import { ITEMS, th, sentenceThai } from './th';
 import { TONES } from './th/tones';
@@ -32,7 +32,8 @@ export function collectVoiceTexts(): string[] {
   for (const t of raVoiceTexts()) add(t);
   const out = new Set<string>();
   for (const s of raw) {
-    if (/\{N\}/.test(s)) continue; // dépend du prénom : voix de l'appareil
+    // réplique avec le prénom : on synthétise les morceaux autour, joués bout à bout (le prénom vient entre eux)
+    if (/\{N\}/.test(s)) { for (const part of s.split(/\{N\}/)) { const t = part.trim(); if (!/[฀-๿]/.test(t)) continue; out.add(normalizeClipText(speakable(t, { gender: 'm', name: '' }))); out.add(normalizeClipText(speakable(t, { gender: 'f', name: '' }))); } continue; }
     if (hasTokens(s) || /\{[^{}|]*\|[^{}|]*\}/.test(s)) { out.add(normalizeClipText(speakable(s, { gender: 'm', name: '' }))); out.add(normalizeClipText(speakable(s, { gender: 'f', name: '' }))); }
     else out.add(normalizeClipText(s));
   }

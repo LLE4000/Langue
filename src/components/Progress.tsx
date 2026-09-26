@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import { useStore, streakDays } from '@/app/store';
 import { useProgress } from '@/app/hooks';
-import { SKILL_META, TIER_MARK, TIERS, tierLine, type Progress as P, type SkillProgress } from '@/engine/progress';
+import { SKILL_META, TIER_MARK, TIER_STORY, TIERS, tierLine, type Progress as P, type SkillProgress } from '@/engine/progress';
 import { Icon } from './ui';
 
 /** Pastille compacte, toujours visible dans la barre du haut : palier, avancement, série. */
@@ -24,6 +24,25 @@ export function ProgressPill() {
 export function TierRing({ p, size = 78 }: { p: P; size?: number }) {
   const pct = Math.round(p.toNext * 100);
   return <div className="cring" style={{ ['--p' as string]: pct, width: size, height: size }}><b>{p.tier}</b><small>{p.next && p.next !== 'B2' ? `→ ${p.next}` : 'atteint'}</small></div>;
+}
+
+/**
+ * Le palier en grand : « A0 → A1 », une jauge épaisse et le pourcentage du chemin, calculé sur la maîtrise réelle
+ * des compétences (pas sur le nombre de leçons). Ni total de leçons ni estimation de durée : seulement la jauge qui monte.
+ */
+export function TierHero({ p, link = true }: { p: P; link?: boolean }) {
+  const pct = Math.round(p.toNext * 100);
+  const reached = !p.next || p.next === 'B2';
+  const body = (
+    <>
+      <div className="th-ends"><span className="tier cur">{p.tier}</span><span className="grow" /><span className="tier">{reached ? '✓' : p.next}</span></div>
+      <div className="th-gauge" role="progressbar" aria-label={tierLine(p)} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}><i style={{ width: `${Math.max(3, pct)}%` }} /></div>
+      <div className="th-line"><b>{reached ? p.tier : `${pct} %`}</b><span>{reached ? 'palier atteint' : `du chemin vers ${p.next}`}</span></div>
+      <p className="th-story">{p.readyFor ? `Toutes vos compétences sont au niveau ${p.readyFor} : un petit test de validation vous attend.` : TIER_STORY[reached ? p.tier : p.next!].text}</p>
+      {link && <span className="th-more">Voir mes compétences ›</span>}
+    </>
+  );
+  return link ? <Link to="/profile/progress" className="tierhero" aria-label={`Ma progression : ${tierLine(p)}`}>{body}</Link> : <div className="tierhero">{body}</div>;
 }
 
 /** Échelle A0 → B2 : paliers franchis, palier en cours (rempli au prorata), paliers à venir. */

@@ -4,7 +4,7 @@
  * (courbe de hauteur), à l'évaluation Azure facultative, et à se réécouter dans le bilan.
  */
 import { VadSegmenter, downsample, type VadEvent } from './vad';
-import { classifyTone, detectPitchTrack, toneContour } from './pitch';
+import { classifyTone, detectPitchTrack, toneContour, type PitchBaseline } from './pitch';
 import type { ToneId } from '@/content/types';
 
 export type MicListener = (e: VadEvent) => void;
@@ -56,10 +56,14 @@ export class MicStream {
   }
 }
 
-/** Ton d'une lecture d'après la courbe de hauteur (syllabe seule), ou null si la voix n'est pas assez nette. */
-export function toneOfSegment(samples: Float32Array, expected: ToneId): { predicted: ToneId; expected: ToneId; ok: boolean; similarity: number } | null {
+/**
+ * Ton d'une lecture d'après la courbe de hauteur (syllabe seule), ou null si la voix n'est pas assez nette.
+ * `baseline` : registre du locuteur appris pendant la série — la hauteur relative départage moyen, bas et haut.
+ */
+export function toneOfSegment(samples: Float32Array, expected: ToneId, baseline?: PitchBaseline): { predicted: ToneId; expected: ToneId; ok: boolean; similarity: number } | null {
   const contour = toneContour(detectPitchTrack(samples, 16000));
   if (!contour) return null;
-  const c = classifyTone(contour.points, expected);
+  const c = classifyTone(contour.points, expected, baseline?.level(contour.meanHz));
+  baseline?.add(contour.meanHz);
   return { predicted: c.predicted, expected, ok: c.ok, similarity: c.similarity };
 }

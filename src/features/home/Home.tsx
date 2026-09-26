@@ -15,7 +15,7 @@ import { CardTitle, LessonBadge, LessonRow, kindClass } from '@/components/Lesso
 import { lessonCard } from '@/curriculum/card';
 import { nextSession, weakItems } from '@/features/readaloud/data';
 import { emptyReadAloud } from '@/app/store';
-import { remainingLine, tierLine } from '@/engine/progress';
+import { TIER_STORY, tierLine } from '@/engine/progress';
 import { todayKey } from '@/engine/util';
 
 export function Home() {
@@ -100,11 +100,11 @@ export function Home() {
         <TierRing p={prog} size={56} />
         <span className="mid">
           <span className="t">{tierLine(prog)}</span>
-          <span className="s">{remainingLine(prog)}</span>
+          <span className="s">{prog.next && prog.next !== 'B2' ? `Prochain palier : ${TIER_STORY[prog.next].title.toLowerCase()}` : TIER_STORY[prog.tier].title}</span>
           <span className="statline">
             <span><b>{prog.counts.wordsAcquired}</b> mots</span>
             {goals.read && <span><b>{prog.counts.consAcquired}</b> / {progressContent().cons.length} lettres</span>}
-            <span><b>{doneCount}</b> / {active.length} leçons</span>
+            <span><b>{doneCount}</b> leçon{doneCount > 1 ? 's' : ''} faite{doneCount > 1 ? 's' : ''}</span>
           </span>
         </span>
         <span className="chev">›</span>

@@ -20,6 +20,8 @@ export const clips = new ClipPlayer(typeof window !== 'undefined' ? import.meta.
 if (typeof window !== 'undefined') clips.load();
 
 let version = 0;
+/** identifiant de la lecture en cours (une réplique jouée en plusieurs morceaux s'arrête si on en lance une autre) */
+let chain = 0;
 const listeners = new Set<() => void>();
 tts.subscribe(() => { version++; listeners.forEach((l) => l()); });
 clips.subscribe(() => { version++; listeners.forEach((l) => l()); });
@@ -63,21 +65,42 @@ export function useSpeaker(): Speaker {
     speak: (text, opts) => {
       const who = opts?.speaker ?? me;
       const voiceGender = opts?.speaker ?? pref;
+      const rate = opts?.rate != null ? (opts.rate >= 0.9 ? 1 : opts.rate) : opts?.slow ? settings.slowRate : 1;
+      const ttsOpts = { slow: opts?.slow, slowRate: settings.slowRate, rate: opts?.rate, voiceId: settings.voiceId, force: settings.forceTTS, gender: voiceGender, voiceGenders: settings.voiceGenders, approxGender: settings.voiceApprox !== false };
+      /*
+       * Une réplique avec le prénom ({N}) : aucun clip ne peut contenir un prénom. On joue les morceaux avec la voix
+       * native et, entre eux, le prénom écrit en thaï (voix de l'appareil) s'il est connu — sinon une courte pause.
+       * Jamais le prénom en lettres latines lu par une voix thaïe.
+       */
+      if (/\{N\}/.test(text)) {
+        const run = ++chain;
+        const parts = text.split(/\{N\}/);
+        const thaiName = profile?.thaiName?.trim();
+        const step = (i: number): void => {
+          if (run !== chain) return;
+          if (i >= parts.length * 2 - 1) { opts?.onend?.(); return; }
+          const next = (): void => step(i + 1);
+          if (i % 2) { if (thaiName) { if (!tts.speak(thaiName, { ...ttsOpts, onend: next })) setTimeout(next, 250); } else setTimeout(next, 250); return; }
+          const part = speakable(parts[i / 2], { gender: who, name: '' }).trim();
+          if (!part) { next(); return; }
+          if (!clips.play(part, voiceGender, { rate, onend: next }) && !tts.speak(part, { ...ttsOpts, onend: next })) next();
+        };
+        tts.cancel(); clips.stop();
+        step(0);
+        return true;
+      }
+      chain++;
       const said = speakable(text, { gender: who, name: profile?.name ?? '' });
       // 1. Voix native pré-générée si elle existe
-      const rate = opts?.rate != null ? (opts.rate >= 0.9 ? 1 : opts.rate) : opts?.slow ? settings.slowRate : 1;
       tts.cancel();
       if (clips.play(said, voiceGender, { rate, onend: opts?.onend })) return true;
       // 2. Sinon, la voix de l'appareil
-      return tts.speak(said, {
-        slow: opts?.slow, slowRate: settings.slowRate, rate: opts?.rate, voiceId: settings.voiceId, force: settings.forceTTS,
-        gender: voiceGender, voiceGenders: settings.voiceGenders, approxGender: settings.voiceApprox !== false, onend: opts?.onend,
-      });
+      return tts.speak(said, { ...ttsOpts, onend: opts?.onend });
     },
-    cancel: () => { clips.stop(); tts.cancel(); },
+    cancel: () => { chain++; clips.stop(); tts.cancel(); },
     status,
     gender: pref,
-  }), [me, pref, profile?.name, settings.slowRate, settings.voiceId, settings.forceTTS, settings.voiceGenders, settings.voiceApprox, status]);
+  }), [me, pref, profile?.name, profile?.thaiName, settings.slowRate, settings.voiceId, settings.forceTTS, settings.voiceGenders, settings.voiceApprox, status]);
 }
 
 /** Lit un texte à l'affichage (si l'audio automatique est activé). */

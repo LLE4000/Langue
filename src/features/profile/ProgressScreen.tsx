@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { useProgress } from '@/app/hooks';
-import { SKILL_META, TIER_STORY, TIERS, remainingLine, tierLine } from '@/engine/progress';
+import { SKILL_META, TIER_STORY, TIERS, tierLine } from '@/engine/progress';
 import { Icon } from '@/components/ui';
 import { ProgressSpark, SkillBars, TierLadder, TierRing } from '@/components/Progress';
 
@@ -31,7 +31,7 @@ export function ProgressScreen() {
 
       {nextStory && p.next !== 'B2' && (
         <>
-          <div className="h2">Pour atteindre {p.next} <span className="sp" /><span className="sm mut">{remainingLine(p)}</span></div>
+          <div className="h2">Pour atteindre {p.next} <span className="sp" /><span className="sm mut">{Math.round(p.toNext * 100)} % du chemin</span></div>
           <p className="note-under">{nextStory.text}</p>
           {todo.length ? (
             <div className="list">
@@ -49,7 +49,7 @@ export function ProgressScreen() {
       <SkillBars p={p} />
       <div className="statline mt-3">
         <span><b>{p.counts.wordsAcquired}</b> mots acquis</span>
-        <span><b>{p.counts.lessonsDone}</b> / {p.counts.lessonsTotal} leçons</span>
+        <span><b>{p.counts.lessonsDone}</b> leçon{p.counts.lessonsDone > 1 ? 's' : ''} faite{p.counts.lessonsDone > 1 ? 's' : ''}</span>
         {p.counts.toReview > 0 && <Link to="/review"><b>{p.counts.toReview}</b> à réviser ›</Link>}
       </div>
 

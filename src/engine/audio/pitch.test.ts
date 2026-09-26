@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classifyTone, detectPitchTrack, synthesizeTone, toneContour } from './pitch';
+import { classifyTone, detectPitchTrack, synthesizeTone, toneContour, PitchBaseline } from './pitch';
 import type { ToneId } from '@/content/types';
 
 const TONES: ToneId[] = ['M', 'L', 'F', 'H', 'R'];
@@ -30,5 +30,22 @@ describe('analyse de la hauteur de la voix', () => {
   });
   it('ne conclut rien sur du silence', () => {
     expect(toneContour(detectPitchTrack(new Float32Array(16000), 16000))).toBeNull();
+  });
+});
+
+describe('ton et registre du locuteur', () => {
+  it('une syllabe plate mais basse dans le registre est un ton bas, pas moyen', () => {
+    const flat = new Array(12).fill(0);
+    expect(classifyTone(flat, 'M').predicted).toBe('M'); // forme seule
+    expect(classifyTone(flat, 'L', -2.5).predicted).toBe('L'); // 2,5 demi-tons sous le registre
+    expect(classifyTone(flat, 'M', 0.1).predicted).toBe('M');
+  });
+  it('le registre s’apprend sur six syllabes', () => {
+    const b = new PitchBaseline();
+    for (let i = 0; i < 5; i++) b.add(120);
+    expect(b.level(100)).toBeUndefined();
+    b.add(130);
+    expect(b.level(120)).toBeCloseTo(0, 5);
+    expect(b.level(60 * 2)).toBeCloseTo(0, 5);
   });
 });

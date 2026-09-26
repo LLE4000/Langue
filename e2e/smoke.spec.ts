@@ -327,7 +327,7 @@ test('compréhension orale : écouter sans texte, répondre en français, voir l
   await expect(page.locator('.recap .score')).toBeVisible();
 });
 
-test('progression : pastille permanente, palier avec critères chiffrés, chaque nombre avec son total', async ({ page }) => {
+test('progression : pastille permanente, palier avec critères chiffrés, jauge de maîtrise sans total de leçons', async ({ page }) => {
   await onboard(page, [1, 1, 1, 1]);
   // la pastille est visible sur l'accueil et mène à l'écran de progression
   const pill = page.getByTestId('progress-pill');
@@ -337,7 +337,11 @@ test('progression : pastille permanente, palier avec critères chiffrés, chaque
   await expect(page.getByText('Premiers pas').first()).toBeVisible();
   await expect(page.getByText(/Pour atteindre A1/)).toBeVisible();
   await expect(page.getByText(/il faut \d+ consonnes/)).toBeVisible();
-  await expect(page.getByText(/leçons?, soit .* avant A1/).first()).toBeVisible();
+  // ni total de leçons ni estimation de durée : seulement le pourcentage de maîtrise
+  await expect(page.getByText(/soit .* avant A1/)).toHaveCount(0);
+  await page.goto('/#/path');
+  await expect(page.getByRole('progressbar', { name: /A0 · \d+ % du chemin vers A1/ })).toBeVisible();
+  await expect(page.getByText(/sur \d+$|validées? sur/)).toHaveCount(0);
   // les compétences hors objectif « parler » disparaissent du palier
   await page.goto('/#/profile/levels');
   await page.getByRole('radio', { name: /Parler et comprendre/ }).click();

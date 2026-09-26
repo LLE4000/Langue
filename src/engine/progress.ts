@@ -74,6 +74,13 @@ export interface ProgressInput {
   ruleStats: Record<string, { ok: number; ko: number }>;
   pron: Record<string, PronStat>;
   activities: Record<string, ActivityRecord>; // clés « comp:<dialogue> », « dialog:<id> », « reading:<id> »
+  /** lecture à voix haute : maîtrise par étiquette (c:ก, v:–า, tone:M…), lectures justes / jugées */
+  readAloud?: Record<string, { ok: number; n: number }>;
+  /**
+   * Paliers validés par un test (à venir). Absent : un palier est atteint dès que toutes les compétences passent le
+   * jalon. Présent : le palier affiché ne dépasse pas le dernier palier validé, et `readyFor` annonce le test à passer.
+   */
+  validated?: TierId[];
   levels: SkillLevels;
   goals: Goals;
   now?: number;
@@ -98,8 +105,10 @@ export interface Progress {
   relevant: SkillId[];
   tier: TierId;
   next: TierId | null;
-  /** avancement 0–1 vers le prochain palier (moyenne des compétences concernées) */
+  /** avancement 0–1 vers le prochain palier (moyenne des compétences concernées, plafonnée par compétence) */
   toNext: number;
+  /** palier dont toutes les compétences ont atteint le jalon mais qui attend sa validation (test de niveau futur) */
+  readyFor: TierId | null;
   overall: number; // 0–100
   remaining: { lessons: number; hours: number; words: number };
   counts: { lessonsDone: number; lessonsTotal: number; wordsAcquired: number; consAcquired: number; vowelsAcquired: number; toReview: number };
@@ -137,16 +146,24 @@ export function computeProgress(input: ProgressInput): Progress {
   const oral = Math.min(levels.speaking, levels.listening);
 
   // --- mesures brutes ---
+  // lecture à voix haute : précision par famille d'étiquettes, et signes vraiment maîtrisés à l'oral
+  const ra = input.readAloud ?? {};
+  const raSum = (re: RegExp) => Object.entries(ra).filter(([k]) => re.test(k)).reduce((a, [, v]) => ({ ok: a.ok + v.ok, n: a.n + v.n }), { ok: 0, n: 0 });
+  const raAll = raSum(/^(c|v):/), raTone = raSum(/^tone:/);
+  const raMastered = Object.entries(ra).filter(([k, v]) => /^(c|v):/.test(k) && v.n >= 3 && v.ok / v.n >= 0.8).length;
+  const raCoverage = Math.min(1, raMastered / Math.max(1, c.cons.length + c.vowels.length));
   const consA = acq(c.cons).length, vowA = acq(c.vowels).length, wordsA = acq(c.words).length, gramA = acq(c.grammar).length;
   // tons : exercices de règles (ruleStats) et mots de tons acquis
   const rs = Object.values(ruleStats).reduce((a, r) => ({ ok: a.ok + r.ok, ko: a.ko + r.ko }), { ok: 0, ko: 0 });
   const toneAnswers = rs.ok + rs.ko;
-  const toneAcc = toneAnswers >= 8 ? rs.ok / toneAnswers : 0;
   const toneItems = c.toneItems.length ? acq(c.toneItems).length / c.toneItems.length : 0;
-  const tonesRaw = toneAnswers >= 8 ? 0.7 * toneAcc + 0.3 * toneItems : toneItems * 0.6;
+  // la lecture à voix haute ajoute ses tons jugés (reconnaissance, courbe de la voix) aux exercices de règles
+  const toneN = toneAnswers + raTone.n, toneOk = rs.ok + raTone.ok;
+  const tonesRaw = toneN >= 8 ? 0.7 * (toneOk / toneN) + 0.3 * toneItems : toneItems * 0.6;
   // lecture : leçons d'écriture faites + lectures terminées
   const readingsDone = c.readings.filter((id) => activities['reading:' + id]?.n).length;
-  const readingRaw = 0.6 * ratio(c.scriptLessons, doneLessons) + 0.4 * Math.min(1, readingsDone / 10);
+  // lecture : la maîtrise réelle compte autant que les leçons (signes lus justes à voix haute, textes lus)
+  const readingRaw = 0.4 * ratio(c.scriptLessons, doneLessons) + 0.3 * Math.min(1, readingsDone / 10) + 0.3 * raCoverage;
   // compréhension orale : leçons orales + compréhensions (score moyen × couverture)
   const comps = c.dialogs.map((id) => activities['comp:' + id]).filter((a): a is ActivityRecord => !!a && !!a.total);
   const compMean = comps.length ? comps.reduce((a, x) => a + (x.best ?? 0) / (x.total ?? 1), 0) / comps.length : 0;
@@ -154,7 +171,7 @@ export function computeProgress(input: ProgressInput): Progress {
   // prononciation : meilleure note par mot, pondérée par le nombre de mots essayés
   const prons = Object.values(pron);
   const pronMean = prons.length ? prons.reduce((a, p) => a + p.best, 0) / prons.length / 10 : 0;
-  const speakingRaw = pronMean * Math.min(1, prons.length / 40);
+  const speakingRaw = Math.max(pronMean * Math.min(1, prons.length / 40), raAll.n ? (raAll.ok / raAll.n) * Math.min(1, raAll.n / 400) : 0);
   // conversation : dialogues travaillés + prononciation
   const dialogsDone = c.dialogs.filter((id) => activities['dialog:' + id]?.n || activities['comp:' + id]?.n).length;
   const conversationRaw = 0.6 * Math.min(1, dialogsDone / 20) + 0.4 * speakingRaw;
@@ -194,7 +211,13 @@ export function computeProgress(input: ProgressInput): Progress {
 
   // --- palier ---
   let tier: TierId = 'A0';
-  for (const t of ['A1', 'A2', 'B1'] as TierId[]) if (relevant.every((id) => values[id] >= TIER_MARK[t])) tier = t; else break;
+  let readyFor: TierId | null = null;
+  for (const t of ['A1', 'A2', 'B1'] as TierId[]) {
+    if (!relevant.every((id) => values[id] >= TIER_MARK[t])) break;
+    // test de validation (à venir) : sans validation, on reste au palier précédent, « prêt pour » le suivant
+    if (input.validated && !input.validated.includes(t)) { readyFor = t; break; }
+    tier = t;
+  }
   const next: TierId | null = tier === 'B1' ? 'B2' : (TIERS[TIERS.indexOf(tier) + 1] as TierId);
   const mark = next && next !== 'B2' ? TIER_MARK[next] : 100;
   const prevMark = TIER_MARK[tier];
@@ -207,7 +230,7 @@ export function computeProgress(input: ProgressInput): Progress {
       case 'vowels': return `${Math.round(raws.vowels)} / ${c.vowels.length}`;
       case 'vocab': return `${Math.round(raws.vocab)} mots`;
       case 'grammar': return `${Math.round(raws.grammar)} / ${c.grammar.length} points`;
-      case 'tones': return toneAnswers >= 8 || floors.tones > 0 ? `${pct(raws.tones)} de tons justes` : 'pas encore mesuré';
+      case 'tones': return toneN >= 8 || floors.tones > 0 ? `${pct(raws.tones)} de tons justes` : 'pas encore mesuré';
       case 'reading': return `${c.scriptLessons.filter((id) => doneLessons.has(id)).length} / ${c.scriptLessons.length} leçons · ${readingsDone} lecture${readingsDone > 1 ? 's' : ''}`;
       case 'listening': return comps.length ? `${pct(compMean)} compris · ${comps.length} conversation${comps.length > 1 ? 's' : ''}` : 'écoutez une conversation';
       case 'speaking': return prons.length ? `${r1(pronMean * 10)} / 10 sur ${prons.length} mot${prons.length > 1 ? 's' : ''}` : 'dites un mot au micro';
@@ -242,7 +265,7 @@ export function computeProgress(input: ProgressInput): Progress {
   const toReview = skills.reduce((a, s) => a + s.toReview, 0);
 
   return {
-    skills, relevant, tier, next, toNext, overall,
+    skills, relevant, tier, next, toNext, overall, readyFor,
     remaining: { lessons, hours, words: wordsNeed },
     // les compteurs affichés suivent la même règle que les compétences : le niveau déclaré sert de plancher
     counts: { lessonsDone: c.allLessons.filter((id) => completedLessons.has(id)).length, lessonsTotal: c.allLessons.length, wordsAcquired: Math.round(raws.vocab), consAcquired: Math.round(raws.cons), vowelsAcquired: Math.round(raws.vowels), toReview },
@@ -255,11 +278,3 @@ export function tierLine(p: Progress): string {
   return `${p.tier} · ${Math.round(p.toNext * 100)} % du chemin vers ${p.next}`;
 }
 
-/** Phrase du chemin restant : « ≈ 27 leçons, soit 6 h, avant A2 ». */
-export function remainingLine(p: Progress): string {
-  if (!p.next || p.next === 'B2') return 'Le palier B2 arrivera avec les contenus avancés.';
-  const { lessons, hours } = p.remaining;
-  if (!lessons) return `Encore quelques révisions avant ${p.next}.`;
-  const h = hours < 1 ? `${Math.max(10, Math.round(hours * 60))} min` : hours >= 10 ? `${Math.round(hours)} h` : `${String(hours).replace('.', ',')} h`;
-  return `≈ ${lessons} leçon${lessons > 1 ? 's' : ''}, soit ${h}, avant ${p.next}`;
-}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeProgress, remainingLine, tierLine, type ProgressContent, type ProgressInput } from './progress';
+import { computeProgress, tierLine, type ProgressContent, type ProgressInput } from './progress';
 import { rate, type SrsState } from './srs';
 
 const ids = (p: string, n: number) => Array.from({ length: n }, (_, i) => `${p}${i}`);
@@ -21,7 +21,6 @@ describe('progression par compétences', () => {
     expect(p.next).toBe('A1');
     expect(p.overall).toBe(0);
     expect(p.remaining.lessons).toBeGreaterThan(0);
-    expect(remainingLine(p)).toMatch(/leçons/);
     expect(tierLine(p)).toBe('A0 · 0 % du chemin vers A1');
   });
 
@@ -84,5 +83,28 @@ describe('progression par compétences', () => {
     expect(b.counts.wordsAcquired).toBe(300);
     // le niveau déclaré sert aussi de plancher aux compteurs (cohérence entre les écrans)
     expect(computeProgress(base({ levels: { listening: 1, speaking: 1, reading: 0, writing: 0 } })).counts.wordsAcquired).toBe(120);
+  });
+});
+
+describe('progression : lecture à voix haute et validation des paliers', () => {
+  it('la lecture à voix haute fait monter lecture, tons et prononciation', () => {
+    const p0 = computeProgress(base());
+    const tags: Record<string, { ok: number; n: number }> = {};
+    for (let i = 0; i < 30; i++) tags['c:' + i] = { ok: 9, n: 10 };
+    tags['tone:M'] = { ok: 40, n: 50 };
+    const withRa = computeProgress(base({ readAloud: tags }));
+    const v = (p: typeof p0, id: string) => p.skills.find((s) => s.id === id)!.value;
+    expect(v(withRa, 'reading')).toBeGreaterThan(v(p0, 'reading'));
+    expect(v(withRa, 'tones')).toBeGreaterThan(v(p0, 'tones'));
+    expect(v(withRa, 'speaking')).toBeGreaterThan(v(p0, 'speaking'));
+  });
+  it('un palier non validé reste « prêt pour » quand la validation est exigée', () => {
+    const strong = base({ levels: { listening: 3, speaking: 3, reading: 3, writing: 3 } });
+    const free = computeProgress(strong);
+    expect(free.tier).not.toBe('A0');
+    const gated = computeProgress({ ...strong, validated: [] });
+    expect(gated.tier).toBe('A0');
+    expect(gated.readyFor).toBe('A1');
+    expect(free.readyFor).toBeNull();
   });
 });

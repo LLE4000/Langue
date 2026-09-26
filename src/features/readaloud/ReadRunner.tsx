@@ -14,6 +14,7 @@ import { raSession } from '@/engine/readaloud/program';
 import { summarize } from '@/engine/readaloud/queue';
 import type { RaItem } from '@/engine/readaloud/compose';
 import { MicStream, toneOfSegment } from '@/engine/audio/stream';
+import { PitchBaseline } from '@/engine/audio/pitch';
 import { ContinuousRecognizer } from '@/engine/audio/mic';
 import { assessPronunciation, azureConfig } from '@/engine/audio/azure';
 import { visualLength } from '@/engine/thai/script';
@@ -66,6 +67,7 @@ export function ReadRunner() {
   const [run, setRun] = useState<RaRun | null>(null);
   const create = () => {
     runRef.current?.release();
+    const baseline = new PitchBaseline(); // registre de la voix, appris pendant la série
     const r = new RaRun(items, mode, {
       speak: (t, onend) => sp.speak(t, { onend }),
       cancelSpeak: () => sp.cancel(),
@@ -73,7 +75,7 @@ export function ReadRunner() {
       asr: new ContinuousRecognizer(activePack().speechLang).supported ? new ContinuousRecognizer(activePack().speechLang) : null,
       azure: azureConfig(),
       assess: assessPronunciation,
-      pitch: (samples, it) => toneOfSegment(samples, it.tone),
+      pitch: (samples, it) => toneOfSegment(samples, it.tone, baseline),
       now: () => performance.now(),
     }, { tempo: prefs.tempo, chronoMs: 60000 });
     runRef.current = r;

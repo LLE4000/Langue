@@ -8,7 +8,7 @@ import { readRegistry } from '@/app/profiles';
 import { T } from '@/i18n';
 import { Icon, Ico } from '@/components/ui';
 import { SkillBars, TierRing } from '@/components/Progress';
-import { TIER_STORY, remainingLine, tierLine } from '@/engine/progress';
+import { TIER_STORY, tierLine } from '@/engine/progress';
 import { BADGES } from '@/features/lesson/badges';
 import { GOAL_OPTIONS, goalKey } from '@/features/onboarding/Onboarding';
 
@@ -36,11 +36,11 @@ export function Profile() {
     <>
       <Link to="/profile/progress" className="chead">
         <TierRing p={p} />
-        <div className="mid"><div className="name">{profile.name}</div><div className="sm b">{TIER_STORY[p.tier].title} · {tierLine(p)}</div><div className="xs mut">{remainingLine(p)}</div><div className="tagline mt-2"><span className="tag gold"><Icon name="flame" size={13} /> {plural(streak, 'jour')} de suite</span><span className="tag">{plural(nDays, 'jour')} d’étude</span><span className="tag">{xp} XP</span></div></div>
+        <div className="mid"><div className="name">{profile.name}</div><div className="sm b">{TIER_STORY[p.tier].title} · {tierLine(p)}</div><div className="tagline mt-2"><span className="tag gold"><Icon name="flame" size={13} /> {plural(streak, 'jour')} de suite</span><span className="tag">{plural(nDays, 'jour')} d’étude</span><span className="tag">{xp} XP</span></div></div>
       </Link>
       <div className="h2">Mes compétences <span className="sp" /><Link to="/profile/progress">Tout voir ›</Link></div>
       <SkillBars p={p} compact limit={4} />
-      <div className="statline mt-2"><span><b>{p.counts.wordsAcquired}</b> mots acquis</span><span><b>{p.counts.lessonsDone}</b> / {p.counts.lessonsTotal} leçons</span><span>{goalLabel}</span></div>
+      <div className="statline mt-2"><span><b>{p.counts.wordsAcquired}</b> mots acquis</span><span><b>{p.counts.lessonsDone}</b> leçon{p.counts.lessonsDone > 1 ? 's' : ''} faite{p.counts.lessonsDone > 1 ? 's' : ''}</span><span>{goalLabel}</span></div>
       <div className="h2">{t.profile.badges} <span className="sp" /><span className="sm mut">{earned.length} / {BADGES.length}</span></div>
       <div className="badges">{shown.map((b) => <div key={b.id} className={`badge ${badges[b.id] ? 'on' : ''}`} title={b.desc}><span className="e">{b.icon}</span>{b.title}<span className="xs mut d">{b.desc}</span></div>)}</div>
       {BADGES.length > shown.length || allBadges ? <button className="btn ghost sm mt-3" onClick={() => setAllBadges(!allBadges)}>{allBadges ? 'Voir moins' : `Voir tous les badges (${BADGES.length})`}</button> : null}

@@ -108,14 +108,39 @@ function fitDistance(p: number[], proto: number[]): number {
 
 export interface ToneCheck { predicted: ToneId; expected: ToneId; ok: boolean; similarity: number; distances: Record<ToneId, number>; confidence: number }
 
-export function classifyTone(points: number[], expected: ToneId): ToneCheck {
-  const distances = Object.fromEntries(TONE_IDS.map((t) => [t, fitDistance(points, TONE_PROTOTYPES[t])])) as Record<ToneId, number>;
+/**
+ * Hauteur moyenne typique de chaque ton par rapport au registre habituel du locuteur (demi-tons). Une forme seule ne
+ * sépare pas bien moyen, bas et haut (trois tons « plats » à l'oreille d'un francophone) : la hauteur relative, si.
+ */
+export const TONE_LEVEL: Record<ToneId, number> = { M: 0, L: -2, F: 0.6, H: 1.8, R: -0.6 };
+const LEVEL_WEIGHT = 0.35;
+
+/**
+ * `level` (facultatif) : hauteur moyenne de la syllabe par rapport au registre du locuteur, en demi-tons (voir
+ * PitchBaseline). Présent, il départage les tons de même forme ; absent, seule la forme compte.
+ */
+export function classifyTone(points: number[], expected: ToneId, level?: number): ToneCheck {
+  const lv = (t: ToneId) => (level == null ? 0 : LEVEL_WEIGHT * Math.abs(level - TONE_LEVEL[t]));
+  const distances = Object.fromEntries(TONE_IDS.map((t) => [t, fitDistance(points, TONE_PROTOTYPES[t]) + lv(t)])) as Record<ToneId, number>;
   const sorted = [...TONE_IDS].sort((a, b) => distances[a] - distances[b]);
   const predicted = sorted[0];
   const d = distances[expected];
   const similarity = Math.max(0, Math.min(1, 1 - d / 3));
   const confidence = (distances[sorted[1]] - distances[sorted[0]]) / (distances[sorted[1]] + 1e-6);
   return { predicted, expected, ok: predicted === expected, similarity, distances, confidence };
+}
+
+/**
+ * Registre du locuteur, appris pendant une série : médiane des hauteurs moyennes des syllabes déjà lues. Tant qu'il
+ * n'y a pas assez de syllabes (6), on ne s'en sert pas.
+ */
+export class PitchBaseline {
+  private hz: number[] = [];
+  add(meanHz: number) { if (meanHz > 60 && meanHz < 500) { this.hz.push(meanHz); if (this.hz.length > 60) this.hz.shift(); } }
+  get ready() { return this.hz.length >= 6; }
+  median(): number { const s = [...this.hz].sort((a, b) => a - b); return s[Math.floor(s.length / 2)] ?? 0; }
+  /** hauteur relative (demi-tons) d'une syllabe, ou undefined si le registre n'est pas encore connu */
+  level(meanHz: number): number | undefined { return this.ready ? 12 * Math.log2(meanHz / this.median()) : undefined; }
 }
 
 /** Signal de test : une voyelle synthétique dont la hauteur suit un gabarit de ton (pour les tests). */

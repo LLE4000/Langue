@@ -148,21 +148,22 @@ export function progressContent(): ProgressContent {
   return contentCache;
 }
 
-/** Progression par compétences, palier et chemin restant (voir engine/progress.ts). */
+/** Progression par compétences et palier, d'après la maîtrise réelle (voir engine/progress.ts). */
 export function useProgress(): Progress {
   const srs = useStore((s) => s.srs);
   const acquired = useStore((s) => s.acquired);
   const ruleStats = useStore((s) => s.ruleStats);
   const pron = useStore((s) => s.pron);
   const activities = useStore((s) => s.activities);
+  const readAloudTags = useStore((s) => s.readAloud?.tags);
   const completed = useCompleted();
   const levels = useLevels();
   const goals = useGoals();
   return useMemo(() => {
     const cur = curriculum();
     const doneLessons = new Set([...completed, ...grantedLessons(cur, levels)]);
-    return computeProgress({ content: progressContent(), srs, acquired, doneLessons, completedLessons: completed, ruleStats, pron, activities, levels, goals });
-  }, [srs, acquired, ruleStats, pron, activities, completed, levels, goals]);
+    return computeProgress({ content: progressContent(), srs, acquired, doneLessons, completedLessons: completed, ruleStats, pron, activities, readAloud: readAloudTags, levels, goals });
+  }, [srs, acquired, ruleStats, pron, activities, readAloudTags, completed, levels, goals]);
 }
 
 /** Garde une trace quotidienne de la progression (pour la courbe d'évolution). À monter une fois, dans la coque. */

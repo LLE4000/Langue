@@ -29,7 +29,7 @@ export function StatsScreen() {
         <div><div className="k"><span>Temps total</span><b>{tot.minutes} min</b></div></div>
         <div><div className="k"><span>Réponses</span><b>{tot.answers}</b></div><div className="xs mut">{tot.answers ? Math.round((tot.correct / tot.answers) * 100) : 0} % justes</div></div>
         <div><div className="k"><span>Palier</span><b>{p.tier}</b></div><div className="xs mut">{tierLine(p)}</div></div>
-        <div><div className="k"><span>Leçons validées</span><b>{p.counts.lessonsDone} / {p.counts.lessonsTotal}</b></div></div>
+        <div><div className="k"><span>Leçons validées</span><b>{p.counts.lessonsDone}</b></div></div>
         <div><div className="k"><span>Mots acquis</span><b>{p.counts.wordsAcquired}</b></div></div>
         <div><div className="k"><span>XP</span><b>{xp}</b></div></div>
       </div>
