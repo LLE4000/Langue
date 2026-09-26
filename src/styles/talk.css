@@ -1,0 +1,19 @@
+/* Conversation parlée : fil de bulles, carte « À vous » en bas, grand bouton micro */
+.talk { display: flex; flex-direction: column; gap: var(--s-2); padding-bottom: var(--s-6); }
+.talk .bub .th { font-family: var(--f-th); font-size: calc(20px * var(--ths)); line-height: 1.45; display: block; }
+.talk .bub .tr { display: block; margin-top: 4px; font-size: var(--fs-2); color: var(--ink2); }
+.talk .bub.me.ok { border-color: var(--ok); background: var(--ok-soft); }
+.talk .bub.me.near { border-color: var(--acc); background: var(--acc-soft); }
+.talk .bub.me.ko { border-color: var(--ko); background: var(--ko-soft); }
+.talk .who .vd { margin-left: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.talk .who .vd.ok { color: var(--ok); } .talk .who .vd.near { color: var(--acc-deep); } .talk .who .vd.ko { color: var(--ko); }
+.talk-me { margin-top: var(--s-3); padding: var(--s-5) var(--s-4); border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--e1); display: flex; flex-direction: column; align-items: center; gap: var(--s-2); text-align: center; }
+.talk-me .eyebrow { color: var(--acc-deep); }
+.talk-me .th { font-family: var(--f-th); font-size: 22px; line-height: 1.45; margin: 0; } .talk-me .th.big { font-size: 28px; font-weight: 500; }
+.talk-me .rom { color: var(--jade); font-weight: 600; margin: 0; } .talk-me .fr { color: var(--ink2); margin: 0; } .talk-me .fr.big { color: var(--ink); font-size: var(--fs-4); font-weight: 600; line-height: 1.35; }
+.talk-mic { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; margin-top: var(--s-3); background: var(--acc); color: var(--on-acc); box-shadow: 0 10px 24px -12px rgba(0, 0, 0, .5); transition: transform .08s, box-shadow .2s; }
+.talk-mic svg { width: 34px; height: 34px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.talk-mic.on { animation: talkpulse 1.2s ease-in-out infinite; }
+@keyframes talkpulse { 50% { box-shadow: 0 0 0 14px color-mix(in srgb, var(--acc) 22%, transparent), 0 10px 24px -12px rgba(0, 0, 0, .5); } }
+.talk-after { display: flex; flex-wrap: wrap; gap: var(--s-2); justify-content: center; margin-top: var(--s-2); }
+.talk-after .btn { width: auto; }
