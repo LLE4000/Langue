@@ -67,7 +67,7 @@ function Turn({ item, player, onScored }: { item: LearnItem; player: string; onS
     setRes(null); setMsg(''); setListening(true); sp.cancel();
     try {
       recognizer.start((ev) => {
-        if (ev.type === 'result') setRes(scorePronunciation(ev.alts, targets, [{ t: resolveTokens(item.thai, tok), r: resolveTokens(item.rom, tok) }], strictness));
+        if (ev.type === 'result') setRes(scorePronunciation(ev.alts, targets, [{ t: resolveTokens(item.thai, tok), r: resolveTokens(item.rom, tok) }], strictness, ev.confidence));
         else if (ev.type === 'error') { if (ev.code !== 'aborted') setMsg(RECOGNITION_ERRORS[ev.code] ?? `Reconnaissance interrompue (${ev.code}).`); }
         else setListening(false);
       });

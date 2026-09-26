@@ -67,7 +67,7 @@ export function MicPanel({ item, onClose, inline, onScore }: { item: LearnItem; 
     try {
       recognizer.start((ev) => {
         if (ev.type === 'result') {
-          const r = scorePronunciation(ev.alts, targets, words, strictness);
+          const r = scorePronunciation(ev.alts, targets, words, strictness, ev.confidence);
           setRes(r); record(item.id, r.score); onScore?.(r.score);
         } else if (ev.type === 'error') { if (ev.code !== 'aborted') setMsg(RECOGNITION_ERRORS[ev.code] ?? `Reconnaissance interrompue (${ev.code}).`); }
         else setListening(false);
@@ -116,6 +116,7 @@ export function MicPanel({ item, onClose, inline, onScore }: { item: LearnItem; 
             <div className={`verdict ${res.verdict}`}>{VERDICT_TEXT[res.verdict]}</div>
             {res.words.length > 1 && <div className="pwords">{res.words.map((w, k) => <span key={k} className={`pw ${w.ok ? 'ok' : w.near ? 'near' : 'ko'}`} lang="th"><b>{w.t}</b>{w.r && <em>{w.r}</em>}</span>)}</div>}
             {res.verdict !== 'ok' && res.heard && <div className="sm" style={{ marginTop: 6 }}>Le moteur a compris : <b className="th" style={{ fontSize: 18 }}>{res.heard}</b></div>}
+            {typeof res.confidence === 'number' && <div className="xs mut" style={{ marginTop: 4 }}>Certitude du moteur : {Math.round(res.confidence * 100)} %</div>}
             {res.verdict !== 'ok' && res.alts.length > 1 && <div className="xs mut" style={{ marginTop: 2 }}>Il hésitait aussi avec : <span className="th">{res.alts.slice(1, 3).join(' · ')}</span></div>}
             {res.hints.map((h, k) => <div key={k} className="sm mut" style={{ marginTop: 4 }}>{h}</div>)}
             {stat && stat.n > 1 && <div className="xs mut" style={{ marginTop: 6 }}>Meilleur : {stat.best}/10 · {stat.n} essais</div>}

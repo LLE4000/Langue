@@ -48,7 +48,8 @@ export class Recorder {
   get active() { return !!(this.mr && this.mr.state === 'recording'); }
 }
 
-export type RecognitionEvent = { type: 'result'; alts: string[] } | { type: 'error'; code: string } | { type: 'end' };
+/** `confidence` : certitude du moteur sur sa première hypothèse (0–1), absente si le navigateur ne la donne pas. */
+export type RecognitionEvent = { type: 'result'; alts: string[]; confidence?: number } | { type: 'error'; code: string } | { type: 'end' };
 
 /** Types minimaux de l'API Web Speech (reconnaissance), absents de lib.dom dans certaines versions. */
 interface SRAlternative { transcript: string; confidence: number }
@@ -85,8 +86,9 @@ export class Recognizer {
     r.onresult = (e) => {
       got = true;
       const alts: string[] = [];
-      for (let i = 0; i < e.results.length; i++) { const res = e.results[i]; for (let j = 0; j < res.length; j++) { const a = res[j]; if (a?.transcript) alts.push(a.transcript.trim()); } }
-      cb({ type: 'result', alts });
+      let confidence: number | undefined;
+      for (let i = 0; i < e.results.length; i++) { const res = e.results[i]; for (let j = 0; j < res.length; j++) { const a = res[j]; if (a?.transcript) { if (!alts.length && typeof a.confidence === 'number' && a.confidence > 0) confidence = a.confidence; alts.push(a.transcript.trim()); } } }
+      cb({ type: 'result', alts, confidence });
     };
     r.onerror = (e) => { got = true; cb({ type: 'error', code: e.error }); };
     r.onend = () => { this.cur = null; if (!got) cb({ type: 'error', code: 'no-speech' }); cb({ type: 'end' }); };

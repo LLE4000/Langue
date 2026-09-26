@@ -19,6 +19,7 @@ export interface PronResult {
   words: WordCheck[];
   verdict: 'ok' | 'near' | 'ko';
   hints: string[];
+  confidence?: number;
 }
 
 const POLITE_END = /(ครับ|คับ|ค่ะ|คะ|ค่า)$/;
@@ -48,7 +49,13 @@ function bestWindow(word: string, heard: string): number {
  */
 export type Strictness = 'lenient' | 'normal' | 'strict';
 
-export function scorePronunciation(alts: string[], targets: string[], words: TargetWord[] = [], strictness: Strictness = 'normal'): PronResult {
+/**
+ * Note 0–10. `confidence` (0–1) est la certitude du moteur sur sa première hypothèse quand le navigateur la donne :
+ * un mot « compris » avec peu de certitude ne vaut pas 10. En modes normal et strict, une erreur qui ne porte que sur
+ * un ton ou une longueur de voyelle plafonne la note : en thaï, c'est un autre mot, même si l'écriture n'en diffère
+ * que d'un signe (une comparaison caractère par caractère ne le verrait presque pas).
+ */
+export function scorePronunciation(alts: string[], targets: string[], words: TargetWord[] = [], strictness: Strictness = 'normal', confidence?: number): PronResult {
   const cands = strictness === 'lenient' ? alts : alts.slice(0, 1);
   let sim = 0, heard = alts[0] ?? '', bestTarget = targets[0] ?? '';
   for (const a of cands) for (const t of targets) for (const na of forms(a)) for (const nt of forms(t)) {
@@ -66,21 +73,33 @@ export function scorePronunciation(alts: string[], targets: string[], words: Tar
   const okWords = ws.filter((w) => w.ok).length;
   const nearWeight = strictness === 'strict' ? 0.25 : 0.5;
   const wordScore = ws.length ? (okWords + nearWeight * ws.filter((w) => w.near).length) / ws.length : sim;
-  const raw = sim >= 0.999 ? 10 : strictness === 'strict' ? Math.min(7, Math.round(8 * (0.5 * sim + 0.5 * wordScore))) : Math.round(10 * (0.6 * sim + 0.4 * wordScore));
+  let raw = sim >= 0.999 ? 10 : strictness === 'strict' ? Math.min(7, Math.round(8 * (0.5 * sim + 0.5 * wordScore))) : Math.round(10 * (0.6 * sim + 0.4 * wordScore));
+
+  const tN = forms(bestTarget)[forms(bestTarget).length - 1] ?? '';
+  const hN = heardN.replace(POLITE_END, '');
+  const toneOnly = !!hN && sim < 0.999 && hN.replace(TONE_MARKS, '') === tN.replace(TONE_MARKS, '');
+  const lengthOnly = !toneOnly && !!hN && sim < 0.999 && shorten(hN.replace(TONE_MARKS, '')) === shorten(tN.replace(TONE_MARKS, ''));
+  const hints: string[] = [];
+  if (strictness !== 'lenient') {
+    // Un ton ou une longueur de voyelle faux = un autre mot : jamais « presque compris » à 8.
+    if (toneOnly || lengthOnly) raw = Math.min(raw, strictness === 'strict' ? 4 : 5);
+    // Le moteur lui-même n'était pas sûr : on ne valide pas sur un doute.
+    if (typeof confidence === 'number') {
+      if (confidence < 0.5) { raw = Math.min(raw, 6); hints.push('Le moteur a hésité pour comprendre : articulez davantage, plus près du micro.'); }
+      else if (confidence < (strictness === 'strict' ? 0.85 : 0.75)) { raw = Math.min(raw, 8); hints.push('Compris, mais sans certitude : le moteur n’était pas sûr de ce qu’il entendait.'); }
+    }
+  }
   const score = Math.max(0, Math.min(10, alts.length ? raw : 0));
   const verdict: PronResult['verdict'] = score >= 9 ? 'ok' : score >= 6 ? 'near' : 'ko';
 
-  const hints: string[] = [];
-  const tN = forms(bestTarget)[forms(bestTarget).length - 1] ?? '';
-  const hN = heardN.replace(POLITE_END, '');
   if (verdict !== 'ok' && hN) {
-    if (hN.replace(TONE_MARKS, '') === tN.replace(TONE_MARKS, '')) hints.push('Les sons sont justes : c’est le ton qui a été entendu différemment. Réécoutez le modèle et exagérez la courbe du ton.');
-    else if (shorten(hN.replace(TONE_MARKS, '')) === shorten(tN.replace(TONE_MARKS, ''))) hints.push('Le moteur a entendu une autre longueur de voyelle : en thaï, une voyelle longue se tient vraiment deux fois plus longtemps.');
+    if (toneOnly) hints.unshift('Les sons sont justes, mais le ton entendu est un autre : en thaï c’est un autre mot. Réécoutez le modèle et exagérez la courbe du ton.');
+    else if (lengthOnly) hints.unshift('Le moteur a entendu une autre longueur de voyelle : en thaï, une voyelle longue se tient vraiment deux fois plus longtemps.');
     else if (ws.length > 1 && okWords > 0 && okWords < ws.length) hints.push(`${ws.length - okWords} mot${ws.length - okWords > 1 ? 's' : ''} sur ${ws.length} n’${ws.length - okWords > 1 ? 'ont' : 'a'} pas été reconnu${ws.length - okWords > 1 ? 's' : ''} : reprenez-les un par un, puis la phrase entière.`);
     else if (sim < 0.4) hints.push('Le moteur a compris tout autre chose. Parlez plus près du micro, un peu plus lentement, en séparant les syllabes.');
   }
   if (verdict === 'near' && !hints.length) hints.push('Presque : le moteur hésite. Répétez en articulant les consonnes finales.');
-  return { score, sim, heard, alts, words: ws, verdict, hints };
+  return { score, sim, heard, alts, words: ws, verdict, hints, confidence };
 }
 
 /** Note lissée sur les dernières tentatives (pour l'affichage « meilleur / dernier »). */

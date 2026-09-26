@@ -38,6 +38,23 @@ describe('contrôle de prononciation', () => {
     expect(strict.score).toBeLessThanOrEqual(7);
     expect(scorePronunciation(['สวัสดีครับ'], ['สวัสดีครับ'], words, 'strict').score).toBe(10);
   });
+  it('une erreur de ton seule ne vaut jamais « presque » : plafond 5 (4 en strict), libre en indulgent', () => {
+    // ผมอยากไปตลาด avec un ton faux sur ตลาด : 92 % de ressemblance caractère par caractère, mais un autre mot
+    const t = 'ผมอยากไปตลาด', h = 'ผมอยากไปตล่าด';
+    expect(scorePronunciation([h], [t]).score).toBeLessThanOrEqual(5);
+    expect(scorePronunciation([h], [t], [], 'strict').score).toBeLessThanOrEqual(4);
+    expect(scorePronunciation([h], [t], [], 'lenient').score).toBeGreaterThanOrEqual(7);
+    expect(scorePronunciation([h], [t]).hints[0]).toMatch(/ton/);
+    // longueur de voyelle seule : même plafond
+    expect(scorePronunciation(['กิน'], ['กีน']).score).toBeLessThanOrEqual(5);
+  });
+  it('la certitude du moteur plafonne la note', () => {
+    expect(scorePronunciation(['สวัสดีครับ'], ['สวัสดีครับ'], words, 'normal', 0.95).score).toBe(10);
+    expect(scorePronunciation(['สวัสดีครับ'], ['สวัสดีครับ'], words, 'normal', 0.6).score).toBe(8);
+    expect(scorePronunciation(['สวัสดีครับ'], ['สวัสดีครับ'], words, 'normal', 0.3).score).toBe(6);
+    expect(scorePronunciation(['สวัสดีครับ'], ['สวัสดีครับ'], words, 'strict', 0.8).score).toBe(8);
+    expect(scorePronunciation(['สวัสดีครับ'], ['สวัสดีครับ'], words, 'lenient', 0.3).score).toBe(10);
+  });
   it('rien entendu : 0', () => {
     expect(scorePronunciation([], ['ขอบคุณ']).score).toBe(0);
     expect(scorePronunciation(['ไปไหน'], ['ขอบคุณ']).score).toBeLessThanOrEqual(3);
