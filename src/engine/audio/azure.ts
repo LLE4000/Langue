@@ -10,15 +10,23 @@
  * mesure PAS en thaï : les tons (l'évaluation prosodique n'existe qu'en anglais). Les tons restent jugés par la
  * reconnaissance (un ton faux donne souvent un autre mot) et par la courbe de la voix, présentée comme indicative.
  *
+ * Version commerciale : la clé ne doit jamais être dans l'application. Un petit service (fonction serverless) garde la
+ * clé et délivre des jetons de 10 minutes aux utilisateurs autorisés ; l'application les demande à `tokenUrl`
+ * (réponse JSON { token, region }) et n'a plus besoin de clé personnelle. Tout le reste du code est inchangé.
+ *
  * Le SDK (lourd) n'est chargé qu'au premier usage.
  */
 import { toPcm16 } from './vad';
 
-export interface AzureConfig { key: string; region: string }
+export interface AzureConfig { key: string; region: string; tokenUrl?: string }
 export interface AzureWord { word: string; accuracy: number; errorType: string }
 const KEY = 'langue.azure';
 
+/** Service de jetons configuré au déploiement (VITE_AZURE_TOKEN_URL) : prime sur une clé personnelle. */
+const TOKEN_URL = (import.meta.env.VITE_AZURE_TOKEN_URL as string | undefined) || '';
+
 export function azureConfig(): AzureConfig | null {
+  if (TOKEN_URL) return { key: '', region: (import.meta.env.VITE_AZURE_REGION as string | undefined) || 'northeurope', tokenUrl: TOKEN_URL };
   try { const c = JSON.parse(localStorage.getItem(KEY) ?? 'null'); return c?.key && c?.region ? c : null; } catch { return null; }
 }
 export function saveAzureConfig(c: AzureConfig | null) {
@@ -32,7 +40,14 @@ export function saveAzureConfig(c: AzureConfig | null) {
  */
 export async function assessPronunciation(cfg: AzureConfig, samples: Float32Array, reference: string): Promise<AzureWord[]> {
   const sdk = await import('microsoft-cognitiveservices-speech-sdk');
-  const speech = sdk.SpeechConfig.fromSubscription(cfg.key, cfg.region);
+  let speech;
+  if (cfg.tokenUrl) {
+    // service de jetons (version commerciale) : la clé reste sur le serveur
+    const r = await fetch(cfg.tokenUrl, { credentials: 'include' });
+    if (!r.ok) throw new Error(`jeton refusé (${r.status})`);
+    const { token, region } = (await r.json()) as { token: string; region?: string };
+    speech = sdk.SpeechConfig.fromAuthorizationToken(token, region ?? cfg.region);
+  } else speech = sdk.SpeechConfig.fromSubscription(cfg.key, cfg.region);
   speech.speechRecognitionLanguage = 'th-TH';
   const push = sdk.AudioInputStream.createPushStream(sdk.AudioStreamFormat.getWaveFormatPCM(16000, 16, 1));
   const pcm = toPcm16(samples);
