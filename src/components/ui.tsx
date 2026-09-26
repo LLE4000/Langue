@@ -65,7 +65,7 @@ const PATHS: Record<string, ReactNode> = {
   stop: <rect x="6" y="6" width="12" height="12" rx="2" />,
   sparkles: <><path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z" /><path d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" /></>,
   checkCircle: <><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.5 2.5L16 9.5" /></>,
-  // Jouer, profil
+  // Défis, profil
   swords: <><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2" /><path d="M14.5 6.5L18 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2" /></>,
   users: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c1-3.5 3.8-5 6.5-5s5.5 1.5 6.5 5" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 15c1.8.6 3 2.2 3.5 5" /></>,
   send: <><path d="M21 3L10 14" /><path d="M21 3l-7 18-4-7-7-4z" /></>,
@@ -76,13 +76,35 @@ const PATHS: Record<string, ReactNode> = {
   sliders: <><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" /><circle cx="16" cy="6" r="2" /><circle cx="10" cy="12" r="2" /><circle cx="18" cy="18" r="2" /></>,
   archive: <><rect x="3" y="4" width="18" height="5" rx="1.5" /><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4" /></>,
   dice: <><rect x="3" y="3" width="18" height="18" rx="4.5" /><circle cx="8.5" cy="8.5" r=".9" /><circle cx="15.5" cy="8.5" r=".9" /><circle cx="12" cy="12" r=".9" /><circle cx="8.5" cy="15.5" r=".9" /><circle cx="15.5" cy="15.5" r=".9" /></>,
+  // Types de leçon
+  tone: <><path d="M3 14.5c2.2 0 3-6 5.5-6s3.3 9 6 9 3-11 6.5-11" /><circle cx="3" cy="14.5" r=".6" /><circle cx="21" cy="6.5" r=".6" /></>,
+  word: <><path d="M20.5 11.5a8.5 8 0 0 1-12.3 7.1L3.5 20l1.3-4.1a8 8 0 0 1-1.3-4.4 8.5 8 0 0 1 17 0z" /><path d="M8.5 10h7M8.5 13.5h4.5" /></>,
+  dialog: <><path d="M14.5 9A6 5.5 0 0 0 3 11.3c0 1.2.4 2.3 1.1 3.2L3.5 17l2.9-.9A6 5.5 0 0 0 14.5 9z" /><path d="M9.8 17.3a6 5.5 0 0 0 7.8 1.3l2.9.9-.6-2.5a5.3 5.3 0 0 0 1.1-3.2 5.6 5.6 0 0 0-4-5.2" /></>,
 };
+
+/**
+ * Icônes des quatre onglets, dessinées pour la barre du bas : même grille, même trait, et une surface
+ * (classe `f`) qui se remplit d'une teinte quand l'onglet est actif.
+ */
+const TAB_PATHS: Record<string, ReactNode> = {
+  // Leçons : un livre ouvert au signet
+  lessons: <><path className="f" d="M12 6.5C10 5 7.4 4.5 4 4.5v13c3.4 0 6 .5 8 2 2-1.5 4.6-2 8-2v-13c-3.4 0-6 .5-8 2z" /><path d="M12 6.5v13" /><path d="M15.5 4.9V10l1.5-1 1.5 1V4.6" /></>,
+  // Réviser : une boucle qui revient, validée
+  review: <><path className="f" d="M19.4 12.6A7.5 7.5 0 1 1 17.3 6.7" /><path d="M19.8 4.2v3.6h-3.6" /><path d="M8.8 12.3l2.2 2.2 4.2-4.4" /></>,
+  // Défis : une coupe
+  challenge: <><path className="f" d="M7.5 4h9v5.5a4.5 4.5 0 0 1-9 0z" /><path d="M16.5 5.5h2.2a.8.8 0 0 1 .8.9 4 4 0 0 1-3.3 3.6M7.5 5.5H5.3a.8.8 0 0 0-.8.9 4 4 0 0 0 3.3 3.6" /><path d="M12 14v3.5M8.5 20h7M9.5 17.5h5" /></>,
+  // Bibliothèque : des livres sur l'étagère
+  library: <><path className="f" d="M4.5 4.5h3.5v15H4.5zM10 6.5h3.5v13H10z" /><path className="f" d="M15.4 7.3l3.3-.9 3.1 12-3.3.9z" /><path d="M3 19.5h18" /></>,
+};
+export function TabIcon({ name }: { name: string }) {
+  return <svg viewBox="0 0 24 24" width={24} height={24} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{TAB_PATHS[name] ?? null}</svg>;
+}
 export function Icon({ name, size = 22, style }: { name: keyof typeof PATHS | string; size?: number; style?: CSSProperties }) {
   return <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" style={style} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">{PATHS[name] ?? null}</svg>;
 }
 /**
  * Icône dans son conteneur de ligne ou de tuile (`.ico`). Teinte à sens : '' neutre, 'acc' action, 'ok' / 'ko' juste / faux,
- * ou la couleur d'une rubrique : 'jade' Réviser, 'plum' Jouer, 'indigo' Explorer.
+ * ou la couleur d'une rubrique : 'jade' Réviser, 'plum' Défis, 'indigo' Bibliothèque.
  */
 export const Ico = ({ name, tone = '' }: { name: string; tone?: '' | 'acc' | 'ok' | 'jade' | 'ko' | 'plum' | 'indigo' }) => <span className={`ico ${tone}`}><Icon name={name} /></span>;
 

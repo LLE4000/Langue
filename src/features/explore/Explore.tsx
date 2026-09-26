@@ -1,4 +1,4 @@
-/** Explorer : la bibliothèque — alphabet, voyelles, tons, nombres, vocabulaire, conversations, lectures, grammaire… */
+/** Bibliothèque : tout le contenu, librement — alphabet, voyelles, tons, nombres, vocabulaire, conversations, lectures, grammaire… */
 import { Link, NavLink } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
 import { useMetrics, useProgress } from '@/app/hooks';
@@ -6,7 +6,7 @@ import { th, MAIN_WORDS } from '@/content/th';
 import { T } from '@/i18n';
 import { Bar, Icon } from '@/components/ui';
 
-// La loupe vit dans Explorer (élément stable : un nouvel élément à chaque rendu relancerait usePage)
+// La loupe vit dans la bibliothèque (élément stable : un nouvel élément à chaque rendu relancerait usePage)
 const SEARCH_BUTTON = <NavLink to="/explore/search" className="tb" aria-label="Rechercher"><Icon name="search" /></NavLink>;
 
 /** Une tuile : un glyphe thaï (le contenu lui-même) ou une icône, un titre, une ligne, et l'avancement s'il existe. */
@@ -22,7 +22,7 @@ function Tile({ to, thai, icon, title, sub, p }: { to: string; thai?: string; ic
 
 export function Explore() {
   const t = T();
-  usePage(t.explore.title, { right: SEARCH_BUTTON, avatar: true, thai: { th: 'สำรวจ', rom: 'sǎm-rùat' } });
+  usePage(t.explore.title, { right: SEARCH_BUTTON, avatar: true, thai: { th: 'ห้องสมุด', rom: 'hɔ̂ng-sà-mùt' } });
   const m = useMetrics();
   const prog = useProgress();
   const vocab = prog.skills.find((s) => s.id === 'vocab')!;

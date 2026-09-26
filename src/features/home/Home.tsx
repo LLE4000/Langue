@@ -1,21 +1,20 @@
 /**
- * Accueil « Apprendre » : une seule question — quelle est ma prochaine leçon ?
+ * Accueil « Leçons » : une seule question — quelle est ma prochaine leçon ?
  * En haut, le prénom (qui ouvre le profil) et la progression ; puis la prochaine leçon, l'essentiel du jour,
- * où j'en suis et la suite du parcours. Jouer et réviser ont leurs onglets.
+ * où j'en suis et la suite du parcours. Réviser et Défis ont leurs onglets.
  */
-import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ProfileChip, usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { useDueItems, useNextLesson, usePath, useGoals, useProgress, progressContent } from '@/app/hooks';
 import { curriculum } from '@/content/packs';
-import { T, L } from '@/i18n';
+import { T } from '@/i18n';
 import { Bar, Icon, Ico, VoiceStatusNote } from '@/components/ui';
 import { ProgressPill, TierRing } from '@/components/Progress';
+import { CardTitle, LessonBadge, LessonRow, kindClass } from '@/components/LessonCard';
+import { lessonCard } from '@/curriculum/card';
 import { remainingLine, tierLine } from '@/engine/progress';
 import { todayKey } from '@/engine/util';
-
-const TRACK_ICON: Record<string, ReactNode> = { script: 'ก', talk: <Icon name="chat" />, numbers: '๑', tones: <Icon name="music" /> };
 
 export function Home() {
   const t = T();
@@ -31,12 +30,13 @@ export function Home() {
   const goals = useGoals();
   const today = days[todayKey()];
   const cur = curriculum();
-  const unit = next ? cur.units.find((u) => u.id === next.lesson.unit) : null;
   const active = path.filter((p) => p.status !== 'granted');
   const doneCount = active.filter((p) => p.status === 'done').length;
   const lessonNo = active.findIndex((p) => p.lesson.id === next?.lesson.id) + 1;
   // Une séance arrêtée sur le bilan est terminée : on propose la leçon suivante, pas une « reprise ».
   const resumable = session && !session.training && session.steps[session.index]?.type !== 'recap' ? session : null;
+  const resumeLesson = resumable ? cur.lessons.find((l) => l.id === resumable.lessonId) : undefined;
+  const card = next ? lessonCard(next.lesson) : null;
   const goalMin = profile.dailyGoalMinutes || 15;
   const minutes = today?.minutes ?? 0;
   const upcoming = path.filter((p) => p.status !== 'done' && p.status !== 'granted').slice(next ? 1 : 0, 4);
@@ -50,15 +50,24 @@ export function Home() {
 
       {resumable ? (
         <Link className="cta" to={`/lesson/${resumable.lessonId}`}>
-          <span className="n"><Icon name="play" /></span>
-          <span><span className="k">{t.home.resume}</span><span className="t">{resumable.title}</span><span className="s">Étape {resumable.index + 1} sur {resumable.steps.length}</span></span>
-          <span className="go">{t.common.continue} <Icon name="next" /></span>
+          {resumeLesson ? <LessonBadge card={lessonCard(resumeLesson)} size="lg" /> : <span className="lbadge lg"><Icon name="play" /></span>}
+          <span className="body">
+            <span className="k">{t.home.resume}</span>
+            <span className={`t ${resumable.title.length > 22 ? 'long' : ''}`}>{resumable.title}</span>
+            <span className="s">Étape {resumable.index + 1} sur {resumable.steps.length}</span>
+          </span>
+          <span className="foot"><span className="go">{t.common.continue} <Icon name="next" /></span></span>
         </Link>
-      ) : next ? (
-        <Link className="cta" to={`/lesson/${next.lesson.id}`}>
-          <span className="n">{TRACK_ICON[next.lesson.track]}</span>
-          <span><span className="k">{t.home.nextLesson}{next.status === 'locked' ? ' · à débloquer' : ''}</span><span className="t">{L(next.lesson.title)}</span><span className="s">{lessonNo > 0 ? `${t.home.lesson} ${lessonNo} · ` : ''}{unit ? L(unit.title) + ' · ' : ''}{next.lesson.minutes} {t.common.minutes}{next.knownOrally ? ' · à lire' : ''}</span></span>
-          <span className="go">{t.common.start} <Icon name="next" /></span>
+      ) : next && card ? (
+        <Link className={`cta ${kindClass(card)}`} to={`/lesson/${next.lesson.id}`}>
+          <LessonBadge card={card} size="lg" />
+          <span className="body">
+            <span className="k">{t.home.nextLesson}{lessonNo > 0 ? ` · n° ${lessonNo}` : ''}{next.status === 'locked' ? ' · à débloquer' : ''}</span>
+            <span className={`t ${card.title.length > 19 ? 'long' : ''}`}><CardTitle card={card} /></span>
+            <span className="s">{card.sub}</span>
+            <span className="pills"><span className="kl">{card.label}</span><span>{card.count}</span>{card.extras.map((x) => <span key={x}>{x}</span>)}<span>{next.lesson.minutes} {t.common.minutes}</span>{next.knownOrally && <span>à lire</span>}</span>
+          </span>
+          <span className="foot"><span className="go">{t.common.start} <Icon name="next" /></span></span>
         </Link>
       ) : (
         <div className="card"><div className="row-flex"><Ico name="sparkles" tone="acc" /><b>Parcours terminé</b></div><p className="mut sm mt-2">{t.home.allDone}</p></div>
@@ -87,18 +96,12 @@ export function Home() {
         <span className="chev">›</span>
       </Link>
 
-      {/* La suite du parcours : « Apprendre », ce sont les leçons, dans l'ordre */}
+      {/* La suite du parcours : les leçons suivantes, dans l'ordre */}
       {upcoming.length > 0 && (
         <>
           <div className="h2">Ensuite <span className="sp" /><Link to="/path" aria-label="Mon parcours complet">Tout le parcours ›</Link></div>
           <div className="list upnext">
-            {upcoming.map((p) => (
-              <Link key={p.lesson.id} to={`/lesson/${p.lesson.id}`} className={`row lrow ${p.status === 'locked' ? 'todo' : 'avail'}`}>
-                <span className="ico">{p.status === 'locked' ? <Icon name="lock" size={18} /> : TRACK_ICON[p.lesson.track]}</span>
-                <span className="mid"><span className="t">{L(p.lesson.title)}</span><span className="s">{L(p.lesson.subtitle) || ''}{p.lesson.minutes ? ` · ${p.lesson.minutes} min` : ''}</span></span>
-                <span className="end"><span className="chev">›</span></span>
-              </Link>
-            ))}
+            {upcoming.map((p) => <LessonRow key={p.lesson.id} lesson={p.lesson} state={p.status === 'locked' ? 'lock' : undefined} />)}
           </div>
         </>
       )}

@@ -1,6 +1,6 @@
 /** Étape « À retenir » : blocs d'explication (texte, lettres, voyelles, syllabes, mots, règles de ton, grammaire…). */
 import { Link } from 'react-router-dom';
-import type { TheoryBlock } from '@/curriculum/types';
+import type { LessonDef, TheoryBlock } from '@/curriculum/types';
 import type { RuntimeStep } from '../engine';
 import { ITEMS, GRAMMAR_BY_ID, TONE_BY_ID, vowelDisplay, type LearnItem } from '@/content/th';
 import { TONES, TONE_MARKS } from '@/content/th/tones';
@@ -12,6 +12,8 @@ import { AudioButton, Fr, Icon, Thai, Rom, MasteryDot, useShowRom } from '@/comp
 import { StepFooter, ContinueButton } from '@/components/StepFooter';
 import { ToneCurve } from '@/components/ToneCurve';
 import { useMastery } from '@/app/hooks';
+import { lessonCard } from '@/curriculum/card';
+import { LessonBadge, kindClass } from '@/components/LessonCard';
 import type { ConsonantClass } from '@/content/types';
 
 const POS_LABEL: Record<string, string> = { L: 'avant', T: 'au-dessus', R: 'après', B: 'en dessous' };
@@ -117,9 +119,12 @@ export function TheoryBlockView({ b, knownOrally }: { b: TheoryBlock; knownOrall
   }
 }
 
-export function TheoryStep({ step, onDone, title, subtitle }: { step: RuntimeStep & { type: 'theory' }; onDone: () => void; title: string; subtitle?: string }) {
+export function TheoryStep({ step, onDone, title, subtitle, lesson }: { step: RuntimeStep & { type: 'theory' }; onDone: () => void; title: string; subtitle?: string; lesson?: LessonDef }) {
+  const card = lesson ? lessonCard(lesson) : null;
   return (
     <>
+      {/* Le type de la leçon, tel que sur sa carte : badge, libellé, indicateur */}
+      {card && <div className={`lkind ${kindClass(card)}`}><LessonBadge card={card} /><span>{card.label}</span><span className="n">· {card.count}</span></div>}
       <h2 className="theory-title">{step.title ? L(step.title) : title}</h2>
       {subtitle && <p className="theory-sub">{subtitle}</p>}
       {step.blocks.map((b, i) => <div className="theory-block" key={i}><TheoryBlockView b={b} /></div>)}

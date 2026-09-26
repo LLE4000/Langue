@@ -48,12 +48,19 @@ export type ActivitySpec =
   | { type: 'review'; count: number } // révision espacée intercalée
   | { type: 'recap' };
 
+/** Type de leçon, pour sa carte : chaque type a sa couleur, son badge et son libellé (voir curriculum/card). */
+export type LessonKind = 'letters' | 'vowels' | 'tones' | 'rules' | 'reading' | 'vocab' | 'dialog' | 'numbers' | 'classifiers';
+
 export interface LessonDef {
   id: string;
   track: Track;
   unit: string; // identifiant d'unité (regroupe les leçons dans le parcours)
-  title: Localized;
-  subtitle?: Localized;
+  title: Localized; // court : tient sur une ligne ; « · 1/2 » final = partie d'une série
+  subtitle?: Localized; // en français, sans suite de signes thaïs
+  /** Présentation de la carte : type, glyphe du badge, indicateur de contenu. Déduits s'ils manquent. */
+  kind?: LessonKind;
+  badge?: string;
+  count?: Localized;
   skills: Skill[];
   prerequisites: string[]; // identifiants de leçons
   newConcepts: string[]; // identifiants d'éléments introduits (lettres, voyelles, mots, règles, m:1…)

@@ -25,8 +25,7 @@ function attachReadings(script: LessonDef[]) {
           const idx = r.sentences.findIndex((s) => s.tokens.length >= 3 && s.tokens.length <= 7 && !s.tokens.some((t) => /\{/.test(t.thai)));
           lesson.activities.splice(i < 0 ? lesson.activities.length : i + 1, 0, { type: 'build', sentences: [{ readingId: r.id, index: idx }] });
         }
-        lesson.minutes += 2;
-        lesson.subtitle = { fr: (lesson.subtitle?.fr ?? '') + ' · lecture' };
+        lesson.minutes += 2; // la carte de la leçon l'annonce (« 1 texte ») d'après ses activités
         break; // un texte par leçon au plus
       }
     }

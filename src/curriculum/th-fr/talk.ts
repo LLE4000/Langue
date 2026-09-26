@@ -6,7 +6,19 @@
  * transcription. Les exercices de lecture n'y sont proposés que sur les mots que l'apprenant sait lire.
  */
 import type { ActivitySpec, LessonDef, UnitDef } from '../types';
-import { th, NUM_ITEMS, CLF_ITEMS } from '@/content/th';
+import { th, ITEMS, NUM_ITEMS, CLF_ITEMS } from '@/content/th';
+
+/**
+ * Sous-titre d'une leçon de vocabulaire : ses premiers mots, en français (« Bonjour · merci · pardon… »).
+ * Au moins deux mots quand il y en a ; l'affichage coupe proprement ce qui dépasse.
+ */
+export function wordsPreview(ids: string[], max = 38): string {
+  const words = ids.map((id) => (ITEMS[id]?.meaning.fr ?? '').split(';')[0].replace(/\s*\([^)]*\)/g, '').replace(/^[\s…,]+|[\s…,]+$/g, '').trim()).filter((w) => w.length > 1);
+  const out: string[] = [];
+  for (const w of words) { if (out.length >= 2 && [...out, w].join(' · ').length > max) break; if (!out.includes(w)) out.push(w); }
+  const text = out.join(' · ');
+  return text.charAt(0).toUpperCase() + text.slice(1) + (out.length < words.length ? '…' : '');
+}
 
 /** Niveau oral approximatif de chaque thème (0 débutant complet … 4). */
 export const THEME_ORAL: Record<string, number> = {
@@ -75,7 +87,7 @@ export function buildTalkTrack(): LessonDef[] {
       lessons.push({
         id, track: 'talk', unit: THEME_UNIT[themeId] ?? 'u-talk-6',
         title: { fr: chunks.length > 1 ? `${theme.name.fr} · ${k + 1}/${chunks.length}` : theme.name.fr },
-        subtitle: { fr: `${chunk.length} mots et phrases` + (grammar ? ' · grammaire' : '') + (isLast && dialogId ? ' · conversation' : '') },
+        subtitle: { fr: wordsPreview(chunk) }, kind: isLast && dialogId ? 'dialog' : 'vocab',
         skills: ['listening', 'speaking'], prerequisites: prev ? [prev] : [],
         newConcepts: [...chunk, ...(grammar ? [grammar] : [])], activities: acts, minutes: 9 + (isLast && dialogId ? 3 : 0),
         oralLevel: THEME_ORAL[themeId] ?? 2, minScore: 0.6,
@@ -118,17 +130,17 @@ export function buildNumbersTrack(): LessonDef[] {
     { type: 'recap' },
   ];
   return [
-    { id: 'num-01', track: T, unit: 'u-num', title: { fr: 'Compter de 0 à 10' }, subtitle: { fr: 'et les chiffres thaïs ๐–๙' }, skills: S, prerequisites: [], oralLevel: 1, minScore: 0.6, minutes: 8,
+    { id: 'num-01', track: T, unit: 'u-num', title: { fr: 'Compter de 0 à 10' }, subtitle: { fr: 'Les nombres, et les chiffres thaïs' }, badge: '๑', skills: S, prerequisites: [], oralLevel: 1, minScore: 0.6, minutes: 8,
       newConcepts: [...digits, 'rule:digits'], activities: numActs(digits, 'Les nombres de zéro à dix. Chaque nombre a aussi un chiffre thaï, que l’on voit sur les documents officiels, les billets et les prix d’entrée : ๑ ๒ ๓… Ils se lisent exactement comme nos chiffres.', [4]) },
-    { id: 'num-02', track: T, unit: 'u-num', title: { fr: 'De 11 à 99' }, subtitle: { fr: 'สิบเอ็ด · ยี่สิบ · ห้าสิบ' }, skills: S, prerequisites: ['num-01'], oralLevel: 1, minScore: 0.6, minutes: 8,
+    { id: 'num-02', track: T, unit: 'u-num', title: { fr: 'De 11 à 99' }, subtitle: { fr: 'Les dizaines, et trois exceptions' }, badge: '๒๐', skills: S, prerequisites: ['num-01'], oralLevel: 1, minScore: 0.6, minutes: 8,
       newConcepts: tens, activities: numActs(tens, 'Les dizaines se forment avec สิบ (dix) : สามสิบ = 3 × 10 = 30. Trois exceptions à retenir : 11 se dit สิบเอ็ด (pas สิบหนึ่ง), 20 se dit ยี่สิบ, et le 1 final se dit toujours เอ็ด (21 = ยี่สิบเอ็ด).', [0, 1, 2]) },
-    { id: 'num-03', track: T, unit: 'u-num', title: { fr: 'Centaines, milliers, millions' }, subtitle: { fr: 'ร้อย · พัน · หมื่น · แสน · ล้าน' }, skills: S, prerequisites: ['num-02'], oralLevel: 2, minScore: 0.6, minutes: 8,
+    { id: 'num-03', track: T, unit: 'u-num', title: { fr: 'Grands nombres' }, subtitle: { fr: 'Centaines, milliers, millions, et les prix' }, badge: '๑๐๐', skills: S, prerequisites: ['num-02'], oralLevel: 2, minScore: 0.6, minutes: 8,
       newConcepts: big, activities: numActs(big, 'Le thaï a un mot pour 10 000 (หมื่น) et 100 000 (แสน) : 25 000 se dit « deux dix-mille cinq mille ». Pour les prix, on ajoute บาท : ร้อยบาท = 100 bahts.', [3]) },
-    { id: 'clf-01', track: T, unit: 'u-num', title: { fr: 'Compter les choses : les classificateurs' }, subtitle: { fr: 'คน · ตัว · อัน · ใบ · แก้ว · ขวด · จาน' }, skills: S, prerequisites: ['num-02'], oralLevel: 2, minScore: 0.6, minutes: 8,
+    { id: 'clf-01', track: T, unit: 'u-num', title: { fr: 'Classificateurs · 1/3' }, subtitle: { fr: 'Compter les personnes, les objets, les verres…' }, skills: S, prerequisites: ['num-02'], oralLevel: 2, minScore: 0.6, minutes: 8,
       newConcepts: [...clf1, 'g:clf'], activities: clfActs(clf1, 'On ne dit pas « deux cafés » mais « café deux verres » : chaque famille d’objets a son mot-mesure. Les sept premiers couvrent l’essentiel : personnes, animaux et vêtements, petits objets, contenants, verres, bouteilles, assiettes.') },
-    { id: 'clf-02', track: T, unit: 'u-num', title: { fr: 'Classificateurs · suite' }, subtitle: { fr: 'ชาม · ชิ้น · หลัง · ห้อง · ต้น · เส้น · แผ่น' }, skills: S, prerequisites: ['clf-01'], oralLevel: 3, minScore: 0.6, minutes: 8,
+    { id: 'clf-02', track: T, unit: 'u-num', title: { fr: 'Classificateurs · 2/3' }, subtitle: { fr: 'Bols, morceaux, maisons, pièces, arbres…' }, skills: S, prerequisites: ['clf-01'], oralLevel: 3, minScore: 0.6, minutes: 8,
       newConcepts: clf2, activities: clfActs(clf2, 'D’autres classificateurs courants : bols, morceaux, maisons, pièces, arbres et poteaux, objets longs et fins, objets plats.') },
-    { id: 'clf-03', track: T, unit: 'u-num', title: { fr: 'Classificateurs · fin' }, subtitle: { fr: 'คู่ · เครื่อง · ฉบับ · ครั้ง…' }, skills: S, prerequisites: ['clf-02'], oralLevel: 3, minScore: 0.6, minutes: 8,
+    { id: 'clf-03', track: T, unit: 'u-num', title: { fr: 'Classificateurs · 3/3' }, subtitle: { fr: 'Paires, machines, documents, et les « fois »' }, skills: S, prerequisites: ['clf-02'], oralLevel: 3, minScore: 0.6, minutes: 8,
       newConcepts: clf3, activities: clfActs(clf3, 'Les derniers : paires, machines, documents, et ครั้ง pour compter les fois. En cas de doute, อัน dépanne pour les objets.') },
   ].map((l): LessonDef => ({ ...l, newConcepts: l.newConcepts.filter((id) => id.startsWith('rule:') || id.startsWith('g:') || NUM_ITEMS.some((n2) => n2.id === id) || CLF_ITEMS.some((c) => c.id === id)) }));
 }

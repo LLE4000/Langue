@@ -28,7 +28,7 @@ export function LevelsScreen() {
       <div className="h2">Mes niveaux</div>
       <p className="note-under">Soyez précis : le parcours saute ce que vous savez déjà.</p>
       <LevelPicker levels={levels} onChange={set} skills={goalSkills(goals)} />
-      <div className="note sm">Monter un niveau marque comme acquises les leçons de ce niveau ; le baisser les remet dans le parcours. Retirer « lire et écrire » enlève les leçons d’écriture du parcours (Explorer reste complet). Votre maîtrise déjà enregistrée n’est jamais effacée.</div>
+      <div className="note sm">Monter un niveau marque comme acquises les leçons de ce niveau ; le baisser les remet dans le parcours. Retirer « lire et écrire » enlève les leçons d’écriture du parcours (la bibliothèque reste complète). Votre maîtrise déjà enregistrée n’est jamais effacée.</div>
       <div className="qfoot">
         <div className="meta"><span>{changed ? 'Des changements sont en attente.' : 'Aucun changement pour l’instant.'}</span></div>
         <button className="btn" disabled={!changed} onClick={apply}>Recalculer mon parcours</button>

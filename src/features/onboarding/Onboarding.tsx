@@ -41,7 +41,7 @@ export function LevelPicker({ levels, onChange, skills = SKILLS }: { levels: Ski
 /** `icon` : nom d'une icône du jeu d'icônes (voir `Icon`). */
 export const GOAL_OPTIONS: { key: 'speak' | 'read' | 'both'; icon: string; title: string; desc: string; goals: Goals }[] = [
   { key: 'both', icon: 'target', title: 'Parler, lire et écrire', desc: 'Le parcours complet : conversation et écriture s’entrelacent. Recommandé.', goals: { speak: true, read: true } },
-  { key: 'speak', icon: 'chat', title: 'Parler et comprendre', desc: 'Uniquement l’oral : mots, phrases, conversations, avec la phonétique. Pas de leçon d’écriture (elle reste consultable dans Explorer).', goals: { speak: true, read: false } },
+  { key: 'speak', icon: 'chat', title: 'Parler et comprendre', desc: 'Uniquement l’oral : mots, phrases, conversations, avec la phonétique. Pas de leçon d’écriture (elle reste consultable dans la bibliothèque).', goals: { speak: true, read: false } },
   { key: 'read', icon: 'bookOpen', title: 'Lire et écrire', desc: 'Pour qui parle déjà : l’alphabet, les tons, la lecture de mots et de textes.', goals: { speak: false, read: true } },
 ];
 export const goalKey = (g: Goals) => (g.speak && g.read ? 'both' : g.speak ? 'speak' : 'read');

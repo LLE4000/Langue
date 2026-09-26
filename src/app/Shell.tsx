@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
-import { Icon } from '@/components/ui';
+import { Icon, TabIcon } from '@/components/ui';
 import { ProgressPill } from '@/components/Progress';
 import { useProgressLog } from './hooks';
 import { useStore } from './store';
@@ -53,14 +53,15 @@ export function TopBar({ state }: { state: TopBarState }) {
 }
 
 /**
- * Les quatre onglets : apprendre du nouveau, réviser ce qu'on sait, jouer à plusieurs, explorer la bibliothèque.
+ * Les quatre onglets : Leçons (la prochaine leçon et le parcours), Réviser (ce qu'on sait), Défis (à plusieurs),
+ * Bibliothèque (tout le contenu, librement). Chacun a sa couleur de rubrique quand il est actif.
  * Le profil n'est pas un onglet (on y va rarement) : on l'ouvre en touchant son prénom, en haut à gauche.
  */
 const TABS = [
-  { to: '/', icon: 'home', key: 'learn' as const, end: true, also: ['/path'] },
-  { to: '/review', icon: 'repeat', key: 'review' as const, also: ['/train'] },
-  { to: '/play', icon: 'dice', key: 'play' as const, also: [] },
-  { to: '/explore', icon: 'compass', key: 'explore' as const, also: [] },
+  { to: '/', icon: 'lessons', key: 'learn' as const, tone: 'acc', end: true, also: ['/path'] },
+  { to: '/review', icon: 'review', key: 'review' as const, tone: 'jade', also: ['/train'] },
+  { to: '/play', icon: 'challenge', key: 'play' as const, tone: 'plum', also: [] },
+  { to: '/explore', icon: 'library', key: 'explore' as const, tone: 'indigo', also: [] },
 ];
 
 export function Shell() {
@@ -69,7 +70,7 @@ export function Shell() {
   const navType = useNavigationType();
   const t = T();
   useProgressLog(); // trace quotidienne pour la courbe d'évolution
-  // Nouvelle page : on repart du haut. Retour arrière : on garde la position (longues listes du parcours, d'Explorer).
+  // Nouvelle page : on repart du haut. Retour arrière : on garde la position (longues listes du parcours, de la bibliothèque).
   useEffect(() => { if (navType !== 'POP') window.scrollTo(0, 0); }, [loc.pathname, navType]);
   // Valeur de contexte stable : sinon chaque rendu de la coque ferait re-rendre tous les écrans (boucle avec usePage)
   const ctx = useMemo(() => ({ set: setBar }), []);
@@ -80,8 +81,8 @@ export function Shell() {
         <main className="view"><Outlet /></main>
         <nav className="tabbar" aria-label="Navigation principale">
           {TABS.map((tab) => (
-            <NavLink key={tab.to} to={tab.to} end={tab.end} className={({ isActive }) => (isActive || (!tab.end && loc.pathname.startsWith(tab.to)) || tab.also.some((p) => loc.pathname.startsWith(p)) ? 'on' : '')}>
-              <Icon name={tab.icon} />{t.nav[tab.key]}
+            <NavLink key={tab.to} to={tab.to} end={tab.end} className={({ isActive }) => `t-${tab.tone} ${isActive || (!tab.end && loc.pathname.startsWith(tab.to)) || tab.also.some((p) => loc.pathname.startsWith(p)) ? 'on' : ''}`}>
+              <span className="pill"><TabIcon name={tab.icon} /></span>{t.nav[tab.key]}
             </NavLink>
           ))}
         </nav>

@@ -1,13 +1,15 @@
-/** Onglet Jouer : quatre façons de se mesurer à plusieurs, sans classement permanent ni serveur. */
+/** Onglet Défis : quatre façons de se mesurer à plusieurs, sans classement permanent ni serveur. */
 import { Link } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { readRegistry } from '@/app/profiles';
 import { recognizer } from '@/app/services/speech';
 import { Ico } from '@/components/ui';
+import { T } from '@/i18n';
 
 export function PlayHub() {
-  usePage('Jouer', { avatar: true, thai: { th: 'เล่น', rom: 'lên' } });
+  const t = T();
+  usePage(t.nav.play, { avatar: true, thai: { th: 'ท้าทาย', rom: 'tháa-thaai' } });
   const records = useStore((s) => s.challenges);
   const pending = records.filter((r) => r.dir === 'sent' && !r.theirs).length;
   const people = readRegistry().list.filter((p) => p.name).length;

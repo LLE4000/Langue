@@ -122,12 +122,12 @@ test('onboarding, première leçon, déblocage, reprise, révision', async ({ pa
   expect(secondTitle).not.toBe(firstTitle);
   // parcours
   await page.getByRole('link', { name: /Mon parcours/ }).click();
-  await expect(page.locator('.lrow.ok').first()).toBeVisible();
+  await expect(page.locator('.lrow.done').first()).toBeVisible();
   // révision : des éléments existent désormais
   await page.getByRole('link', { name: 'Réviser' }).click();
   await expect(page.getByText(/dans votre mémoire de révision/)).toBeVisible();
-  // exploration
-  await page.getByRole('link', { name: 'Explorer' }).click();
+  // bibliothèque
+  await page.getByRole('link', { name: 'Bibliothèque', exact: true }).click();
   await page.getByRole('link', { name: /Alphabet/ }).click();
   await expect(page.locator('.cell').first()).toBeVisible();
   await page.locator('.cell').first().click(); // premier toucher : le son et l'aperçu
@@ -168,7 +168,8 @@ test('objectif « parler » : aucune leçon d’écriture dans le parcours, phon
   await expect(page.locator('a.cta .t')).toContainText('Salutations');
   await page.getByRole('link', { name: /Mon parcours/ }).click();
   await expect(page.locator('.lrow').first()).toBeVisible();
-  await expect(page.getByText(/consonnes et la voyelle/)).toHaveCount(0);
+  await expect(page.locator('.lrow.k-letters, .lrow.k-vowels, .lrow.k-tones')).toHaveCount(0);
+  await expect(page.locator('.lrow.k-vocab').first()).toBeVisible();
   await page.goto('/#/profile/settings?tab=exercises');
   await expect(page.locator('.seg button.on', { hasText: 'Toujours' })).toBeVisible();
   // l'objectif se change dans Profil
@@ -177,7 +178,7 @@ test('objectif « parler » : aucune leçon d’écriture dans le parcours, phon
   await expect(page.getByRole('radiogroup')).toHaveCount(5);
   await page.getByRole('button', { name: /Recalculer mon parcours/ }).click();
   await page.getByRole('link', { name: /Mon parcours/ }).click();
-  await expect(page.getByText(/consonnes et la voyelle/).first()).toBeVisible();
+  await expect(page.locator('.lrow.k-letters').first()).toBeVisible();
 });
 
 test('duel sur un écran : deux moitiés, le point va au premier qui touche juste', async ({ page }) => {
@@ -356,19 +357,19 @@ test('progression : pastille permanente, palier avec critères chiffrés, chaque
 test('navigation : quatre onglets, le profil s’ouvre sur le prénom, le mot thaï des titres se prononce', async ({ page }) => {
   await onboard(page);
   const tabs = page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link');
-  await expect(tabs).toHaveText(['Apprendre', 'Réviser', 'Jouer', 'Explorer']);
+  await expect(tabs).toHaveText(['Leçons', 'Réviser', 'Défis', 'Bibliothèque']);
   // le prénom, en haut à gauche de l'accueil, mène au profil (qui n'est plus un onglet)
   await page.getByRole('link', { name: /Mon profil : Lucien/ }).click();
   await expect(page).toHaveURL(/#\/profile$/);
   await page.getByRole('button', { name: 'Retour' }).click();
   await expect(page).toHaveURL(/#\/$/);
-  // l'onglet Jouer ouvre les jeux à plusieurs ; le titre porte son mot thaï
-  await tabs.filter({ hasText: 'Jouer' }).click();
+  // l'onglet Défis ouvre les jeux à plusieurs ; le titre porte son mot thaï
+  await tabs.filter({ hasText: 'Défis' }).click();
   await expect(page).toHaveURL(/#\/play$/);
   await expect(page.getByRole('link', { name: /Duel sur un écran/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Écouter เล่น/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Écouter ท้าทาย/ })).toBeVisible();
   // l'accueil n'affiche plus « Jouer à plusieurs », mais la suite du parcours
-  await tabs.filter({ hasText: 'Apprendre' }).click();
+  await tabs.filter({ hasText: 'Leçons' }).click();
   await expect(page.getByText('Jouer à plusieurs')).toHaveCount(0);
   await expect(page.getByRole('link', { name: /Mon parcours complet/ })).toBeVisible();
 });

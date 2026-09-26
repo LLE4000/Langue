@@ -129,7 +129,7 @@ export function LessonRunner() {
     <FullScreen title={session.title} onBack={askQuit} progress={progress} fit={step.type === 'questions' || step.type === 'flashcards'}>
       <StepProgressCtx.Provider value={reportSub}>
       {showTitle && <p className="eyebrow ctr mb-2">{session.title}</p>}
-      {step.type === 'theory' && <TheoryStep key={key} step={step} onDone={() => finish()} title={lesson ? L(lesson.title) : session.title} subtitle={lesson ? L(lesson.subtitle) : ''} />}
+      {step.type === 'theory' && <TheoryStep key={key} step={step} onDone={() => finish()} title={lesson ? L(lesson.title) : session.title} subtitle={lesson ? L(lesson.subtitle) : ''} lesson={lesson ?? undefined} />}
       {step.type === 'flashcards' && <FlashcardsStep key={key} step={step} onDone={finish} />}
       {step.type === 'questions' && <QuestionsStep key={key} step={step} onDone={finish} timed={session.mode === 'timed'} />}
       {step.type === 'match' && <MatchStep key={key} step={step} onDone={finish} />}

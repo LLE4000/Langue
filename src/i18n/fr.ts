@@ -1,7 +1,7 @@
 /** Textes de l'interface — français. Pour ajouter une langue d'interface : copier ce fichier (en.ts) et l'enregistrer dans index.ts. */
 export const fr = {
   app: { name: 'Langue', tagline: 'Apprendre le thaï, un pas après l’autre' },
-  nav: { learn: 'Apprendre', review: 'Réviser', play: 'Jouer', explore: 'Explorer', profile: 'Profil' },
+  nav: { learn: 'Leçons', review: 'Réviser', play: 'Défis', explore: 'Bibliothèque', profile: 'Profil' },
   common: {
     continue: 'Continuer', start: 'Commencer', next: 'Suivant', check: 'Vérifier', back: 'Retour', close: 'Fermer', quit: 'Quitter', cancel: 'Annuler',
     listen: 'Écouter', slow: 'Lentement', reveal: 'Voir la réponse', correct: 'Correct', wrong: 'Pas tout à fait', goodAnswer: 'Bonne réponse',
@@ -54,7 +54,7 @@ export const fr = {
     weak: 'Points faibles', onlyLearned: 'Les entraînements n’utilisent que ce que vous avez déjà appris.',
   },
   explore: {
-    title: 'Explorer', alphabet: 'Alphabet', vowels: 'Voyelles', tones: 'Tons', numbers: 'Nombres', vocabulary: 'Vocabulaire', conversations: 'Conversations',
+    title: 'Bibliothèque', alphabet: 'Alphabet', vowels: 'Voyelles', tones: 'Tons', numbers: 'Nombres', vocabulary: 'Vocabulaire', conversations: 'Conversations',
     readings: 'Lectures', grammar: 'Grammaire', classifiers: 'Classificateurs', phrasebook: 'Phrases de voyage', writing: 'Écriture', transcription: 'Transcription',
     search: 'Recherche',
   },

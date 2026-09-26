@@ -1,6 +1,6 @@
 /**
  * Réviser, en trois blocs : ce qui est à revoir aujourd'hui (répétition espacée), mes points faibles,
- * s'entraîner (modes courts). Jouer à plusieurs est à un toucher en bas.
+ * s'entraîner (modes courts). Les défis à plusieurs sont à un toucher en bas.
  */
 import { Link } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
