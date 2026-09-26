@@ -1,7 +1,7 @@
 /**
  * Composants d'interface réutilisables : boutons, texte thaï, audio, feuilles, toasts, icônes.
  */
-import { useEffect, useMemo, useState, type ReactNode, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode, type CSSProperties } from 'react';
 import { create } from 'zustand';
 import { useStore } from '@/app/store';
 import { useSpeaker, useVoices } from '@/app/services/speech';
@@ -106,12 +106,16 @@ export function useOral(thai?: string): boolean {
 export function AudioButton({ text, slow, big, className = '', quiet, label }: { text: string; slow?: boolean; big?: boolean; className?: string; quiet?: boolean; label?: string }) {
   const sp = useSpeaker();
   const toast = useToast((s) => s.show);
+  const [speaking, setSpeaking] = useState(false);
+  const alive = useRef(true);
+  useEffect(() => () => { alive.current = false; }, []);
   const onClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const ok = sp.speak(text, { slow });
+    const ok = sp.speak(text, { slow, onend: () => { if (alive.current) setSpeaking(false); } });
     if (!ok && !quiet) toast(sp.status === 'unsupported' ? 'Ce navigateur ne propose pas la synthèse vocale.' : 'Aucune voix thaïlandaise détectée. Voir Profil › Réglages › Voix.');
+    if (ok) { setSpeaking(true); setTimeout(() => { if (alive.current) setSpeaking(false); }, 8000); }
   };
-  return <button className={`ib ${big ? 'big' : ''} ${className}`} onClick={onClick} aria-label={label ?? (slow ? 'Écouter lentement' : 'Écouter')}><Icon name={slow ? 'turtle' : 'speaker'} /></button>;
+  return <button className={`ib ${big ? 'big' : ''} ${speaking ? 'speaking' : ''} ${className}`} onClick={onClick} aria-label={label ?? (slow ? 'Écouter lentement' : 'Écouter')} aria-pressed={speaking || undefined}><Icon name={slow ? 'turtle' : 'speaker'} /></button>;
 }
 export function AudioPair({ text, big }: { text: string; big?: boolean }) {
   return <><AudioButton text={text} big={big} /><AudioButton text={text} slow big={big} /></>;
@@ -128,13 +132,28 @@ export function ToastHost() {
 }
 
 /* ---------- Feuille du bas ---------- */
-export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title?: ReactNode; children: ReactNode }) {
+/**
+ * Feuille du bas. Le bouton « retour » du téléphone la ferme (une entrée d'historique est ajoutée à l'ouverture),
+ * Échap aussi. `footer` : une action de bas de feuille (par défaut « Fermer »), pour ne jamais laisser sans issue.
+ */
+export function Sheet({ open, onClose, title, children, footer, closeLabel = 'Fermer' }: { open: boolean; onClose: () => void; title?: ReactNode; children: ReactNode; footer?: ReactNode | null; closeLabel?: string }) {
+  const close = useRef(onClose);
+  close.current = onClose;
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close.current(); };
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+    let byPop = false;
+    const onPop = () => { byPop = true; close.current(); };
+    try { window.history.pushState({ ...(window.history.state ?? {}), sheet: true }, ''); } catch { /* ignore */ }
+    window.addEventListener('popstate', onPop);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('popstate', onPop);
+      // Fermée par un bouton : on retire l'entrée d'historique ajoutée (sauf si on a navigué ailleurs entre-temps)
+      if (!byPop && window.history.state?.sheet) { try { window.history.back(); } catch { /* ignore */ } }
+    };
+  }, [open]);
   if (!open) return null;
   return (
     <>
@@ -142,6 +161,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
       <section className="sheet" role="dialog" aria-modal="true">
         <div className="shead">{typeof title === 'string' ? <b>{title}</b> : title}<span className="sp" /><button className="ib sm" onClick={onClose} aria-label="Fermer"><Icon name="close" size={18} /></button></div>
         {children}
+        {footer === null ? null : footer ?? <button className="btn soft" style={{ marginTop: 16 }} onClick={onClose}>{closeLabel}</button>}
       </section>
     </>
   );

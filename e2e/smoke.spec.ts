@@ -12,9 +12,9 @@ async function onboard(page: Page, levels: number[] = [0, 0, 0, 0], goal: 'both'
   // objectif
   await expect(page.getByText('Votre objectif')).toBeVisible();
   await page.getByRole('radio', { name: goal === 'both' ? /Parler, lire et écrire/ : goal === 'speak' ? /Parler et comprendre/ : /^Lire et écrire/ }).click();
-  await page.getByRole('button', { name: /^Continuer$/ }).click();
-  // niveaux : seulement les compétences concernées par l'objectif
-  const groups = page.getByRole('radiogroup');
+  // niveaux : repliés derrière « J'ai déjà des bases » ; seulement les compétences concernées par l'objectif
+  await page.getByRole('button', { name: /déjà des bases/ }).click();
+  const groups = page.getByRole('radiogroup', { name: /Comprendre|Parler|Lire|Écrire/ });
   const n = goal === 'both' ? 4 : 2;
   await expect(groups).toHaveCount(n);
   const wanted = goal === 'both' ? levels : goal === 'speak' ? levels.slice(0, 2) : levels.slice(2);
@@ -91,7 +91,7 @@ async function completeLesson(page: Page) {
       continue;
     }
     // répéter (facultatif)
-    for (const name of [/^Passer$/, /^Terminer$/]) {
+    for (const name of [/^Passer l’exercice$/, /^Terminer$/, /^Mot suivant$/]) {
       const b = page.getByRole('button', { name });
       if (await b.isVisible().catch(() => false)) { await b.click(); break; }
     }
@@ -136,7 +136,7 @@ test('onboarding, première leçon, déblocage, reprise, révision', async ({ pa
   await expect(page.locator('.sheet')).toBeVisible();
   // profil et export
   await page.goto('/#/profile/data');
-  await expect(page.getByRole('button', { name: /Exporter mes données/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Exporter une sauvegarde/ })).toBeVisible();
 });
 
 test('reprise d’une leçon après rechargement', async ({ page }) => {
@@ -165,7 +165,7 @@ test('objectif « parler » : aucune leçon d’écriture dans le parcours, phon
   await page.getByRole('link', { name: /Mon parcours/ }).click();
   await expect(page.locator('.lrow').first()).toBeVisible();
   await expect(page.getByText(/consonnes et la voyelle/)).toHaveCount(0);
-  await page.goto('/#/profile/settings');
+  await page.goto('/#/profile/settings?tab=exercises');
   await expect(page.locator('.seg button.on', { hasText: 'Toujours' })).toBeVisible();
   // l'objectif se change dans Profil
   await page.goto('/#/profile/levels');
@@ -237,16 +237,18 @@ test('alphabet : un toucher lit la lettre et montre l’aperçu, un second ouvre
 test('écoute en boucle : sélection de deux lettres proches depuis l’alphabet, réglages persistants', async ({ page }) => {
   await onboard(page);
   await page.goto('/#/explore/alphabet');
+  await page.getByText(/Sons voisins à l’oreille/).click(); // section repliée
   await page.getByRole('link', { name: /b · p · ph/ }).click();
   await expect(page).toHaveURL(/explore\/listen/);
   await expect(page.locator('.listen-stage .tag')).toHaveText('1 / 4');
-  await expect(page.locator('.chip.on')).toContainText('Ma sélection · 4');
+  await expect(page.locator('.chip.on', { hasText: 'Ma sélection' })).toContainText('Ma sélection · 4');
   // ne garder que ป et พ
   await page.locator('.lgrid .cell.sel', { hasText: 'บ' }).click();
   await page.locator('.lgrid .cell.sel', { hasText: 'ผ' }).click();
   await expect(page.locator('.listen-stage .tag')).toHaveText('1 / 2');
-  await page.locator('.seg button', { hasText: 'Le son seul' }).click();
-  await page.locator('.seg button', { hasText: 'Normal, lent, très lent' }).click();
+  await page.getByText(/^Réglages/).click(); // repli des réglages
+  await page.locator('.seg button', { hasText: /^Son / }).click();
+  await page.locator('.seg button', { hasText: '+ lent + très lent' }).click();
   await expect(page.locator('.takes .take')).toHaveCount(3);
   await page.getByTestId('listen-play').click();
   await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible();

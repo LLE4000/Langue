@@ -43,7 +43,7 @@ export function TheoryBlockView({ b, knownOrally }: { b: TheoryBlock; knownOrall
   switch (b.kind) {
     case 'text': return <p className="lead" style={{ color: 'var(--ink)', marginBottom: 6 }}><Fr text={b.text} /></p>;
     case 'note': return <div className="note info"><Fr text={b.text} /></div>;
-    case 'tip': return <div className="note"><b>Le point du jour.</b> <Fr text={b.text} /></div>;
+    case 'tip': return <div className="note"><b>Astuce.</b> <Fr text={b.text} /></div>;
     case 'pattern': return <div className="pattern" lang="th"><Fr text={b.text} /></div>;
     case 'letters': return (
       <><div className="h2">Les consonnes</div><div className="list">{(b.ids ?? []).map((id) => { const c = ITEMS[id]; if (!c || c.kind !== 'cons') return null; return (
@@ -124,7 +124,7 @@ export function TheoryStep({ step, onDone, title, subtitle }: { step: RuntimeSte
       {subtitle && <p className="mut sm" style={{ marginBottom: 14 }}>{subtitle}</p>}
       {step.blocks.map((b, i) => <div className="theory-block" key={i}><TheoryBlockView b={b} /></div>)}
       <div className="gap" />
-      <StepFooter meta={<><span>Rien à retenir par cœur : les exercices viennent tout de suite après.</span></>}>
+      <StepFooter meta={<><span>Parcourez, écoutez : les exercices suivent tout de suite.</span></>}>
         <ContinueButton onClick={onDone} label="Continuer" />
       </StepFooter>
     </>

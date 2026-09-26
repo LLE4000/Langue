@@ -43,7 +43,7 @@ export function PlacementTest({ onClose, onResult }: { onClose: () => void; onRe
     }
   };
   return (
-    <Sheet open onClose={onClose} title={t.onboarding.placementTitle}>
+    <Sheet open onClose={onClose} title={t.onboarding.placementTitle} footer={null}>
       <p className="lead">{t.onboarding.placementIntro}</p>
       <div className="sess"><div className="bar thin"><i style={{ width: `${(i / qs.length) * 100}%` }} /></div><span className="n">{i + 1} / {qs.length}</span></div>
       <p className="qprompt">{q.prompt}</p>

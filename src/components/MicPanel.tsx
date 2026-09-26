@@ -17,10 +17,10 @@ import { TONE_BY_ID, type LearnItem } from '@/content/th';
 import { TONES } from '@/content/th/tones';
 import { resolveTokens } from '@/engine/tokens';
 import { L } from '@/i18n';
-import { Icon, Thai, Rom, useTokens, AudioPair } from './ui';
+import { Icon, Thai, Rom, useTokens, AudioPair, Segmented, Sheet } from './ui';
 import { useWbw } from './WordByWord';
 
-const VERDICT_TEXT: Record<PronResult['verdict'], string> = { ok: 'Compris du premier coup', near: 'Presque compris', ko: 'Pas compris' };
+const VERDICT_TEXT: Record<PronResult['verdict'], string> = { ok: 'Compris !', near: 'Presque compris', ko: 'Pas compris' };
 const TONE_MS = 1700;
 
 /** Courbe du ton : gabarit attendu (couleur du ton) et courbe de la voix (pointillés). */
@@ -48,6 +48,7 @@ export function MicPanel({ item, onClose, inline, onScore }: { item: LearnItem; 
   const [url, setUrl] = useState('');
   const [toneState, setToneState] = useState<'idle' | 'rec' | 'busy'>('idle');
   const [toneRes, setToneRes] = useState<ToneCheckResult | null>(null);
+  const [tab, setTab] = useState<'say' | 'tone'>(recognizer.supported ? 'say' : 'tone');
   const audio = useRef<HTMLAudioElement>(null);
   const thai = item.kind === 'cons' ? item.thai + ' ' + item.ref.nameWord : item.thai;
   const seg = useWbw(item.kind === 'cons' ? item.ref.nameWord : item.thai, item.kind === 'cons' ? item.rom.split(' ').slice(1).join(' ') : item.rom);
@@ -93,80 +94,79 @@ export function MicPanel({ item, onClose, inline, onScore }: { item: LearnItem; 
     setToneState('idle');
   };
 
+  const hasToneTab = recorder.supported;
   const body = (
     <>
       <div className="stage compact"><div className="big s3"><Thai text={thai} /></div><Rom text={item.rom} /><span className="mut sm">{resolveTokens(L(item.meaning), tok)}</span></div>
       <div className="audio"><AudioPair text={item.say} big /></div>
+      {hasToneTab && recognizer.supported && <div style={{ marginBottom: 12 }}><Segmented value={tab} options={[{ v: 'say' as const, label: '🎙️ Je le dis' }, { v: 'tone' as const, label: '🎵 Mon ton et ma voix' }]} onChange={setTab} /></div>}
 
-      {recognizer.supported ? (
+      {tab === 'say' && (recognizer.supported ? (
         <>
           <button className={`btn ${listening ? 'listening' : ''}`} onClick={listen} data-testid="mic-say">
             <Icon name="mic" size={20} /> {listening ? 'Je vous écoute… parlez maintenant' : res ? 'Je le redis' : 'Je le dis'}
           </button>
           <p className="xs mut ctr" style={{ marginTop: 6 }}>{listening ? 'Touchez à nouveau pour arrêter.' : `Dites « ${resolveTokens(thai, tok)} » : le moteur thaï écrit ce qu’il comprend${strictness === 'strict' ? ' · mode strict' : strictness === 'lenient' ? ' · mode indulgent' : ''}.`}</p>
+          {msg && <div className="note warn sm">{msg}</div>}
+          {res && (
+            <div className={`pron ${res.verdict}`} aria-live="polite">
+              <div className="cring" data-tone={res.verdict} style={{ ['--p' as string]: res.score * 10 }}><b>{res.score}</b><small>/ 10</small></div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className={`verdict ${res.verdict}`}>{VERDICT_TEXT[res.verdict]}</div>
+                {res.words.length > 1 && <div className="pwords">{res.words.map((w, k) => <span key={k} className={`pw ${w.ok ? 'ok' : w.near ? 'near' : 'ko'}`} lang="th"><b>{w.t}</b>{w.r && <em>{w.r}</em>}</span>)}</div>}
+                {res.verdict !== 'ok' && res.heard && <div className="sm" style={{ marginTop: 6 }}>Le moteur a compris : <b className="th" style={{ fontSize: 18 }}>{res.heard}</b></div>}
+                {typeof res.confidence === 'number' && <div className="xs mut" style={{ marginTop: 4 }}>Certitude du moteur : {Math.round(res.confidence * 100)} %</div>}
+                {res.verdict !== 'ok' && res.alts.length > 1 && <div className="xs mut" style={{ marginTop: 2 }}>Il hésitait aussi avec : <span className="th">{res.alts.slice(1, 3).join(' · ')}</span></div>}
+                {res.hints.map((h, k) => <div key={k} className="sm mut" style={{ marginTop: 4 }}>{h}</div>)}
+                {stat && stat.n > 1 && <div className="xs mut" style={{ marginTop: 6 }}>Meilleur : {stat.best}/10 · {stat.n} essais</div>}
+              </div>
+            </div>
+          )}
+          {!res && stat && <p className="xs mut ctr">Meilleur : {stat.best}/10 · dernier : {stat.last}/10 · {stat.n} essai{stat.n > 1 ? 's' : ''}</p>}
         </>
       ) : (
         <div className="note plain sm">La reconnaissance vocale n’est pas disponible sur ce navigateur (elle fonctionne dans Chrome pour Android et Safari). L’analyse du ton et l’enregistrement restent possibles.</div>
-      )}
+      ))}
 
-      {res && (
-        <div className={`pron ${res.verdict}`} aria-live="polite">
-          <div className="cring" data-tone={res.verdict} style={{ ['--p' as string]: res.score * 10 }}><b>{res.score}</b><small>/ 10</small></div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div className={`verdict ${res.verdict}`}>{VERDICT_TEXT[res.verdict]}</div>
-            {res.words.length > 1 && <div className="pwords">{res.words.map((w, k) => <span key={k} className={`pw ${w.ok ? 'ok' : w.near ? 'near' : 'ko'}`} lang="th"><b>{w.t}</b>{w.r && <em>{w.r}</em>}</span>)}</div>}
-            {res.verdict !== 'ok' && res.heard && <div className="sm" style={{ marginTop: 6 }}>Le moteur a compris : <b className="th" style={{ fontSize: 18 }}>{res.heard}</b></div>}
-            {typeof res.confidence === 'number' && <div className="xs mut" style={{ marginTop: 4 }}>Certitude du moteur : {Math.round(res.confidence * 100)} %</div>}
-            {res.verdict !== 'ok' && res.alts.length > 1 && <div className="xs mut" style={{ marginTop: 2 }}>Il hésitait aussi avec : <span className="th">{res.alts.slice(1, 3).join(' · ')}</span></div>}
-            {res.hints.map((h, k) => <div key={k} className="sm mut" style={{ marginTop: 4 }}>{h}</div>)}
-            {stat && stat.n > 1 && <div className="xs mut" style={{ marginTop: 6 }}>Meilleur : {stat.best}/10 · {stat.n} essais</div>}
-          </div>
-        </div>
-      )}
-      {!res && stat && <p className="xs mut ctr">Meilleur : {stat.best}/10 · dernier : {stat.last}/10 · {stat.n} essai{stat.n > 1 ? 's' : ''}</p>}
-
-      {expectedTone && recorder.supported && (
-        <div className="tonecheck">
-          <div className="row-flex" style={{ gap: 8 }}>
-            <b style={{ flex: 1 }}>Mon ton <span className="mut" style={{ fontWeight: 500 }}>· attendu : {L(TONE_BY_ID[expectedTone].name)}</span></b>
-            <button className={`btn auto sm ${toneState === 'rec' ? 'listening' : 'soft'}`} onClick={checkTone} disabled={toneState !== 'idle'} data-testid="tone-check">
-              {toneState === 'rec' ? 'Parlez…' : toneState === 'busy' ? 'Analyse…' : '🎵 Vérifier mon ton'}
-            </button>
-          </div>
-          <p className="xs mut" style={{ margin: '4px 0 8px' }}>{toneState === 'rec' ? `Dites la syllabe seule, un peu longuement (${(TONE_MS / 1000).toFixed(1).replace('.', ',')} s d’enregistrement).` : 'L’application mesure la hauteur de votre voix et la compare à la forme du ton. Hors ligne, rien n’est envoyé.'}</p>
-          {toneRes && (
-            <>
-              <ToneOverlay points={toneRes.points} expected={expectedTone} />
-              <div className={`verdict ${toneRes.ok ? 'ok' : toneRes.similarity >= 0.6 ? 'near' : 'ko'}`} style={{ marginTop: 8 }}>
-                {toneRes.ok ? `Ton ${L(TONE_BY_ID[expectedTone].name)} reconnu` : `On entend plutôt un ton ${L(TONE_BY_ID[toneRes.predicted].name)}`} · ressemblance {Math.round(toneRes.similarity * 100)} %
+      {tab === 'tone' && hasToneTab && (
+        <>
+          {expectedTone ? (
+            <div className="tonecheck">
+              <div className="row-flex" style={{ gap: 8 }}>
+                <b style={{ flex: 1 }}>Mon ton <span className="mut" style={{ fontWeight: 500 }}>· attendu : {L(TONE_BY_ID[expectedTone].name)}</span></b>
+                <button className={`btn auto sm ${toneState === 'rec' ? 'listening' : 'soft'}`} onClick={checkTone} disabled={toneState !== 'idle'} data-testid="tone-check">
+                  {toneState === 'rec' ? 'Parlez…' : toneState === 'busy' ? 'Analyse…' : '🎵 Vérifier mon ton'}
+                </button>
               </div>
-              {!toneRes.ok && <div className="sm mut" style={{ marginTop: 4 }}>{L(TONES.find((t) => t.id === expectedTone)!.desc)} Réécoutez le modèle et exagérez le mouvement.</div>}
-            </>
+              <p className="xs mut" style={{ margin: '4px 0 8px' }}>{toneState === 'rec' ? `Dites la syllabe seule, un peu longuement (${(TONE_MS / 1000).toFixed(1).replace('.', ',')} s d’enregistrement).` : 'L’application mesure la hauteur de votre voix et la compare à la forme du ton. Cette analyse se fait sur l’appareil.'}</p>
+              {toneRes && (
+                <>
+                  <ToneOverlay points={toneRes.points} expected={expectedTone} />
+                  <div className={`verdict ${toneRes.ok ? 'ok' : toneRes.similarity >= 0.6 ? 'near' : 'ko'}`} style={{ marginTop: 8 }}>
+                    {toneRes.ok ? `Ton ${L(TONE_BY_ID[expectedTone].name)} reconnu` : `On entend plutôt un ton ${L(TONE_BY_ID[toneRes.predicted].name)}`} · ressemblance {Math.round(toneRes.similarity * 100)} %
+                  </div>
+                  {!toneRes.ok && <div className="sm mut" style={{ marginTop: 4 }}>{L(TONES.find((t) => t.id === expectedTone)!.desc)} Réécoutez le modèle et exagérez le mouvement.</div>}
+                </>
+              )}
+            </div>
+          ) : (
+            <p className="sm mut" style={{ margin: '0 2px 10px' }}>L’analyse du ton se fait sur les mots d’une syllabe. Ici, comparez votre voix au modèle.</p>
           )}
-        </div>
+          <div className="note plain sm" style={{ marginTop: 12 }}>
+            <b>Me comparer au modèle</b>
+            <div className="btns" style={{ marginTop: 10 }}>
+              <button className="btn soft sm" onClick={() => sp.speak(item.say)}><Icon name="speaker" size={16} /> Modèle</button>
+              <button className={`btn sm ${rec ? 'danger' : 'ghost'}`} onClick={toggleRec}><Icon name={rec ? 'pause' : 'mic'} size={16} /> {rec ? 'Arrêter' : 'M’enregistrer'}</button>
+              <button className="btn soft sm" disabled={!url} onClick={() => { if (audio.current) { audio.current.src = url; audio.current.play().catch(() => setMsg('Lecture impossible sur ce navigateur.')); } }}><Icon name="play" size={16} /> Ma voix</button>
+            </div>
+            <p className="xs mut" style={{ marginTop: 8 }}>La reconnaissance juge si le mot est compréhensible ; la courbe juge la forme du ton sur une syllabe. Pour le reste, l’oreille : comparez « Modèle » et « Ma voix ».</p>
+            <audio ref={audio} preload="none" />
+          </div>
+          {msg && <div className="note warn sm">{msg}</div>}
+        </>
       )}
-      {msg && <div className="note warn sm">{msg}</div>}
-
-      <details className="note plain sm" style={{ marginTop: 12 }}>
-        <summary>Me comparer au modèle (enregistrement)</summary>
-        <div className="btns" style={{ marginTop: 10 }}>
-          <button className="btn soft sm" onClick={() => sp.speak(item.say)}><Icon name="speaker" size={16} /> Modèle</button>
-          {recorder.supported && <button className={`btn sm ${rec ? 'danger' : 'ghost'}`} onClick={toggleRec}><Icon name={rec ? 'pause' : 'mic'} size={16} /> {rec ? 'Arrêter' : 'M’enregistrer'}</button>}
-          <button className="btn soft sm" disabled={!url} onClick={() => { if (audio.current) { audio.current.src = url; audio.current.play().catch(() => setMsg('Lecture impossible sur ce navigateur.')); } }}><Icon name="play" size={16} /> Ma voix</button>
-        </div>
-        <p className="xs mut" style={{ marginTop: 8 }}>La reconnaissance juge si le mot est compréhensible ; la courbe juge la forme du ton sur une syllabe. Pour le reste, l’oreille : comparez « Modèle » et « Ma voix ».</p>
-        <audio ref={audio} preload="none" />
-      </details>
     </>
   );
   if (inline) return <div>{body}</div>;
-  return (
-    <>
-      <div className="scrim" onClick={onClose} />
-      <section className="sheet" role="dialog" aria-modal="true">
-        <div className="shead"><b>Prononciation</b><span className="sp" /><button className="ib sm" onClick={onClose} aria-label="Fermer"><Icon name="close" size={18} /></button></div>
-        {body}
-      </section>
-    </>
-  );
+  return <Sheet open onClose={onClose ?? (() => {})} title="Prononciation">{body}</Sheet>;
 }

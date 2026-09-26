@@ -47,15 +47,24 @@ export function LessonRunner() {
   const startedAt = useRef(Date.now());
   const isTraining = id === 'training';
 
+  // Une autre leçon est en pause : on demande avant de l'écraser
+  const [conflict, setConflict] = useState<LessonSession | null>(null);
+  const start = useCallback(() => {
+    if (!lesson) return;
+    const ctx = { known: known.concepts, srs, levels, knownOrally: isKnownOrally(lesson, levels), seen, micAvailable: recorder.supported || recognizer.supported };
+    const steps = planLesson(lesson, ctx);
+    const s: LessonSession = { lessonId: lesson.id, title: L(lesson.title), steps, index: 0, ok: 0, total: 0, xp: 0, wrong: [], startedAt: Date.now() };
+    startSession(s);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lesson?.id]);
   // Démarre (ou reprend) la séance
   useEffect(() => {
     if (isTraining) { if (!session || !session.training) nav('/review', { replace: true }); return; }
     if (!lesson) return;
     if (session && session.lessonId === lesson.id && !session.training) return;
-    const ctx = { known: known.concepts, srs, levels, knownOrally: isKnownOrally(lesson, levels), seen, micAvailable: recorder.supported || recognizer.supported };
-    const steps = planLesson(lesson, ctx);
-    const s: LessonSession = { lessonId: lesson.id, title: L(lesson.title), steps, index: 0, ok: 0, total: 0, xp: 0, wrong: [], startedAt: Date.now() };
-    startSession(s);
+    const paused = session && !session.training && session.steps[session.index]?.type !== 'recap' && session.index > 0 ? session : null;
+    if (paused) { setConflict(paused); return; }
+    start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lesson?.id, isTraining]);
 
@@ -94,6 +103,17 @@ export function LessonRunner() {
   const quit = () => { endSession(); nav(isTraining ? '/review' : '/', { replace: true }); };
 
   if (!isTraining && !lesson) return <FullScreen title="Leçon introuvable" onBack={() => nav('/')}><div className="empty">Cette leçon n’existe pas.</div></FullScreen>;
+  if (conflict && lesson) {
+    return (
+      <FullScreen title={L(lesson.title)} onBack={() => nav(-1)}>
+        <div className="recap" style={{ marginTop: 20 }}><div style={{ fontSize: 40 }}>⏸️</div><div className="serif" style={{ fontSize: 26 }}>« {conflict.title} » est en pause</div><p className="mut sm" style={{ marginTop: 6 }}>Étape {conflict.index + 1} sur {conflict.steps.length}. Commencer une autre leçon abandonne cette tentative.</p></div>
+        <div className="stack" style={{ marginTop: 16 }}>
+          <button className="btn" onClick={() => nav(`/lesson/${conflict.lessonId}`, { replace: true })}>Reprendre « {conflict.title} »</button>
+          <button className="btn ghost" onClick={() => { setConflict(null); endSession(); start(); }}>Abandonner et commencer « {L(lesson.title)} »</button>
+        </div>
+      </FullScreen>
+    );
+  }
   if (!session || !step) return <FullScreen title={lesson ? L(lesson.title) : ''} onBack={() => nav(-1)}><div className="ctr mut" style={{ padding: 40 }}>{t.common.loading}</div></FullScreen>;
 
   const total = session.steps.length;
@@ -103,9 +123,9 @@ export function LessonRunner() {
   const key = `${session.lessonId}-${session.startedAt}-${session.index}`;
 
   return (
-    <FullScreen title={session.training ? session.title : `${lessonNo ? `Leçon ${lessonNo}` : 'Leçon'} · ${STEP_LABEL[step.type]}`} onBack={() => setQuitAsk(true)}
-      right={<button className="tb" aria-label="Quitter" onClick={() => setQuitAsk(true)}><Icon name="close" /></button>} fit={step.type === 'questions' || step.type === 'flashcards'}>
-      <div className="sess"><div className="steps" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}>{session.steps.map((_, k) => <i key={k} className={k < session.index ? 'done' : k === session.index ? 'cur' : ''} />)}</div><span className="n">{session.index + 1} / {total}{step.type !== 'recap' ? ` · ≈ ${minutesLeft} min` : ''}</span></div>
+    <FullScreen title={session.training ? session.title : `${lessonNo ? `Leçon ${lessonNo}` : 'Leçon'} · ${STEP_LABEL[step.type]}`} onBack={() => (step.type === 'recap' ? quit() : setQuitAsk(true))}
+      right={<button className="tb" aria-label="Quitter" onClick={() => (step.type === 'recap' ? quit() : setQuitAsk(true))}><Icon name="close" /></button>} fit={step.type === 'questions' || step.type === 'flashcards'}>
+      <div className="sess"><div className="steps" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}>{session.steps.map((_, k) => <i key={k} className={k < session.index ? 'done' : k === session.index ? 'cur' : ''} />)}</div><span className="n">{t.lesson.step} {session.index + 1} / {total}{step.type !== 'recap' ? ` · ≈ ${minutesLeft} min` : ''}</span></div>
       {step.type === 'theory' && <TheoryStep key={key} step={step} onDone={() => finish()} title={lesson ? L(lesson.title) : session.title} subtitle={lesson ? L(lesson.subtitle) : ''} />}
       {step.type === 'flashcards' && <FlashcardsStep key={key} step={step} onDone={finish} />}
       {step.type === 'questions' && <QuestionsStep key={key} step={step} onDone={finish} timed={session.mode === 'timed'} />}
@@ -115,11 +135,11 @@ export function LessonRunner() {
       {step.type === 'reading' && <div key={key}><ReadingView id={step.id} onDone={() => finish({ xp: 5 })} doneLabel={t.common.continue} /></div>}
       {step.type === 'repeat' && <RepeatStep key={key} step={step} onDone={finish} />}
       {step.type === 'recap' && <RecapStep key={key} session={session} lesson={lesson} next={next} onClose={quit} onNext={(nid) => { endSession(); nav(`/lesson/${nid}`, { replace: true }); }} onRetry={() => { endSession(); nav(`/lesson/${session.lessonId}`, { replace: true }); }} startedAt={startedAt.current} />}
-      <Sheet open={quitAsk} onClose={() => setQuitAsk(false)} title={t.common.quit}>
+      <Sheet open={quitAsk} onClose={() => setQuitAsk(false)} title={t.common.quit} footer={null}>
         <p className="lead">{session.training ? 'Quitter l’entraînement ?' : t.lesson.quitConfirm}</p>
         <div className="stack">
-          {!session.training && <button className="btn" onClick={() => nav('/')}>Mettre en pause et revenir plus tard</button>}
-          <button className="btn danger" onClick={quit}>{session.training ? 'Quitter' : 'Abandonner cette tentative'}</button>
+          {!session.training && <button className="btn" onClick={() => nav('/')}>Mettre en pause · je reprendrai ici</button>}
+          <button className="btn danger" onClick={quit}>{session.training ? 'Quitter' : 'Abandonner · cette tentative est perdue'}</button>
           <button className="btn ghost" onClick={() => setQuitAsk(false)}>{t.common.cancel}</button>
         </div>
       </Sheet>

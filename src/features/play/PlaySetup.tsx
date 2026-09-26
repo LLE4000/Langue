@@ -67,7 +67,7 @@ export function PlaySetup({ minPlayers, maxPlayers, withLayout, onStart, startLa
       {withLayout && (
         <>
           <label className="f">Position</label>
-          <Segmented value={layout} options={[{ v: 'face', label: 'Face à face (appareil posé)' }, { v: 'side', label: 'Côte à côte' }]} onChange={setLayout} />
+          <Segmented value={layout} options={[{ v: 'face', label: 'Face à face' }, { v: 'side', label: 'Côte à côte' }]} onChange={setLayout} />
           <p className="xs mut" style={{ margin: '6px 2px 0' }}>Face à face : la moitié du haut est retournée pour la personne assise en face. Côte à côte : chacun sa moitié gauche/droite.</p>
         </>
       )}

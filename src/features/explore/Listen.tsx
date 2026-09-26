@@ -94,6 +94,8 @@ export function Listen() {
   const jump = (d: number) => { const was = on; stop(); const n = queue.length ? (((iRef.current + d) % queue.length) + queue.length) % queue.length : 0; iRef.current = n; setI(n); setRevealed(true); if (was) { token.current++; setOn(true); playEntry(token.current, n); } };
 
   const learnedCount = useMemo(() => buildListenQueue({ ...prefs, set: 'words' }, srs, 1).length, [prefs, srs]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const summary = [prefs.set === 'words' ? '' : prefs.what === 'sound' ? 'son seul' : prefs.what === 'name' ? 'nom entier' : 'son puis nom', ['normal', 'normal + lent', 'normal, lent, très lent'][prefs.speeds - 1], prefs.order === 'shuffle' ? 'mélangé' : 'dans l’ordre', prefs.guess ? 'deviner d’abord' : ''].filter(Boolean).join(' · ');
   const isLetter = cur && (cur.item.kind === 'cons' || cur.item.kind === 'vow');
   const label = cur ? (cur.item.kind === 'cons' ? `${cur.item.thai} ${cur.item.ref.nameWord}` : cur.item.kind === 'vow' ? vowelDisplay(cur.item.ref.form, 'อ') : cur.item.thai) : '';
   const toggleCustom = (id: string) => setPrefs({ set: 'custom', custom: prefs.custom.includes(id) ? prefs.custom.filter((x) => x !== id) : [...prefs.custom, id] });
@@ -133,27 +135,30 @@ export function Listen() {
       {prefs.set === 'custom' && (
         <>
           <p className="sm mut" style={{ margin: '0 2px 6px' }}>Sons voisins à distinguer, ou cochez librement.</p>
-          <div className="chips">{th.NEAR_SOUNDS.map(([lab, chars]) => <button key={lab} className="chip" onClick={() => setPrefs({ set: 'custom', custom: [...chars].map((c) => 'c:' + c) })}><b className="rom">{lab}</b> <Thai text={[...chars].join(' ')} style={{ fontSize: 17, color: 'var(--ink)' }} /></button>)}<button className="chip" onClick={() => setPrefs({ custom: [] })}>Tout décocher</button></div>
+          <div className="chips">{th.NEAR_SOUNDS.map(([lab, chars]) => { const ids = [...chars].map((c) => 'c:' + c); const active = ids.length === prefs.custom.length && ids.every((x) => prefs.custom.includes(x)); return <button key={lab} className={`chip ${active ? 'on' : ''}`} aria-pressed={active} onClick={() => setPrefs({ set: 'custom', custom: ids })}><b className="rom">{lab}</b> <Thai text={[...chars].join(' ')} style={{ fontSize: 17, color: active ? 'var(--bg)' : 'var(--ink)' }} /></button>; })}</div>
+          {prefs.custom.length > 0 && <p className="xs mut" style={{ margin: '0 2px 6px', textAlign: 'right' }}><button className="link" onClick={() => setPrefs({ custom: [] })}>Tout décocher</button></p>}
           <div className="lgrid" style={{ marginTop: 6 }}>{CONS_ITEMS.map((c) => <button key={c.id} className={`cell ${c.ref.cls} ${prefs.custom.includes(c.id) ? 'sel' : ''} ${c.ref.obsolete ? 'locked' : ''}`} lang="th" aria-pressed={prefs.custom.includes(c.id)} onClick={() => toggleCustom(c.id)}>{c.thai}<small>{c.ref.initial === '(muet)' ? '–' : c.ref.initial}</small></button>)}</div>
           <label className="f">Voyelles</label>
           <div className="lgrid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(78px, 1fr))' }}>{TAUGHT_VOWELS.map((v) => <button key={v.id} className={`cell wide ${prefs.custom.includes(v.id) ? 'sel' : ''}`} lang="th" aria-pressed={prefs.custom.includes(v.id)} onClick={() => toggleCustom(v.id)}>{vowelDisplay(v.form, 'อ')}<small>{v.rom}</small></button>)}</div>
         </>
       )}
 
-      <div className="h2">Comment</div>
-      {(prefs.set === 'cons' || prefs.set === 'vow' || prefs.set === 'custom') && (
-        <>
-          <label className="f">Ce qui est dit</label>
-          <Segmented value={prefs.what} options={[{ v: 'sound' as const, label: <>Le son seul <span className="th" lang="th">ปอ</span></> }, { v: 'name' as const, label: <>Le nom entier <span className="th" lang="th">ปอ ปลา</span></> }, { v: 'both' as const, label: 'Son, puis nom' }]} onChange={(v) => setPrefs({ what: v })} />
-        </>
-      )}
-      <label className="f">Vitesses, pour chaque élément</label>
-      <Segmented value={prefs.speeds} options={[{ v: 1 as const, label: 'Normal' }, { v: 2 as const, label: 'Normal, puis lent' }, { v: 3 as const, label: 'Normal, lent, très lent' }]} onChange={(v) => setPrefs({ speeds: v })} />
-      <label className="f">Ordre</label>
-      <Segmented value={prefs.order} options={[{ v: 'order' as const, label: prefs.set === 'words' ? 'Dans l’ordre appris' : 'Ordre de l’alphabet' }, { v: 'shuffle' as const, label: 'Mélangé' }]} onChange={(v) => { setSeed(Date.now()); setPrefs({ order: v }); }} />
-      <label className="f">Deviner d’abord <span className="xs">(le caractère n’apparaît qu’après la première lecture)</span></label>
-      <Segmented value={prefs.guess} options={[{ v: false, label: 'Non' }, { v: true, label: 'Oui' }]} onChange={(v) => setPrefs({ guess: v })} />
-      <div className="note info sm" style={{ marginTop: 16 }}>Dans un groupe « même son » (ข ฃ ค…), les lettres se prononcent <b>exactement pareil</b> en début de syllabe : ce qui change, c’est la classe, donc le ton quand on récite la lettre. Pour ป / พ ou ต / ท, en revanche, la différence est réelle : la deuxième est <b>aspirée</b> (un souffle après la consonne, comme en anglais <i>pin</i>). Le son seul, en boucle, l’une après l’autre, est la meilleure façon de l’entendre.</div>
+      <details className="fold" open={settingsOpen} onToggle={(e) => setSettingsOpen((e.target as HTMLDetailsElement).open)}>
+        <summary>Réglages <span className="sm mut">· {summary}</span></summary>
+        {(prefs.set === 'cons' || prefs.set === 'vow' || prefs.set === 'custom') && (
+          <>
+            <label className="f">Ce qui est dit</label>
+            <Segmented value={prefs.what} options={[{ v: 'sound' as const, label: <>Son <span className="th" lang="th">ปอ</span></> }, { v: 'name' as const, label: <>Nom <span className="th" lang="th">ปอ ปลา</span></> }, { v: 'both' as const, label: 'Les deux' }]} onChange={(v) => setPrefs({ what: v })} />
+          </>
+        )}
+        <label className="f">Vitesses, pour chaque élément</label>
+        <Segmented value={prefs.speeds} options={[{ v: 1 as const, label: 'Normal' }, { v: 2 as const, label: '+ lent' }, { v: 3 as const, label: '+ lent + très lent' }]} onChange={(v) => setPrefs({ speeds: v })} />
+        <label className="f">Ordre</label>
+        <Segmented value={prefs.order} options={[{ v: 'order' as const, label: prefs.set === 'words' ? 'Ordre appris' : 'Ordre de l’alphabet' }, { v: 'shuffle' as const, label: 'Mélangé' }]} onChange={(v) => { setSeed(Date.now()); setPrefs({ order: v }); }} />
+        <label className="f">Deviner d’abord <span className="xs">(le caractère n’apparaît qu’après la première lecture)</span></label>
+        <Segmented value={prefs.guess} options={[{ v: false, label: 'Non' }, { v: true, label: 'Oui' }]} onChange={(v) => setPrefs({ guess: v })} />
+      </details>
+      {prefs.set === 'custom' && <div className="note info sm" style={{ marginTop: 16 }}>Dans un groupe « même son » (ข ฃ ค…), les lettres se prononcent <b>exactement pareil</b> en début de syllabe : seule la classe change. Pour ป / พ ou ต / ท, la différence est réelle : la deuxième est <b>aspirée</b> (un souffle après la consonne, comme en anglais <i>pin</i>).</div>}
     </>
   );
 }

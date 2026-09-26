@@ -10,30 +10,38 @@ export function PeopleScreen() {
   const me = useStore((s) => s.profile?.name ?? '');
   const [reg, setReg] = useState(readRegistry());
   const [ask, setAsk] = useState<string | null>(null);
+  const [askAdd, setAskAdd] = useState(false);
+  const [edit, setEdit] = useState(false);
   const refresh = () => setReg(readRegistry());
+  const nameOf = (id: string) => { const p = reg.list.find((x) => x.id === id); return (p?.id === reg.active ? me || p.name : p?.name) || 'Sans nom'; };
   return (
     <>
       <p className="lead">Chaque personne a son parcours, sa mémoire de révision, ses réglages et ses défis. Tout reste sur l’appareil.</p>
+      <div className="h2" style={{ marginTop: 0 }}>Profils <span className="sp" />{reg.list.length > 1 && <button onClick={() => setEdit(!edit)}>{edit ? 'Terminer' : 'Modifier'}</button>}</div>
       <div className="list">
         {reg.list.map((p) => {
           const active = p.id === reg.active;
-          const name = active ? me || p.name || 'Sans nom' : p.name || 'Sans nom';
+          const name = nameOf(p.id);
           return (
-            <div className="row" key={p.id}>
+            <button className="row" key={p.id} onClick={() => { if (!active && !edit) { switchProfile(p.id); reloadToHome(); } }} disabled={active && !edit} aria-current={active ? 'true' : undefined}>
               <span className="ico" style={active ? { background: 'var(--acc-soft)' } : undefined}>{name.slice(0, 1).toUpperCase() || '?'}</span>
               <span className="mid"><span className="t">{name}</span><span className="s">{active ? 'Profil actif' : 'Touchez pour passer à ce profil'}</span></span>
               <span className="end">
-                {!active && <button className="btn sm auto" onClick={() => { switchProfile(p.id); reloadToHome(); }}>Utiliser</button>}
-                {reg.list.length > 1 && <button className="ib sm" aria-label="Supprimer ce profil" onClick={() => setAsk(p.id)}><Icon name="trash" size={16} /></button>}
+                {edit && reg.list.length > 1 ? <span className="ib sm" role="button" aria-label={`Supprimer le profil de ${name}`} onClick={(e) => { e.stopPropagation(); setAsk(p.id); }}><Icon name="trash" size={16} /></span> : active ? <Icon name="check" size={18} /> : <span className="chev">›</span>}
               </span>
-            </div>
+            </button>
           );
         })}
       </div>
-      <button className="btn" style={{ marginTop: 14 }} onClick={() => { createProfile(); reloadToHome(); }}>+ Ajouter une personne</button>
-      <p className="xs mut" style={{ margin: '8px 2px 0' }}>L’application redémarre sur l’écran de bienvenue du nouveau profil. Pour revenir, repassez par cet écran.</p>
-      <Sheet open={!!ask} onClose={() => setAsk(null)} title="Supprimer ce profil ?">
-        <p className="lead">Sa progression sera effacée de cet appareil (pensez à l’exporter avant, dans Mes données). Définitif.</p>
+      <p className="sm mut" style={{ margin: '14px 2px 8px' }}>Ajouter une personne redémarre l’application sur l’écran de bienvenue du nouveau profil. Pour revenir à votre profil, repassez par cet écran.</p>
+      <button className="btn" onClick={() => setAskAdd(true)}>+ Ajouter une personne</button>
+
+      <Sheet open={askAdd} onClose={() => setAskAdd(false)} title="Ajouter une personne ?" footer={null}>
+        <p className="lead">L’application va redémarrer sur l’écran de bienvenue pour créer le nouveau profil. Votre progression est conservée.</p>
+        <div className="stack"><button className="btn" onClick={() => { createProfile(); reloadToHome(); }}>Créer le profil</button><button className="btn ghost" onClick={() => setAskAdd(false)}>Annuler</button></div>
+      </Sheet>
+      <Sheet open={!!ask} onClose={() => setAsk(null)} title={`Supprimer le profil de ${ask ? nameOf(ask) : ''} ?`} footer={null}>
+        <p className="lead">Sa progression sera effacée de cet appareil. Pour la garder, passez d’abord sur ce profil et exportez une sauvegarde (Profil › Mes données). Cette action est définitive.</p>
         <div className="stack">
           <button className="btn danger" onClick={async () => { const id = ask!; const wasActive = id === reg.active; await deleteProfile(id); setAsk(null); if (wasActive) reloadToHome(); else refresh(); }}>Oui, supprimer</button>
           <button className="btn ghost" onClick={() => setAsk(null)}>Annuler</button>

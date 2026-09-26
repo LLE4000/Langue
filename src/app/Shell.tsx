@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { Icon } from '@/components/ui';
 import { T } from '@/i18n';
 
@@ -25,18 +25,21 @@ export function TopBar({ state }: { state: TopBarState }) {
   );
 }
 
+/** Onglet de rattachement d'une route (le parcours dépend d'Apprendre, les jeux de Réviser). */
 const TABS = [
-  { to: '/', icon: 'home', key: 'learn' as const, end: true },
-  { to: '/review', icon: 'repeat', key: 'review' as const },
-  { to: '/explore', icon: 'compass', key: 'explore' as const },
-  { to: '/profile', icon: 'user', key: 'profile' as const },
+  { to: '/', icon: 'home', key: 'learn' as const, end: true, also: ['/path'] },
+  { to: '/review', icon: 'repeat', key: 'review' as const, also: ['/play'] },
+  { to: '/explore', icon: 'compass', key: 'explore' as const, also: [] },
+  { to: '/profile', icon: 'user', key: 'profile' as const, also: [] },
 ];
 
 export function Shell() {
   const [bar, setBar] = useState<TopBarState>({ title: '' });
   const loc = useLocation();
+  const navType = useNavigationType();
   const t = T();
-  useEffect(() => { window.scrollTo(0, 0); }, [loc.pathname]);
+  // Nouvelle page : on repart du haut. Retour arrière : on garde la position (longues listes du parcours, d'Explorer).
+  useEffect(() => { if (navType !== 'POP') window.scrollTo(0, 0); }, [loc.pathname, navType]);
   return (
     <TopBarCtx.Provider value={{ set: setBar }}>
       <div className="app">
@@ -44,7 +47,7 @@ export function Shell() {
         <main className="view"><Outlet /></main>
         <nav className="tabbar" aria-label="Navigation principale">
           {TABS.map((tab) => (
-            <NavLink key={tab.to} to={tab.to} end={tab.end} className={({ isActive }) => (isActive || (!tab.end && loc.pathname.startsWith(tab.to)) ? 'on' : '')}>
+            <NavLink key={tab.to} to={tab.to} end={tab.end} className={({ isActive }) => (isActive || (!tab.end && loc.pathname.startsWith(tab.to)) || tab.also.some((p) => loc.pathname.startsWith(p)) ? 'on' : '')}>
               <Icon name={tab.icon} />{t.nav[tab.key]}
             </NavLink>
           ))}

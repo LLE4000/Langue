@@ -17,46 +17,58 @@ export function DialogView({ id, onDone, doneLabel }: { id: string; onDone?: () 
   const [tr, setTr] = useState(false);
   const [one, setOne] = useState<Record<string, boolean>>({});
   const [mic, setMic] = useState<string | null>(null);
-  const playing = useRef(false);
+  const [playingLine, setPlayingLine] = useState<number | null>(null); // réplique en cours dans « Tout écouter »
+  const token = useRef(0);
   const toggleFav = useStore((s) => s.toggleFavorite);
   const favs = useStore((s) => s.favorites);
   const defaultRom = useShowRom(undefined, false);
   useEffect(() => { setRom(defaultRom && useStore.getState().settings.translit === 'always'); }, [defaultRom, id]);
-  useEffect(() => () => { playing.current = false; sp.cancel(); }, [sp]);
+  useEffect(() => () => { token.current++; sp.cancel(); }, [sp]);
   if (!d) return null;
   const on = (i: number, k: string) => (one[i + k] != null ? one[i + k] : k === 'rom' ? rom : k === 'tr' ? tr : false);
+  // Bascule globale : n'efface que les choix ligne par ligne de la même aide (les « mot à mot » ouverts restent)
+  const toggleAll = (k: 'rom' | 'tr') => { const v = k === 'rom' ? !rom : !tr; if (k === 'rom') setRom(v); else setTr(v); setOne(Object.fromEntries(Object.entries(one).filter(([key]) => !key.endsWith(k)))); };
   // Deux voix : l'apprenant (sa voix préférée) et l'interlocuteur (homme ou femme selon le dialogue).
   const other = dialogOtherGender(d, sp.gender === 'm' ? 'f' : 'm');
   const say = (l: { who: 'me' | 'other'; thai: string }, opts: { slow?: boolean; onend?: () => void } = {}) => sp.speak(l.thai, { ...opts, speaker: l.who === 'other' ? other : undefined });
+  const stopAll = () => { token.current++; setPlayingLine(null); sp.cancel(); };
   const playAll = () => {
-    playing.current = true;
+    if (playingLine !== null) { stopAll(); return; }
+    const tok = ++token.current;
     let i = 0;
-    const next = () => { if (!playing.current || i >= d.lines.length) { playing.current = false; return; } say(d.lines[i++], { onend: () => setTimeout(next, 450) }); };
+    const next = () => {
+      if (tok !== token.current || i >= d.lines.length) { if (tok === token.current) setPlayingLine(null); return; }
+      setPlayingLine(i);
+      document.getElementById(`bub-${id}-${i}`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      const ok = say(d.lines[i++], { onend: () => setTimeout(next, 450) });
+      if (!ok) setPlayingLine(null);
+    };
     next();
   };
   return (
     <>
-      <div className="btns" style={{ marginBottom: 8 }}>
-        <button className={`btn sm ${rom ? '' : 'ghost'}`} onClick={() => { setRom(!rom); setOne({}); }}><Icon name="eye" size={16} /> Phonétique</button>
-        <button className={`btn sm ${tr ? '' : 'ghost'}`} onClick={() => { setTr(!tr); setOne({}); }}>🇫🇷 Traduction</button>
+      <div className="dlgbar">
+        <button className={`btn sm ${playingLine !== null ? '' : 'soft'}`} onClick={playAll}><Icon name={playingLine !== null ? 'pause' : 'play'} size={16} /> {playingLine !== null ? 'Arrêter' : 'Tout écouter'}</button>
+        <button className={`btn sm ${rom ? '' : 'ghost'}`} onClick={() => toggleAll('rom')} aria-pressed={rom}><Icon name="eye" size={16} /> Phonétique</button>
+        <button className={`btn sm ${tr ? '' : 'ghost'}`} onClick={() => toggleAll('tr')} aria-pressed={tr}>🇫🇷 Traduction</button>
       </div>
-      <div className="btns" style={{ marginBottom: 14 }}><button className="btn soft sm" onClick={playAll}><Icon name="play" size={16} /> Tout écouter</button><button className="btn ghost sm" onClick={() => { playing.current = false; sp.cancel(); }}>Stop</button></div>
       {d.lines.map((l, i) => {
         const wid = 'w:' + l.thai;
         const it = WORD_BY_THAI[l.thai];
+        const voice = l.who === 'me' ? sp.gender : other;
         return (
-          <div key={i} className={`bub ${l.who === 'me' ? 'me' : ''}`}>
-            <div className="who">{l.who === 'me' ? 'Vous' : L(d.other)} <span aria-label={l.who === 'me' ? (sp.gender === 'f' ? 'voix de femme' : 'voix d’homme') : other === 'f' ? 'voix de femme' : 'voix d’homme'} title="Voix">{(l.who === 'me' ? sp.gender : other) === 'f' ? '♀' : '♂'}</span></div>
+          <div key={i} id={`bub-${id}-${i}`} className={`bub ${l.who === 'me' ? 'me' : ''} ${playingLine === i ? 'playing' : ''}`}>
+            <div className="who">{l.who === 'me' ? 'Vous' : L(d.other)} <span aria-label={voice === 'f' ? 'voix de femme' : 'voix d’homme'} title="Voix">{voice === 'f' ? '♀' : '♂'}</span></div>
             {on(i, 'w') ? <WordByWord thai={l.thai} rom={l.rom} /> : <><Thai text={l.thai} />{on(i, 'rom') && <Rom text={l.rom} style={{ display: 'block' }} />}</>}
             {on(i, 'tr') && <span className="tr"><Fr text={l.tr} /></span>}
             <div className="acts">
               <button className="mini" onClick={() => say(l)} aria-label="Écouter"><Icon name="speaker" /></button>
               <button className="mini" onClick={() => say(l, { slow: true })} aria-label="Lentement"><Icon name="turtle" /></button>
-              <button className={`mini ${on(i, 'rom') ? 'on' : ''}`} onClick={() => setOne({ ...one, [i + 'rom']: !on(i, 'rom') })} aria-label="Phonétique"><Icon name="eye" /></button>
-              <button className={`mini ${on(i, 'tr') ? 'on' : ''}`} onClick={() => setOne({ ...one, [i + 'tr']: !on(i, 'tr') })} aria-label="Traduction">🇫🇷</button>
-              <button className={`mini ${on(i, 'w') ? 'on' : ''}`} onClick={() => setOne({ ...one, [i + 'w']: !on(i, 'w') })} aria-label="Mot à mot">🎨</button>
-              {l.who === 'me' && it && <button className="mini" onClick={() => setMic(wid)} aria-label="M'enregistrer"><Icon name="mic" /></button>}
-              {it && <button className={`mini ${favs[wid] ? 'on' : ''}`} onClick={() => toggleFav(wid)} aria-label="Favori"><Icon name="star" /></button>}
+              <button className={`mini ${on(i, 'rom') ? 'on' : ''}`} onClick={() => setOne({ ...one, [i + 'rom']: !on(i, 'rom') })} aria-label="Phonétique" aria-pressed={on(i, 'rom')}><Icon name="eye" /></button>
+              <button className={`mini ${on(i, 'tr') ? 'on' : ''}`} onClick={() => setOne({ ...one, [i + 'tr']: !on(i, 'tr') })} aria-label="Traduction" aria-pressed={on(i, 'tr')}>🇫🇷</button>
+              <button className={`mini txt ${on(i, 'w') ? 'on' : ''}`} onClick={() => setOne({ ...one, [i + 'w']: !on(i, 'w') })} aria-pressed={on(i, 'w')}>Mot à mot</button>
+              {l.who === 'me' && it && <button className="mini" onClick={() => setMic(wid)} aria-label="Vérifier ma prononciation" title="Vérifier ma prononciation"><Icon name="mic" /></button>}
+              {it && <button className={`mini ${favs[wid] ? 'on' : ''}`} onClick={() => toggleFav(wid)} aria-label="Favori" aria-pressed={!!favs[wid]}><Icon name="star" /></button>}
             </div>
           </div>
         );

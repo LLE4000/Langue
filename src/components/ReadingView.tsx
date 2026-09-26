@@ -14,7 +14,7 @@ export function ReadingView({ id, onDone, doneLabel }: { id: string; onDone?: ()
   const tog = (k: string) => setOn({ ...on, [k]: !on[k] });
   return (
     <>
-      <p className="lead">Lisez d’abord sans aide. L’audio, la phonétique et la traduction ne s’affichent que si vous les demandez.</p>
+      <p className="sm mut" style={{ margin: '0 2px 12px' }}>Lisez d’abord sans aide ; l’audio, la phonétique et la traduction sont sous chaque phrase.</p>
       {r.sentences.map((s, i) => {
         const thai = sentenceThai(s.tokens, r.level === 1), rom = sentenceRom(s.tokens);
         return (
@@ -28,7 +28,7 @@ export function ReadingView({ id, onDone, doneLabel }: { id: string; onDone?: ()
               <button className="mini" onClick={() => sp.speak(thai, { slow: true })} aria-label="Lentement"><Icon name="turtle" /></button>
               <button className={`mini ${on[i + 'rom'] ? 'on' : ''}`} onClick={() => tog(i + 'rom')} aria-label="Phonétique"><Icon name="eye" /></button>
               <button className={`mini ${on[i + 'tr'] ? 'on' : ''}`} onClick={() => tog(i + 'tr')} aria-label="Traduction">🇫🇷</button>
-              <button className={`mini ${on[i + 'w'] ? 'on' : ''}`} onClick={() => tog(i + 'w')} style={{ fontSize: 12, padding: '0 8px' }}>mot à mot</button>
+              <button className={`mini txt ${on[i + 'w'] ? 'on' : ''}`} onClick={() => tog(i + 'w')} aria-pressed={!!on[i + 'w']}>Mot à mot</button>
             </div>
           </div>
         );

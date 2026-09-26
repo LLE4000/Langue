@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FullScreen } from '@/app/Shell';
 import { useStore } from '@/app/store';
+import { useToast } from '@/components/ui';
 import { PlaySetup, type PlayConfig } from './PlaySetup';
 import { QuizRunner } from './QuizRunner';
 import { buildPlayQuestions, fmtSecs, poolFor, type PlayQuestion, type PlayResult } from './quiz';
@@ -18,9 +19,10 @@ export function Turns() {
   const [results, setResults] = useState<PlayResult[]>([]);
   const [phase, setPhase] = useState<'setup' | 'handoff' | 'play' | 'end'>('setup');
 
+  const toast = useToast((s) => s.show);
   const start = (c: PlayConfig) => {
     const built = buildPlayQuestions(poolFor(c.source, srs), c.count);
-    if (built.length < 4) return;
+    if (built.length < 4) { toast('Pas assez de mots dans cette source : choisissez un thème ou les nombres.'); return; }
     setCfg(c); setQs(built); setTurn(0); setResults([]); setPhase('handoff');
   };
   useEffect(() => {
@@ -43,7 +45,7 @@ export function Turns() {
   if (phase === 'handoff') {
     const name = cfg.players[turn];
     return (
-      <FullScreen title={`Joueur ${turn + 1} / ${cfg.players.length}`} onBack={() => setPhase('setup')}>
+      <FullScreen title={`Joueur ${turn + 1} / ${cfg.players.length}`} onBack={() => { if (turn === 0 || window.confirm('Abandonner la partie en cours ?')) setPhase('setup'); }}>
         <div className="recap" style={{ marginTop: 24 }}>
           <div style={{ fontSize: 40 }}>📱</div>
           <div className="serif" style={{ fontSize: 30, marginTop: 6 }}>Au tour de {name}</div>
@@ -55,7 +57,7 @@ export function Turns() {
   }
   if (phase === 'play') {
     return (
-      <FullScreen title={`${cfg.players[turn]} joue`} onBack={() => setPhase('handoff')} fit>
+      <FullScreen title={`${cfg.players[turn]} joue`} onBack={() => { if (window.confirm('Interrompre cette série ? Elle sera recommencée du début.')) setPhase('handoff'); }} fit>
         <QuizRunner key={turn} questions={qs} label={`Joueur ${turn + 1}`} onDone={(r) => {
           const next = [...results, { name: cfg.players[turn], ...r }];
           setResults(next);

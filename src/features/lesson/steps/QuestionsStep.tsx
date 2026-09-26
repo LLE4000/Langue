@@ -72,12 +72,13 @@ function SpellInput({ q, onAnswer, done }: { q: Question; onAnswer: (ok: boolean
     <>
       <div className="spellzone" onClick={() => !done && setPicked(picked.slice(0, -1))} role="button" aria-label="Retirer le dernier signe">{typed || <span className="mut" style={{ fontSize: 15, fontFamily: 'var(--f-ui)' }}>touchez les signes dans l’ordre</span>}</div>
       <div className="tiles-spell">{tiles.map((c, k) => <button key={k} lang="th" className={picked.includes(k) ? 'used' : ''} disabled={done} onClick={() => setPicked([...picked, k])}>{c}</button>)}</div>
-      {!done && picked.length > 0 && <button className="btn ghost sm" style={{ marginTop: 10 }} onClick={() => setPicked([])}>Effacer</button>}
+      {!done && picked.length > 0 && <div className="btns" style={{ marginTop: 10 }}><button className="btn ghost sm" onClick={() => setPicked(picked.slice(0, -1))} aria-label="Retirer le dernier signe">⌫ Dernier signe</button><button className="btn ghost sm" onClick={() => setPicked([])}>Tout effacer</button></div>}
     </>
   );
 }
 
-export function QuestionsStep({ step, onDone, timed, noRetry }: { step: RuntimeStep & { type: 'questions' }; onDone: (r: StepResult) => void; timed?: boolean; noRetry?: boolean }) {
+/** `record` : enregistrer les réponses dans la mémoire de révision du profil (faux pour les parties à plusieurs). */
+export function QuestionsStep({ step, onDone, timed, noRetry, record = true }: { step: RuntimeStep & { type: 'questions' }; onDone: (r: StepResult) => void; timed?: boolean; noRetry?: boolean; record?: boolean }) {
   const t = T();
   const sp = useSpeaker();
   const answer = useStore((s) => s.answer);
@@ -109,8 +110,7 @@ export function QuestionsStep({ step, onDone, timed, noRetry }: { step: RuntimeS
     if (done || !q) return;
     const secs = (performance.now() - t0.current) / 1000;
     setPicked(idx); setOk(isOk);
-    if (q.itemId) answer(q.itemId, isOk, secs, q.ruleKey);
-    markSeen(q.itemId ?? q.id);
+    if (record) { if (q.itemId) answer(q.itemId, isOk, secs, q.ruleKey); markSeen(q.itemId ?? q.id); }
     const xp = isOk ? xpFor(q, first) : 0;
     setStats((s) => ({ ok: s.ok + (isOk && first ? 1 : 0), total: s.total + (first ? 1 : 0), xp: s.xp + xp, wrong: isOk || !q.itemId ? s.wrong : [...s.wrong, q.itemId!] }));
     if (isOk && q.sayAfter) setTimeout(() => sp.speak(q.sayAfter!), 250);
@@ -139,15 +139,16 @@ export function QuestionsStep({ step, onDone, timed, noRetry }: { step: RuntimeS
   const good = q.choices.find((c) => c.ok);
   const sayText = q.say ?? (done ? q.sayAfter : undefined);
   const twoCols = q.choices.every((c) => (c.thai && !c.text && (c.thai.length <= 6)) || c.tone || (c.rom && !c.text && c.rom.length <= 8) || (c.text && c.text.length <= 12 && !c.thai));
+  const extra = queue.length - step.questions.length; // questions ratées remises plus loin
 
   return (
     <>
-      <div className="sess" style={{ marginBottom: 6 }}><span className="tag jade">{L(step.label)}</span><span className="sp" /><span className="n">{i + 1} / {queue.length}</span>{timed && <span className="timer">{elapsed.toFixed(1).replace('.', ',')} s</span>}</div>
+      <div className="sess" style={{ marginBottom: 6 }}><span className="tag jade">{L(step.label)}</span><span className="sp" /><span className="n">Question {i + 1} / {step.questions.length}{extra > 0 ? ` · +${extra} à revoir` : ''}</span>{timed && <span className="timer">{elapsed.toFixed(1).replace('.', ',')} s</span>}</div>
       <p className="qprompt">{L(q.prompt)}</p>
       {q.meaningHint && !done && <div className="note info sm" style={{ marginTop: -4 }}>{L(q.meaningHint)}</div>}
       <Stage q={q} done={done} />
       {sayText ? <div className="audio"><AudioPair text={sayText} /></div> : <div className="gap" />}
-      {q.kind === 'spell' ? <SpellInput q={q} done={done} onAnswer={(isOk) => grade(isOk, null)} /> : (
+      {q.kind === 'spell' ? <SpellInput key={q.id} q={q} done={done} onAnswer={(isOk) => grade(isOk, null)} /> : (
         <div className={`choices ${twoCols ? 'c2' : ''} ${done ? 'lock' : ''}`}>
           {q.choices.map((c, k) => (
             <button key={k} className={`choice ${c.thai && !c.text && c.thai.length <= 2 ? 'lg' : ''} ${done ? (c.ok ? 'ok' : k === picked ? 'ko' : 'dim') : ''}`} onClick={() => grade(!!c.ok, k)} disabled={done}>
@@ -162,13 +163,13 @@ export function QuestionsStep({ step, onDone, timed, noRetry }: { step: RuntimeS
         <StepFooter tone={ok ? 'ok' : 'ko'}>
           <div className="qfin">
             <span className={`verdict ${ok ? 'ok' : 'ko'}`}>{ok ? '✓ ' + t.common.correct : '✗ ' + t.common.wrong}</span>
-            {!ok && good && q.kind !== 'spell' && <span className="good"> · {t.common.goodAnswer} : {good.thai && <Thai text={good.thai} />} {good.rom && <span className="rom">{good.rom}</span>} {good.text} {good.tone && <b>{good.text}</b>}</span>}
+            {!ok && good && q.kind !== 'spell' && <span className="good"> · {t.common.goodAnswer} : {good.tone && <ToneCurve tone={good.tone as ToneId} />}{good.thai && <Thai text={good.thai} />} {good.rom && <span className="rom">{good.rom}</span>} {good.text}</span>}
             {!ok && q.kind === 'spell' && q.reveal?.thai && <span className="good"> · <Thai text={q.reveal.thai} /></span>}
             {q.reveal && !q.stage.ear && (q.reveal.thai || q.reveal.rom || q.reveal.text) && <div style={{ marginTop: 4 }}>{q.reveal.thai && !q.stage.thai?.includes(q.reveal.thai) && <><Thai text={q.reveal.thai} /> </>}{q.reveal.rom && <><Rom text={q.reveal.rom} /> </>}{q.reveal.text && <span className="mut">· <Fr text={q.reveal.text} /></span>}</div>}
             {q.reveal?.explain && <ol>{q.reveal.explain.map((e, k) => <li key={k}>{L(e)}</li>)}</ol>}
             {q.itemId && ITEMS[q.itemId]?.kind === 'cons' && q.kind === 'listen' && <div className="xs mut" style={{ marginTop: 4 }}>Astuce : le nom de la lettre commence par son propre son.</div>}
           </div>
-          <ContinueButton onClick={next} label={t.common.continue} auto={!!ok && !timed} autoMs={q.sayAfter ? 1700 : 1200} autoFocus />
+          <ContinueButton onClick={next} label={t.common.continue} auto={!!ok} autoMs={timed ? 700 : q.sayAfter ? 1700 : 1200} autoFocus />
         </StepFooter>
       )}
     </>

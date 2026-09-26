@@ -17,10 +17,10 @@ export function ItemRow({ it, onClick, showMissing }: { it: LearnItem; onClick: 
   const known = useKnown();
   const readable = it.kind === 'word' ? isReadable(it.thai, known.concepts) : true;
   return (
-    <button className="row" onClick={onClick}>
+    <div className="row tap" role="button" tabIndex={0} onClick={onClick} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}>
       <span className="mid"><Thai text={it.thai} /><span className="s">{showRom && <><Rom text={it.rom} /> · </>}<Fr text={it.kind === 'cons' ? it.ref.nameMeaning : it.meaning} />{showMissing && !readable && <span className="tag" style={{ fontSize: 10, marginLeft: 6 }}>pas encore lisible</span>}</span></span>
       <span className="end"><MasteryDot m={m} />{it.say && <AudioButton text={it.say} className="sm" />}</span>
-    </button>
+    </div>
   );
 }
 
@@ -55,7 +55,7 @@ export function VocabTheme() {
   const ids = items.map((w) => w.id);
   return (
     <>
-      <div className="btns"><Link className="btn sm" to={`/train/flashcards?theme=${id}`}>Flashcards</Link><Link className="btn soft sm" to={`/train/listening?theme=${id}`}>🎧 À l’oreille</Link><Link className="btn ghost sm" to={`/train/match?theme=${id}`}>Associer</Link></div>
+      <div className="btns"><Link className="btn soft sm" to={`/train/flashcards?theme=${id}`}>🗂️ Cartes</Link><Link className="btn soft sm" to={`/train/listening?theme=${id}`}>🎧 À l’oreille</Link><Link className="btn soft sm" to={`/train/match?theme=${id}`}>🔗 Associer</Link></div>
       <div className="gap" />
       <div className="list">{items.map((w, i) => <ItemRow key={w.id} it={w} onClick={() => setDetail(i)} showMissing />)}</div>
       {detail != null && <ItemDetailSheet ids={ids} index={detail} onClose={() => setDetail(null)} onNav={setDetail} />}

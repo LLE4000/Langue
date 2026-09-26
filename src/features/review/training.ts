@@ -39,7 +39,7 @@ function syllables(ctx: Ctx): { thai: string; rom: string }[] {
 export function buildTraining(mode: TrainingMode, ctx: Ctx, opts: { theme?: string } = {}): LessonSession | null {
   const now = Date.now();
   const pool = learned(ctx);
-  const title: Record<TrainingMode, string> = { flashcards: 'Flashcards', listening: 'Écoute', speed: 'Lecture rapide', match: 'Associer', dictation: 'Dictée', tones: 'Tons', quiz: 'Quiz', timed: 'Défi chrono', pronunciation: 'Prononciation', review: 'Révision', weak: 'Points faibles' };
+  const title: Record<TrainingMode, string> = { flashcards: 'Cartes', listening: 'Écoute', speed: 'Lecture rapide', match: 'Associer', dictation: 'Dictée', tones: 'Tons', quiz: 'Quiz', timed: 'Défi chrono', pronunciation: 'Prononciation', review: 'Révision', weak: 'Points faibles' };
   let steps: RuntimeStep[] = [];
   const themeWords = opts.theme ? WORD_ITEMS.filter((w) => w.ref.themes.includes(opts.theme!)) : null;
   switch (mode) {

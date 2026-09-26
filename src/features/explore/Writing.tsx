@@ -9,7 +9,7 @@ import { CONS_ITEMS, TAUGHT_VOWELS, vowelDisplay, CONS_BY_CHAR, th } from '@/con
 import { useSpeaker } from '@/app/services/speech';
 import { useStore } from '@/app/store';
 import { T } from '@/i18n';
-import { Icon, Segmented, Thai, useToast } from '@/components/ui';
+import { Icon, Rom, Segmented, Thai, useToast } from '@/components/ui';
 
 type SetKind = 'cons' | 'vow' | 'dig';
 type Pt = { x: number; y: number };
@@ -97,11 +97,11 @@ export function Writing() {
           onPointerMove={(e) => { if (!cur.current) return; e.preventDefault(); cur.current.push(pt(e)); drawFg(); }}
           onPointerUp={() => { cur.current = null; }} onPointerCancel={() => { cur.current = null; }} onPointerLeave={() => { cur.current = null; }} />
       </div>
-      <div className="btns" style={{ marginTop: 10 }}><button className="btn ghost sm" aria-pressed={model} onClick={() => setModel(!model)}><Icon name="eye" size={16} /> Modèle</button><button className="btn ghost sm" onClick={reset}><Icon name="rotate" size={16} /> Effacer</button><button className="btn ghost sm" aria-pressed={answer} onClick={() => setAnswer(!answer)}>💡 Réponse</button></div>
+      <div className="btns" style={{ marginTop: 10 }}><button className="ib" onClick={say} aria-label="Écouter"><Icon name="speaker" /></button><button className="btn ghost sm" aria-pressed={model} onClick={() => setModel(!model)}><Icon name="eye" size={16} /> Filigrane</button><button className="btn ghost sm" aria-pressed={answer} onClick={() => setAnswer(!answer)}>💡 Superposer</button><button className="btn ghost sm" onClick={reset}><Icon name="rotate" size={16} /> Effacer</button></div>
+      {set === 'cons' && CONS_BY_CHAR[c] && <p className="sm mut ctr" style={{ margin: '8px 0 0' }}><Thai text={c + ' ' + CONS_BY_CHAR[c].nameWord} style={{ color: 'var(--ink)', fontSize: 18 }} /> <Rom text={CONS_BY_CHAR[c].nameRom} /></p>}
       <div className="btns" style={{ marginTop: 8 }}><button className="btn soft sm" onClick={() => pick((i - 1 + chars.length) % chars.length)} aria-label="Précédent"><Icon name="back" size={18} /></button><button className="btn sm" style={{ flex: 3 }} onClick={check}>Comparer au modèle</button><button className="btn soft sm" onClick={() => pick((i + 1) % chars.length)} aria-label="Suivant"><Icon name="next" size={18} /></button></div>
-      {res && <div className="note plain"><b>Recouvrement du modèle : {Math.round(res.covered * 100)} %</b> · traits hors du modèle : {Math.round(res.outside * 100)} %<br /><span className="xs mut">Mesure géométrique indicative. L’ordre et le sens des traits ne sont pas vérifiés.</span></div>}
-      <div className="note info" style={{ marginTop: 10 }}>On commence par la petite boucle (la « tête », <Thai text="หัว" />), puis on trace le reste d’un seul geste, en général de gauche à droite. Seules <Thai text="ก" /> et <Thai text="ธ" /> n’ont pas de tête.{modern && set === 'cons' ? <> Forme moderne, sans boucle : <span className="thm" lang="th" style={{ fontSize: 22 }}>{c}</span></> : null}</div>
-      <div className="audio"><button className="ib" onClick={say} aria-label="Écouter"><Icon name="speaker" /></button></div>
+      {res && <div className={`note ${res.covered > 0.6 && res.outside < 0.4 ? 'info' : 'plain'}`}><b>{res.covered > 0.6 && res.outside < 0.4 ? '✓ Bien tracé' : 'À reprendre'}</b> · modèle recouvert à {Math.round(res.covered * 100)} %, traits hors modèle {Math.round(res.outside * 100)} %<br /><span className="xs mut">Mesure géométrique indicative. L’ordre et le sens des traits ne sont pas vérifiés.</span></div>}
+      {set === 'cons' && <div className="note info" style={{ marginTop: 10 }}>On commence par la petite boucle (la « tête », <Thai text="หัว" />), puis on trace le reste d’un seul geste, en général de gauche à droite. Seules <Thai text="ก" /> et <Thai text="ธ" /> n’ont pas de tête.{modern && set === 'cons' ? <> Forme moderne, sans boucle : <span className="thm" lang="th" style={{ fontSize: 22 }}>{c}</span></> : null}</div>}
     </>
   );
 }

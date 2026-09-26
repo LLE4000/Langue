@@ -29,14 +29,14 @@ function Menu() {
       <div className="h2">Comprendre</div>
       <div className="list"><Row ico="💡" t="Syllabe vivante ou morte ?" s="La notion clé avant les règles" to="livedead" /><Row ico="🧭" t="La méthode en 4 questions" s="Classe, marque, fin de syllabe, durée" to="method" /><Row ico="📋" t="Le tableau des règles" s="Tout sur un écran, avec exemples" to="table" /></div>
       <div className="h2">S’entraîner</div>
-      <div className="list"><Link className="row" to="/train/tones"><span className="ico">🎯</span><span className="mid"><span className="t">Entraînement Tons</span><span className="s">Lire le ton, l’entendre, paires, vivante ou morte</span></span><span className="end"><span className="chev">›</span></span></Link></div>
+      <div className="list"><Link className="row" to="/train/tones"><span className="ico">🎯</span><span className="mid"><span className="t">S’entraîner aux tons</span><span className="s">Lire le ton, l’entendre, paires, vivante ou morte</span></span><span className="end"><span className="chev">›</span></span></Link></div>
     </>
   );
 }
 
 function Five() {
   usePage('Les cinq tons', { back: '/explore/tones' });
-  return <><TheoryBlockView b={{ kind: 'tones' }} /><p className="xs mut" style={{ marginTop: 10 }}>Les noms thaïs des tons : {TONES.map((t) => <span key={t.id}><Thai text={t.thaiName} /> <Rom text={t.rom} /> · </span>)}</p></>;
+  return <><TheoryBlockView b={{ kind: 'tones' }} /><p className="xs mut" style={{ marginTop: 10 }}>Les noms thaïs des tons : {TONES.map((t, i) => <span key={t.id}>{i > 0 ? ' · ' : ''}<Thai text={t.thaiName} /> <Rom text={t.rom} /></span>)}</p></>;
 }
 
 function Sets() {

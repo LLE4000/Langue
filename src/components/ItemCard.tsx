@@ -13,7 +13,7 @@ import { explainTone, classNameFr, toneNameFr } from '@/engine/thai/toneRule';
 import { isReadable, missingRequirements } from '@/engine/thai/reading';
 import { resolveTokens } from '@/engine/tokens';
 import { L } from '@/i18n';
-import { AudioPair, BigThai, Icon, MasteryDot, Sheet, Thai, Rom, useTokens } from './ui';
+import { AudioButton, BigThai, Icon, MasteryDot, Sheet, Thai, Rom, useTokens } from './ui';
 import { ToneCurve } from './ToneCurve';
 import { WordByWord } from './WordByWord';
 import { MicPanel } from './MicPanel';
@@ -87,17 +87,20 @@ export function ItemBack({ it }: { it: LearnItem }) {
   }
   const ex = it.kind === 'word' ? it.ref.example : it.kind === 'clf' ? it.ref.example : it.kind === 'vow' ? it.ref.example : null;
   const wbw = it.kind === 'word' && /[\s]|.{6,}/.test(it.thai);
+  // Les notations savantes (API, RTGS) vont dans un repli : utiles, mais pas au premier regard.
+  const isTech = (k: string) => /^(API|RTGS)/.test(k);
+  const main = rows.filter(([k]) => !isTech(k)), tech = rows.filter(([k]) => isTech(k));
   return (
     <>
       {head}
       {it.kind !== 'vow' && it.kind !== 'tone' && it.rom && <ToneChips rom={it.rom} />}
       {wbw && <><div className="xs mut b" style={{ marginTop: 12 }}>Mot à mot</div><WordByWord thai={it.thai} rom={it.rom} /></>}
-      {rows.length > 0 && <dl className="kv">{rows.map(([k, v], i) => <div key={i} style={{ display: 'contents' }}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>}
-      {ex && <div className="ex"><span className="mid"><Thai text={ex.thai} /><Rom text={ex.rom} /><br /><span className="sm mut">{resolveTokens(L(ex.meaning), tok)}</span></span><AudioPairInline text={ex.thai} /></div>}
+      {main.length > 0 && <dl className="kv">{main.map(([k, v], i) => <div key={i} style={{ display: 'contents' }}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>}
+      {ex && <div className="ex"><span className="mid"><Thai text={ex.thai} /><Rom text={ex.rom} /><br /><span className="sm mut">{resolveTokens(L(ex.meaning), tok)}</span></span><AudioButton text={ex.thai} className="sm" /></div>}
+      {tech.length > 0 && <details className="fold sm" style={{ marginTop: 10 }}><summary>Notations API et RTGS</summary><dl className="kv">{tech.map(([k, v], i) => <div key={i} style={{ display: 'contents' }}><dt>{k}</dt><dd>{v}</dd></div>)}</dl></details>}
     </>
   );
 }
-function AudioPairInline({ text }: { text: string }) { return <div style={{ display: 'flex', gap: 4 }}><AudioPair text={text} /></div>; }
 
 export function MasteryLine({ id }: { id: string }) {
   const m = useMastery(id);
@@ -108,6 +111,7 @@ export function MasteryLine({ id }: { id: string }) {
 export function ItemDetailSheet({ ids, index, onClose, onNav }: { ids: string[]; index: number; onClose: () => void; onNav: (i: number) => void }) {
   const it = ITEMS[ids[index]];
   const [mic, setMic] = useState(false);
+  const [rated, setRated] = useState<number | null>(null);
   const rateItem = useStore((s) => s.rateItem);
   const fav = useStore((s) => s.favorites[ids[index]]);
   const toggleFav = useStore((s) => s.toggleFavorite);
@@ -117,17 +121,28 @@ export function ItemDetailSheet({ ids, index, onClose, onNav }: { ids: string[];
   const n = ids.length;
   const readable = it.kind === 'word' || it.kind === 'tone' ? isReadable(it.thai, known.concepts) : true;
   const missing = readable ? [] : missingRequirements(it.thai, known.concepts).filter((r) => !r.startsWith('ch:'));
+  // Ce qui manque, montré tel qu'on le lit : la lettre et son nom (pas le sens du nom), la voyelle, le mot
+  const missingLabel = (r: string) => { const x = ITEMS[r]; if (!x) return r.replace(/^(c:|v:|m:)/, ''); if (x.kind === 'cons') return `${x.thai} ${x.ref.nameWord}`; if (x.kind === 'vow') return vowelDisplay(x.ref.form); return x.thai; };
   const writeChar = it.kind === 'cons' ? it.thai : it.kind === 'vow' ? vowelDisplay(it.ref.form) : it.kind === 'num' && it.value < 10 ? it.digits : '';
+  const rate = (q: 0 | 1 | 2 | 3) => { rateItem(it.id, q); setRated(q); };
+  const act = (label: string, node: ReactNode) => <span className="act">{node}<small>{label}</small></span>;
   return (
-    <Sheet open onClose={onClose} title={<div className="row-flex">{n > 1 && <button className="ib sm" onClick={() => onNav((index - 1 + n) % n)} aria-label="Précédent"><Icon name="back" size={18} /></button>}<b>{n > 1 ? `${index + 1} / ${n}` : L({ fr: 'Détail' })}</b>{n > 1 && <button className="ib sm" onClick={() => onNav((index + 1) % n)} aria-label="Suivant"><Icon name="next" size={18} /></button>}</div>}>
-      <div className="stage" style={{ minHeight: 150 }}><span className="corner"><button className={`ib sm fav ${fav ? 'on' : ''}`} onClick={() => toggleFav(it.id)} aria-label="Favori"><Icon name="star" size={18} /></button></span><ItemFront it={it} /></div>
-      <div className="audio">{it.say && <AudioPair text={it.say} big />}{it.say && <button className="ib big" onClick={() => setMic(true)} aria-label="M'enregistrer"><Icon name="mic" /></button>}{writeChar && <Link to={`/explore/writing?c=${encodeURIComponent(writeChar)}`} className="ib big" aria-label="S'entraîner à l'écrire" onClick={onClose}><Icon name="pen" /></Link>}</div>
-      <div className="ans" style={{ marginTop: 0 }}><ItemBack it={it} /></div>
-      {!readable && missing.length > 0 && <div className="note sm" style={{ marginTop: 10 }}>📖 Pas encore lisible avec ce que vous avez appris : il manque {missing.slice(0, 4).map((r) => ITEMS[r]?.meaning.fr ?? r.replace(/^(c:|v:|m:)/, '')).join(', ')}{missing.length > 4 ? '…' : ''}. Le parcours y viendra.</div>}
-      <div className="h2">Mon niveau sur cet élément <span className="sp" /><span className="sm mut">{Math.round(m * 100)} %</span></div>
-      <div className="rate" style={{ marginTop: 0 }}>
-        {[[0, '❌', 'Inconnu'], [1, '🟠', 'Difficile'], [2, '🟡', 'Presque'], [3, '🟢', 'Connu']].map(([q, e, lab]) => <button key={q} data-q={q} onClick={() => rateItem(it.id, q as 0 | 1 | 2 | 3)}><span>{e}</span>{lab}</button>)}
+    <Sheet open onClose={onClose} title={<div className="row-flex">{n > 1 && <button className="ib sm" onClick={() => { setRated(null); onNav((index - 1 + n) % n); }} aria-label="Précédent"><Icon name="back" size={18} /></button>}<b>{n > 1 ? `${index + 1} / ${n}` : L({ fr: 'Détail' })}</b>{n > 1 && <button className="ib sm" onClick={() => { setRated(null); onNav((index + 1) % n); }} aria-label="Suivant"><Icon name="next" size={18} /></button>}</div>}
+      footer={n > 1 && index + 1 < n ? <div className="btns" style={{ marginTop: 16 }}><button className="btn soft" onClick={onClose}>Fermer</button><button className="btn" onClick={() => { setRated(null); onNav(index + 1); }}>Suivant <Icon name="next" size={18} /></button></div> : undefined}>
+      <div className="stage" style={{ minHeight: 150 }}><span className="corner"><button className={`ib sm fav ${fav ? 'on' : ''}`} onClick={() => toggleFav(it.id)} aria-label="Favori" aria-pressed={!!fav}><Icon name="star" size={18} /></button></span><ItemFront it={it} /></div>
+      <div className="audio acts">
+        {it.say && act('Écouter', <AudioButton text={it.say} big />)}
+        {it.say && act('Lentement', <AudioButton text={it.say} slow big />)}
+        {it.say && act('Prononcer', <button className="ib big" onClick={() => setMic(true)} aria-label="Vérifier ma prononciation"><Icon name="mic" /></button>)}
+        {writeChar && act('Écrire', <Link to={`/explore/writing?c=${encodeURIComponent(writeChar)}`} className="ib big" aria-label="S'entraîner à l'écrire" onClick={onClose}><Icon name="pen" /></Link>)}
       </div>
+      <div className="ans" style={{ marginTop: 0 }}><ItemBack it={it} /></div>
+      {!readable && missing.length > 0 && <div className="note sm" style={{ marginTop: 10 }}>📖 Pas encore lisible avec ce que vous avez appris : il manque <span lang="th" className="th" style={{ fontSize: 17 }}>{missing.slice(0, 4).map(missingLabel).join(' · ')}</span>{missing.length > 4 ? '…' : ''}. Le parcours y viendra.</div>}
+      <div className="h2">Mon niveau sur cet élément <span className="sp" /><span className="sm mut">{Math.round(m * 100)} %</span></div>
+      <div className="rate" style={{ marginTop: 0 }} role="radiogroup" aria-label="Mon niveau">
+        {[[0, '❌', 'Inconnu'], [1, '🟠', 'Difficile'], [2, '🟡', 'Presque'], [3, '🟢', 'Connu']].map(([q, e, lab]) => <button key={q} data-q={q} className={rated === q ? 'cur' : ''} role="radio" aria-checked={rated === q} onClick={() => rate(q as 0 | 1 | 2 | 3)}><span>{e}</span>{lab}</button>)}
+      </div>
+      {rated !== null && <p className="xs mut ctr" style={{ margin: '8px 0 0' }}>Noté · la révision en tiendra compte.</p>}
       {mic && <MicPanel item={it} onClose={() => setMic(false)} />}
     </Sheet>
   );

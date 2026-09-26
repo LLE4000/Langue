@@ -19,19 +19,29 @@ export function Review() {
   const due = useDueItems();
   const learned = useLearnedItems();
   const goals = useGoals();
-  const errors = useStore((s) => s.errors);
+  const srs = useStore((s) => s.srs);
   const pending = useStore((s) => s.challenges.filter((c) => c.dir === 'sent' && !c.theirs).length);
-  const weak = Object.keys(errors).length;
+  // Même critère que l'entraînement « Points faibles » (training.ts), qui exige au moins 3 éléments
+  const weak = Object.values(srs).filter((s) => s.q <= 1 || s.lapses >= 2).length;
   const nothingLearned = learned.length < 4;
   const modes = MODES.filter((m) => (goals.read || !m.needsReading) && (!m.needsMic || recognizer.supported));
+  const dueToday = Math.min(20, due.length);
   return (
     <>
-      <Link className="cta" to={due.length ? '/train/review' : '/train/quiz'} aria-disabled={nothingLearned} onClick={(e) => { if (nothingLearned) e.preventDefault(); }}>
-        <span className="n"><Icon name="repeat" /></span>
-        <span><span className="k">Répétition espacée</span><span className="t">{due.length ? `${due.length} ${due.length > 1 ? 'éléments' : 'élément'} ${t.review.due}` : t.review.nothingDue}</span><span className="s">{nothingLearned ? 'Faites d’abord une leçon : les révisions s’alimentent de ce que vous apprenez.' : due.length ? 'Lettres, mots et tons que la mémoire est sur le point d’oublier' : 'Tout est à jour · un quiz libre pour entretenir'}</span></span>
-        {!nothingLearned && <span className="go">{due.length ? t.review.startReview : 'Quiz'}</span>}
-      </Link>
-      {weak > 0 && <div className="list" style={{ marginTop: 12 }}><Link className="row" to="/train/weak"><span className="ico">🎯</span><span className="mid"><span className="t">{t.review.weak}</span><span className="s">{weak} élément{weak > 1 ? 's' : ''} souvent raté{weak > 1 ? 's' : ''} · à retravailler en priorité</span></span><span className="end"><span className="chev">›</span></span></Link></div>}
+      {nothingLearned ? (
+        <Link className="cta" to="/">
+          <span className="n"><Icon name="repeat" /></span>
+          <span><span className="k">Répétition espacée</span><span className="t">Rien à réviser pour l’instant</span><span className="s">Les révisions s’alimentent de ce que vous apprenez : commencez par une leçon.</span></span>
+          <span className="go">Leçon</span>
+        </Link>
+      ) : (
+        <Link className="cta" to={due.length ? '/train/review' : '/train/quiz'}>
+          <span className="n"><Icon name="repeat" /></span>
+          <span><span className="k">Répétition espacée</span><span className="t">{due.length ? `${dueToday} ${dueToday > 1 ? 'éléments' : 'élément'} ${t.review.due}${due.length > dueToday ? ` · ${due.length} au total` : ''}` : t.review.nothingDue}</span><span className="s">{due.length ? 'Lettres, mots et tons que la mémoire est sur le point d’oublier' : 'Tout est à jour · un quiz libre pour entretenir'}</span></span>
+          <span className="go">{due.length ? t.review.startReview : 'Quiz'}</span>
+        </Link>
+      )}
+      {weak >= 3 && <div className="list" style={{ marginTop: 12 }}><Link className="row" to="/train/weak"><span className="ico">🎯</span><span className="mid"><span className="t">{t.review.weak}</span><span className="s">{weak} élément{weak > 1 ? 's' : ''} souvent raté{weak > 1 ? 's' : ''} · à retravailler en priorité</span></span><span className="end"><span className="chev">›</span></span></Link></div>}
 
       <div className="h2">À plusieurs <span className="sp" /><Link to="/play">Tout voir ›</Link></div>
       <div className="tiles">

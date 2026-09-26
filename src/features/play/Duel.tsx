@@ -9,7 +9,7 @@ import { FullScreen } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { useSpeaker } from '@/app/services/speech';
 import { ITEMS } from '@/content/th';
-import { Icon, Thai } from '@/components/ui';
+import { Icon, Thai, useToast } from '@/components/ui';
 import { PlaySetup, type PlayConfig } from './PlaySetup';
 import { buildPlayQuestions, meaningOf, poolFor, type PlayQuestion } from './quiz';
 
@@ -22,7 +22,7 @@ function Half({ who, name, score, q, locked, picked, resolved, onPick }: { who: 
     <section className={`half p${who} ${done ? (resolved === who ? 'won' : 'lost') : ''}`} aria-label={`Côté de ${name}`}>
       <header><b>{name}</b><span className="score-pill">{score}</span>{done && <span className="verdict-mini">{resolved === who ? '+1' : resolved === 'none' ? '—' : ''}</span>}</header>
       <div className="stem">
-        {q.kind === 'meaning' ? <Thai text={it.thai} className="big-h" /> : <span className="frbig">{meaningOf(it)}</span>}
+        {q.kind === 'meaning' ? <><Thai text={it.thai} className="big-h" /><span className="rom" style={{ fontSize: 13 }}>{it.rom}</span></> : <span className="frbig">{meaningOf(it)}</span>}
       </div>
       <div className="choices c2 duel-choices">
         {q.choiceIds.map((id, k) => {
@@ -30,7 +30,7 @@ function Half({ who, name, score, q, locked, picked, resolved, onPick }: { who: 
           const isOk = id === q.itemId;
           const cls = done ? (isOk ? 'ok' : picked === k ? 'ko' : 'dim') : picked === k ? 'ko' : '';
           return (
-            <button key={id} className={`choice ${cls}`} disabled={done || locked} onPointerDown={(e) => { e.preventDefault(); onPick(k); }} data-side={who} data-ok={isOk ? '1' : '0'}>
+            <button key={id} className={`choice ${cls}`} disabled={done || locked} onPointerDown={(e) => { e.preventDefault(); onPick(k); }} onClick={(e) => { if (e.detail === 0) onPick(k); }} data-side={who} data-ok={isOk ? '1' : '0'}>
               {q.kind === 'meaning' ? <span>{meaningOf(c)}</span> : <><Thai text={c.thai} /><span className="rom" style={{ fontSize: 13 }}>{c.rom}</span></>}
             </button>
           );
@@ -56,11 +56,13 @@ export function Duel() {
   const [phase, setPhase] = useState<'setup' | 'play' | 'end'>('setup');
   const timer = useRef<number | null>(null);
 
+  const toast = useToast((s) => s.show);
   const start = (c: PlayConfig) => {
     const built = buildPlayQuestions(poolFor(c.source, srs), c.count);
-    if (built.length < 4) return;
+    if (built.length < 4) { toast('Pas assez de mots dans cette source : choisissez un thème ou les nombres.'); return; }
     setCfg(c); setQs(built); setI(0); setScores([0, 0]); setLocked([false, false]); setPicked([null, null]); setResolved(null); setPhase('play');
   };
+  const leave = () => { if (timer.current) clearTimeout(timer.current); if (i === 0 && scores[0] + scores[1] === 0 || window.confirm('Quitter le duel en cours ?')) setPhase('setup'); };
   const q = qs[i];
   useEffect(() => {
     if (phase !== 'play' || !q) return;
@@ -125,7 +127,7 @@ export function Duel() {
     <div className={`duel ${cfg.layout}`}>
       <Half who={1} name={cfg.players[1]} score={scores[1]} q={q} locked={locked[1]} picked={picked[1]} resolved={resolved} onPick={(k) => pick(1, k)} />
       <div className="mid">
-        <button className="ib sm" aria-label="Quitter le duel" onClick={() => setPhase('setup')}><Icon name="close" size={16} /></button>
+        <button className="ib sm" aria-label="Quitter le duel" onClick={leave}><Icon name="close" size={16} /></button>
         <span>{i + 1} / {qs.length}</span>
         <button className="ib sm" aria-label="Réécouter" onClick={() => sp.speak(ITEMS[q.itemId].say)}><Icon name="speaker" size={16} /></button>
       </div>

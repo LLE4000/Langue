@@ -28,36 +28,40 @@ export function MatchStep({ step, onDone }: { step: RuntimeStep & { type: 'match
   const [selR, setSelR] = useState<string | null>(null);
   const [matched, setMatched] = useState<Set<string>>(new Set());
   const [bad, setBad] = useState<string | null>(null);
-  const [errors, setErrors] = useState(0);
+  const [missed, setMissed] = useState<Set<string>>(new Set()); // paires ratées au moins une fois
   const showRom = useShowRom(undefined);
   const complete = step.pairs.length > 0 && matched.size === step.pairs.length;
   const tryMatch = (l: string | null, r: string | null) => {
-    if (!l || !r) return;
+    if (!l || !r || bad) return;
     if (l === r) {
       const m = new Set(matched); m.add(l); setMatched(m); setSelL(null); setSelR(null); answer(l, true);
       const p = step.pairs.find((x) => x.id === l); if (p) sp.speak(p.thai);
-    } else { setBad(l + '|' + r); setErrors(errors + 1); answer(l, false); setTimeout(() => { setBad(null); setSelL(null); setSelR(null); }, 500); }
+    } else {
+      setBad(l + '|' + r); setMissed((s) => new Set(s).add(l).add(r)); answer(l, false);
+      setTimeout(() => { setBad(null); setSelL(null); setSelR(null); }, 500);
+    }
   };
-  const finish = () => onDone({ ok: Math.max(0, step.pairs.length - errors), total: step.pairs.length, xp: Math.max(2, step.pairs.length * 2 - errors) });
+  const errors = missed.size;
+  const finish = () => onDone({ ok: Math.max(0, step.pairs.length - errors), total: step.pairs.length, xp: Math.max(2, step.pairs.length * 2 - errors), wrong: [...missed] });
   useEffect(() => { if (!step.pairs.length) onDone({}); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const cls = (id: string, side: 'l' | 'r', sel: string | null) => matched.has(id) ? 'ok' : bad && bad.split('|')[side === 'l' ? 0 : 1] === id ? 'ko' : sel === id ? 'on' : '';
   return (
     <>
       <p className="qprompt">{t.lesson.matchPairs}</p>
-      <p className="sm mut ctr" style={{ marginTop: -6, marginBottom: 10 }}>Touchez un mot à gauche, puis sa traduction à droite.</p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <p className="sm mut ctr" style={{ marginTop: -6, marginBottom: 10 }}>Touchez un élément dans chaque colonne pour les relier.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }} className={bad ? 'lock' : ''}>
         <div className="stack" style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 0 }}>
-          {left.map((p) => <LeftPair key={p.id} p={p} cls={cls(p.id, 'l', selL)} showRom={showRom} byMeaning={step.by === 'meaning'} onClick={() => { setSelL(p.id); tryMatch(p.id, selR); }} />)}
+          {left.map((p) => <LeftPair key={p.id} p={p} cls={cls(p.id, 'l', selL)} showRom={showRom} byMeaning={step.by === 'meaning'} onClick={() => { if (bad) return; setSelL(p.id); tryMatch(p.id, selR); }} />)}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {right.map((p) => <button key={p.id} data-pair={p.id} className={`pr ${cls(p.id, 'r', selR)}`} onClick={() => { setSelR(p.id); tryMatch(selL, p.id); }}>{step.by === 'meaning' ? <Fr text={p.text} /> : <span className="rom">{p.rom}</span>}</button>)}
+          {right.map((p) => <button key={p.id} data-pair={p.id} className={`pr ${cls(p.id, 'r', selR)}`} onClick={() => { if (bad) return; setSelR(p.id); tryMatch(selL, p.id); }}>{step.by === 'meaning' ? <Fr text={p.text} /> : <span className="rom">{p.rom}</span>}</button>)}
         </div>
       </div>
       <div className="sp" />
       {complete && (
         <StepFooter tone="ok">
-          <div className="qfin"><span className="verdict ok">✓ Toutes les paires sont reliées</span>{errors > 0 && <span className="mut"> · {errors} essai{errors > 1 ? 's' : ''} manqué{errors > 1 ? 's' : ''}</span>}</div>
+          <div className="qfin"><span className="verdict ok">✓ Toutes les paires sont reliées</span>{errors > 0 && <span className="mut"> · {errors} paire{errors > 1 ? 's' : ''} à revoir</span>}</div>
           <ContinueButton onClick={finish} label={t.common.continue} auto autoMs={900} autoFocus />
         </StepFooter>
       )}

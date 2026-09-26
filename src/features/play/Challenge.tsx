@@ -14,8 +14,15 @@ import { SourcePicker } from './PlaySetup';
 import { QuizRunner } from './QuizRunner';
 import { buildPlayQuestions, challengeUrl, decodeChallenge, defaultSource, encodeChallenge, fmtSecs, poolFor, shareText, type PlayQuestion, type PlayResult, type PlaySource } from './quiz';
 
+/** Vainqueur d'un défi : le score, puis le temps ; null si tout est égal. */
+export function winnerOf(a: PlayResult, b: PlayResult): PlayResult | null {
+  if (a.score !== b.score) return a.score > b.score ? a : b;
+  if (a.secs !== b.secs) return a.secs < b.secs ? a : b;
+  return null;
+}
+
 function Compare({ a, b }: { a: PlayResult; b: PlayResult | null }) {
-  const win = b ? (a.score !== b.score ? (a.score > b.score ? a : b) : a.secs <= b.secs ? a : b) : null;
+  const win = b ? winnerOf(a, b) : null;
   return (
     <div className="versus">
       <div className={`side ${win === a ? 'win' : ''}`}><span className="name">{a.name}</span><span className="big">{a.score}<small>/{a.total}</small></span><span className="mut xs">{fmtSecs(a.secs)}</span></div>
@@ -105,7 +112,7 @@ export function ChallengePlay() {
     return (
       <FullScreen title="Résultat du défi" onBack={() => nav('/play/defi')}>
         <Compare a={a} b={b} />
-        <p className="lead ctr" style={{ marginTop: 12 }}>{a.score === b.score ? 'Égalité !' : (a.score > b.score || (a.score === b.score && a.secs < b.secs)) ? `${a.name} l’emporte.` : `${b.name} l’emporte.`} Revanche ?</p>
+        <p className="lead ctr" style={{ marginTop: 12 }}>{(() => { const w = winnerOf(a, b); return w ? `${w.name} l’emporte${a.score === b.score ? ' au temps' : ''}.` : 'Égalité parfaite !'; })()} Revanche ?</p>
         <div className="stack"><Link className="btn" to="/play/defi/new">Lancer un nouveau défi</Link><Link className="btn ghost" to="/play/defi">Mes défis</Link></div>
       </FullScreen>
     );
@@ -118,7 +125,7 @@ export function ChallengePlay() {
       <FullScreen title="Défi reçu" onBack={() => nav('/play/defi')}>
         <div className="recap"><div style={{ fontSize: 40 }}>⚔️</div><div className="serif" style={{ fontSize: 28 }}>{from ? `${from.name} vous défie` : 'Un défi'}</div><div className="mut sm">{ch.questions.length} questions{from ? ` · son score : ${from.score}/${from.total} en ${fmtSecs(from.secs)}` : ''}</div></div>
         {existing?.dir === 'sent' && <div className="note info sm">C’est votre propre défi. Renvoyez plutôt le lien à quelqu’un d’autre.</div>}
-        {alreadyMine && existing?.dir === 'received' && <div className="note info sm">Vous l’avez déjà joué : {alreadyMine.score}/{alreadyMine.total}. Vous pouvez rejouer pour vous entraîner, seul le premier résultat compte.</div>}
+        {alreadyMine && existing?.dir === 'received' && <div className="note info sm">Vous l’avez déjà joué : {alreadyMine.score}/{alreadyMine.total}. Vous pouvez rejouer pour vous entraîner ; c’est ce premier résultat qui sera renvoyé.</div>}
         <button className="btn" style={{ marginTop: 16 }} onClick={() => setPlaying(true)}>Relever le défi</button>
       </FullScreen>
     );
@@ -130,9 +137,11 @@ export function ChallengePlay() {
       if (!(existing?.dir === 'received' && existing.mine)) save({ id: ch.id, code: encodeChallenge(ch.questions, from, res), dir: 'received', from: from?.name ?? '?', createdAt: existing?.createdAt ?? Date.now(), mine: r, theirs: from ?? undefined });
     }} /></FullScreen>;
   }
-  const back = encodeChallenge(ch.questions, from, mine);
+  // Le résultat renvoyé est toujours le premier (celui enregistré) ; une partie rejouée sert d'entraînement.
+  const official: PlayResult = existing?.dir === 'received' && existing.mine ? { name: me, ...existing.mine } : mine!;
+  const back = encodeChallenge(ch.questions, from, official);
   const url = challengeUrl(back);
-  const text = from ? `${me} a relevé le défi de ${from.name} : ${mine!.score}/${mine!.total} en ${fmtSecs(mine!.secs)} (contre ${from.score}/${from.total}).` : `${me} : ${mine!.score}/${mine!.total}.`;
+  const text = from ? `${me} a relevé le défi de ${from.name} : ${official.score}/${official.total} en ${fmtSecs(official.secs)} (contre ${from.score}/${from.total}).` : `${me} : ${official.score}/${official.total}.`;
   return (
     <FullScreen title="Votre résultat" onBack={() => nav('/play/defi')}>
       <Compare a={mine!} b={from} />
@@ -162,14 +171,15 @@ export function ChallengeHub() {
         <div className="list">
           {records.map((r) => {
             const status = r.dir === 'sent' ? (r.theirs ? `${r.theirs.name} : ${r.theirs.score}/${r.theirs.total} · vous : ${r.mine?.score ?? '?'}/${r.mine?.total ?? '?'}` : `Envoyé · vous : ${r.mine?.score ?? '?'}/${r.mine?.total ?? '?'} · en attente de réponse`) : `De ${r.from} : ${r.theirs?.score ?? '?'}/${r.theirs?.total ?? '?'} · vous : ${r.mine?.score ?? '?'}/${r.mine?.total ?? '?'}`;
-            const won = r.mine && r.theirs ? (r.mine.score > r.theirs.score ? '🏆' : r.mine.score < r.theirs.score ? '🎯' : '🤝') : r.dir === 'sent' ? '📤' : '📥';
+            const w = r.mine && r.theirs ? winnerOf({ name: 'me', ...r.mine }, { ...r.theirs }) : null;
+            const won = r.mine && r.theirs ? (w === null ? '🤝' : w.name === 'me' ? '🏆' : '🎯') : r.dir === 'sent' ? '📤' : '📥';
             return (
               <div className="row" key={r.id}>
                 <span className="ico">{won}</span>
                 <span className="mid"><span className="t">{r.dir === 'sent' ? 'Mon défi' : `Défi de ${r.from}`}</span><span className="s">{status}</span></span>
                 <span className="end">
                   <button className="ib sm" aria-label="Ouvrir" onClick={() => nav(`/play/defi/${encodeURIComponent(r.code)}`)}><Icon name="next" size={16} /></button>
-                  <button className="ib sm" aria-label="Supprimer" onClick={() => remove(r.id)}><Icon name="trash" size={16} /></button>
+                  <button className="ib sm" aria-label="Supprimer" onClick={() => { if (window.confirm('Supprimer ce défi de la liste ?')) remove(r.id); }}><Icon name="trash" size={16} /></button>
                 </span>
               </div>
             );

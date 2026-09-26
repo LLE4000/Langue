@@ -25,11 +25,13 @@ await page.getByPlaceholder('Prénom').fill('Lucien');
 await page.getByRole('button', { name: /Un homme/ }).click();
 await page.getByRole('button', { name: /Continuer/ }).click();
 await shot('02-goals');
-await page.getByRole('button', { name: /^Continuer$/ }).click();
-await shot('02b-levels');
-const groups = page.getByRole('radiogroup');
 const levels = (process.env.LEVELS || '0,0,0,0').split(',').map(Number);
-for (let i = 0; i < 4; i++) await groups.nth(i).getByRole('radio').nth(levels[i]).click();
+if (levels.some((l) => l > 0)) {
+  await page.getByRole('button', { name: /déjà des bases/ }).click();
+  const groups = page.getByRole('radiogroup', { name: /Comprendre|Parler|Lire|Écrire/ });
+  for (let i = 0; i < 4; i++) await groups.nth(i).getByRole('radio').nth(levels[i]).click();
+  await shot('02b-levels');
+}
 await page.getByRole('button', { name: /^Continuer$/ }).click();
 await page.getByRole('button', { name: /Construire mon parcours/ }).click();
 await page.waitForSelector('a.cta');

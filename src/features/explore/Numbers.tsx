@@ -28,8 +28,8 @@ export function Numbers() {
         <>
           <div className="lgrid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>{th.DIGITS.map((d, i) => <button key={i} className="cell wide" lang="th" onClick={() => setDetail(i)}>{d[0]}<MasteryDot m={mastery(srs['n:' + i])} /><small>{i} · {d[2]}</small></button>)}</div>
           <div className="h2">Nombres clés</div>
-          <div className="list">{NUM_ITEMS.filter((x) => x.value >= 10).map((x) => <button key={x.id} className="row" onClick={() => setDetail(ids.indexOf(x.id))}><span className="mid"><span className="t">{x.meaning.fr} <span className="th mut">{x.digits}</span></span><span className="s"><Thai text={x.thai} /> <Rom text={x.rom} /></span></span><span className="end"><MasteryDot m={mastery(srs[x.id])} /><AudioButton text={x.say} className="sm" /></span></button>)}</div>
-          <div className="btns" style={{ marginTop: 14 }}><Link className="btn soft sm" to="/train/listening">🎧 Écoute</Link><Link className="btn soft sm" to="/train/flashcards">Flashcards</Link></div>
+          <div className="list">{NUM_ITEMS.filter((x) => x.value >= 10).map((x) => <div key={x.id} className="row tap" role="button" tabIndex={0} onClick={() => setDetail(ids.indexOf(x.id))} onKeyDown={(e) => { if (e.key === 'Enter') setDetail(ids.indexOf(x.id)); }}><span className="mid"><span className="t">{x.meaning.fr} <span className="th mut">{x.digits}</span></span><span className="s"><Thai text={x.thai} /> <Rom text={x.rom} /></span></span><span className="end"><MasteryDot m={mastery(srs[x.id])} /><AudioButton text={x.say} className="sm" /></span></div>)}</div>
+          <div className="btns" style={{ marginTop: 14 }}><Link className="btn soft sm" to="/train/listening">🎧 À l’oreille</Link><Link className="btn soft sm" to="/train/flashcards">🗂️ Cartes</Link></div>
         </>
       )}
       {tab === 'conv' && (

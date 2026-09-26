@@ -1,5 +1,6 @@
-/** Réglages : profil, voix (détection, choix, test), translittération, apparence, audio. */
+/** Réglages, en quatre onglets courts : Profil · Voix · Exercices · Affichage. */
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { tts, useSpeaker, useVoices, recognizer, recorder } from '@/app/services/speech';
@@ -7,6 +8,9 @@ import { WebSpeechProvider, chooseVoice, type VoiceGender } from '@/engine/audio
 import { activePack } from '@/content/packs';
 import { T } from '@/i18n';
 import { Segmented, Thai, useToast } from '@/components/ui';
+
+type Tab = 'profile' | 'voice' | 'exercises' | 'display';
+const TABS: { id: Tab; label: string }[] = [{ id: 'profile', label: 'Profil' }, { id: 'voice', label: 'Voix' }, { id: 'exercises', label: 'Exercices' }, { id: 'display', label: 'Affichage' }];
 
 /** Choix homme / femme de la voix, et attribution manuelle d'un genre aux voix inconnues. */
 function VoiceGenderSection() {
@@ -54,21 +58,34 @@ function VoiceGenderSection() {
   );
 }
 
-export function Settings() {
-  const t = T();
-  usePage(t.profile.settings, { back: '/profile' });
-  const settings = useStore((s) => s.settings);
-  const update = useStore((s) => s.updateSettings);
+function ProfileTab() {
   const profile = useStore((s) => s.profile)!;
   const updateProfile = useStore((s) => s.updateProfile);
+  const [name, setName] = useState(profile.name);
+  return (
+    <>
+      <label className="f" htmlFor="pname">Prénom</label>
+      <input id="pname" className="field" value={name} onChange={(e) => setName(e.target.value)} onBlur={() => name.trim() && updateProfile({ name: name.trim() })} />
+      <label className="f">Je suis <span className="xs">(pour les particules de politesse)</span></label>
+      <Segmented value={profile.gender} options={[{ v: 'm', label: <>Un homme · <Thai text="ครับ" /></> }, { v: 'f', label: <>Une femme · <Thai text="ค่ะ" /></> }]} onChange={(g) => updateProfile({ gender: g })} />
+      <label className="f">Objectif quotidien</label>
+      <Segmented value={profile.dailyGoalMinutes} options={[5, 10, 15, 30].map((g) => ({ v: g, label: `${g} min` }))} onChange={(g) => updateProfile({ dailyGoalMinutes: g })} />
+      <p className="sm mut" style={{ margin: '14px 2px 0' }}>L’objectif d’apprentissage (parler, lire et écrire) et les niveaux se règlent dans Profil › Objectif et niveaux.</p>
+    </>
+  );
+}
+
+function VoiceTab() {
+  const t = T();
+  const settings = useStore((s) => s.settings);
+  const update = useStore((s) => s.updateSettings);
   const { status } = useVoices();
   const sp = useSpeaker();
   const toast = useToast((s) => s.show);
-  const [name, setName] = useState(profile.name);
   const voices = tts.voices(), target = tts.targetVoices();
   const sample = 'สวัสดี{P} ยินดีที่ได้รู้จัก';
   const msg: Record<string, string> = {
-    ok: `✅ ${target.length} voix thaïlandaise${target.length > 1 ? 's' : ''} détectée${target.length > 1 ? 's' : ''}. Lecture en th-TH.`,
+    ok: `✅ ${target.length} voix thaïlandaise${target.length > 1 ? 's' : ''} détectée${target.length > 1 ? 's' : ''}.`,
     searching: '🔎 Recherche des voix en cours… Chrome Android met parfois plusieurs secondes à communiquer la liste.',
     unknown: 'ℹ️ Le navigateur ne communique aucune voix (liste vide). Touchez « Tester la voix » : la liste arrive souvent après ce premier essai.',
     none: `❌ Le navigateur liste ${voices.length} voix, mais aucune en thaï. L’application refuse de lire du thaï avec une voix française ou anglaise.`,
@@ -76,55 +93,87 @@ export function Settings() {
   };
   return (
     <>
-      <div className="h2">Profil</div>
-      <label className="f" htmlFor="pname">Prénom</label>
-      <input id="pname" className="field" value={name} onChange={(e) => setName(e.target.value)} onBlur={() => name.trim() && updateProfile({ name: name.trim() })} />
-      <label className="f">Je suis</label>
-      <Segmented value={profile.gender} options={[{ v: 'm', label: <>Un homme · <Thai text="ครับ" /></> }, { v: 'f', label: <>Une femme · <Thai text="ค่ะ" /></> }]} onChange={(g) => updateProfile({ gender: g })} />
-      <label className="f">Objectif quotidien</label>
-      <Segmented value={profile.dailyGoalMinutes} options={[5, 10, 15, 30].map((g) => ({ v: g, label: `${g} min` }))} onChange={(g) => updateProfile({ dailyGoalMinutes: g })} />
-
-      <div className="h2">{t.profile.voice} thaïlandaise</div>
-      <div className={`note ${status === 'ok' ? 'info' : status === 'none' || status === 'unsupported' ? 'warn' : ''}`}>{msg[status]}</div>
-      {target.length > 1 && <><label className="f" htmlFor="voice">Voix utilisée</label><select id="voice" className="field" value={settings.voiceId} onChange={(e) => update({ voiceId: e.target.value })}><option value="">Automatique (locale de préférence)</option>{target.map((v) => <option key={v.id} value={v.id}>{v.name} — {v.lang}{v.local ? ' · hors ligne' : ' · en ligne'}</option>)}</select></>}
+      <div className={`note ${status === 'ok' ? 'info' : status === 'none' || status === 'unsupported' ? 'warn' : ''}`} style={{ marginTop: 0 }}>{msg[status]}</div>
+      <div className="btns"><button className="btn soft sm" onClick={() => sp.speak(sample)}>▶ Tester la voix</button><button className="btn soft sm" onClick={() => sp.speak(sample, { slow: true })}>🐢 Lentement</button></div>
       {status === 'none' && <>
-        <p className="sm mut" style={{ margin: '0 2px 8px' }}><b>Si la voix thaïe Google est pourtant installée</b>, Chrome utilise sans doute un autre moteur vocal (Samsung, etc.) : Paramètres › Système › Langues et saisie › Synthèse vocale › Moteur préféré › Services de synthèse vocale Google. Puis touchez « Relancer la détection ».</p>
+        <p className="sm mut" style={{ margin: '10px 2px 8px' }}><b>Si la voix thaïe Google est pourtant installée</b>, Chrome utilise sans doute un autre moteur vocal (Samsung, etc.) : Paramètres › Système › Langues et saisie › Synthèse vocale › Moteur préféré › Services de synthèse vocale Google. Puis touchez « Relancer la détection ».</p>
         <button className="btn ghost sm" style={{ marginBottom: 8 }} onClick={() => tts.speak('สวัสดีครับ', { force: true })}>▶ Essai forcé en th-TH</button>
         <label className="f">Si l’essai forcé parle bien thaï : toujours lire ainsi</label>
         <Segmented value={settings.forceTTS} options={[{ v: false, label: 'Non' }, { v: true, label: 'Oui, forcer th-TH' }]} onChange={(v) => update({ forceTTS: v })} />
       </>}
-      {(status === 'unknown' || status === 'searching') && <p className="sm mut" style={{ margin: '0 2px 8px' }}>Pour installer la voix sur Android : Paramètres › Système › Langues et saisie › Synthèse vocale › ⚙ du moteur Google › Installer les données vocales › Thaï. Sur iPhone : Réglages › Accessibilité › Contenu énoncé › Voix › Thaï.</p>}
+      {(status === 'unknown' || status === 'searching') && <p className="sm mut" style={{ margin: '10px 2px 8px' }}>Pour installer la voix sur Android : Paramètres › Système › Langues et saisie › Synthèse vocale › ⚙ du moteur Google › Installer les données vocales › Thaï. Sur iPhone : Réglages › Accessibilité › Contenu énoncé › Voix › Thaï.</p>}
       <VoiceGenderSection />
-      <div className="btns" style={{ marginTop: 10 }}><button className="btn soft sm" onClick={() => sp.speak(sample)}>▶ Tester la voix</button><button className="btn soft sm" onClick={() => sp.speak(sample, { slow: true })}>🐢 Lentement</button></div>
-      <div className="btns" style={{ marginTop: 8 }}><button className="btn ghost sm" onClick={() => { tts.rescan(); toast('Détection des voix relancée.'); }}>🔄 Relancer la détection</button><button className="btn ghost sm" onClick={() => { const rep = tts instanceof WebSpeechProvider ? tts.report() : 'Synthèse vocale indisponible'; navigator.clipboard?.writeText(rep).then(() => toast('Liste des voix copiée.'), () => toast('Copie impossible.')); }}>Copier le diagnostic</button></div>
-      <label className="f">Voix détectées · {voices.length}</label>
-      <div className="vlist">{voices.length ? voices.slice().sort((a, b) => Number(b.isTarget) - Number(a.isTarget)).map((v) => <div key={v.id} className={`v ${v.isTarget ? 'is' : ''}`}><span>{v.isTarget ? '✓ ' : ''}{v.name}</span><code>{v.lang || '(vide)'}</code></div>) : <div className="v"><span className="mut">Liste vide pour l’instant.</span></div>}</div>
+      {target.length > 1 && <><label className="f" htmlFor="voice">Imposer une voix précise</label><select id="voice" className="field" value={settings.voiceId} onChange={(e) => update({ voiceId: e.target.value })}><option value="">Automatique (selon le choix ci-dessus)</option>{target.map((v) => <option key={v.id} value={v.id}>{v.name} — {v.lang}{v.local ? ' · hors ligne' : ' · en ligne'}</option>)}</select></>}
       <label className="f" htmlFor="slow">Vitesse de la lecture lente 🐢 : <b>{Math.round(settings.slowRate * 100)} %</b></label>
       <input id="slow" type="range" min={0.4} max={0.85} step={0.05} value={settings.slowRate} onChange={(e) => update({ slowRate: +e.target.value })} />
       <label className="f">{t.profile.autoAudio} <span className="xs">(réponse d’une carte, ouverture d’une fiche)</span></label>
       <Segmented value={settings.autoAudio} options={[{ v: true, label: 'Oui' }, { v: false, label: 'Non' }]} onChange={(v) => update({ autoAudio: v })} />
 
-      <div className="h2">Exercices</div>
-      <label className="f">Avance automatique <span className="xs">(après une bonne réponse, la suite arrive seule ; après une erreur, on attend toujours « Continuer »)</span></label>
+      <details className="note plain sm" style={{ marginTop: 16 }}>
+        <summary>Diagnostic des voix · {voices.length} détectée{voices.length > 1 ? 's' : ''}</summary>
+        <div className="btns" style={{ margin: '10px 0' }}><button className="btn ghost sm" onClick={() => { tts.rescan(); toast('Détection des voix relancée.'); }}>🔄 Relancer la détection</button><button className="btn ghost sm" onClick={() => { const rep = tts instanceof WebSpeechProvider ? tts.report() : 'Synthèse vocale indisponible'; navigator.clipboard?.writeText(rep).then(() => toast('Liste des voix copiée.'), () => toast('Copie impossible.')); }}>Copier le diagnostic</button></div>
+        <div className="vlist">{voices.length ? voices.slice().sort((a, b) => Number(b.isTarget) - Number(a.isTarget)).map((v) => <div key={v.id} className={`v ${v.isTarget ? 'is' : ''}`}><span>{v.isTarget ? '✓ ' : ''}{v.name}</span><code>{v.lang || '(vide)'}</code></div>) : <div className="v"><span className="mut">Liste vide pour l’instant.</span></div>}</div>
+      </details>
+    </>
+  );
+}
+
+function ExercisesTab() {
+  const t = T();
+  const settings = useStore((s) => s.settings);
+  const update = useStore((s) => s.updateSettings);
+  const strict = settings.pronStrictness ?? 'normal';
+  return (
+    <>
+      <label className="f" style={{ marginTop: 0 }}>Avance automatique <span className="xs">(après une bonne réponse, la suite arrive seule ; après une erreur, on attend toujours « Continuer »)</span></label>
       <Segmented value={settings.autoAdvance !== false} options={[{ v: true, label: 'Oui' }, { v: false, label: 'Non, je touche Continuer' }]} onChange={(v) => update({ autoAdvance: v })} />
+
+      <label className="f">{t.profile.transliteration} <span className="xs">(la phonétique sous le thaï)</span></label>
+      <Segmented value={settings.translit} options={[{ v: 'always', label: t.profile.translit.always }, { v: 'learning', label: t.profile.translit.learning }, { v: 'hidden', label: t.profile.translit.hidden }]} onChange={(v) => update({ translit: v })} />
+      <p className="sm mut" style={{ margin: '8px 2px 0' }}>{settings.translit === 'always' ? 'La phonétique est toujours affichée.' : settings.translit === 'learning' ? 'La phonétique disparaît progressivement : elle est masquée sur les mots que vous savez lire avec les lettres déjà apprises.' : 'La phonétique est masquée dans les listes et les exercices (elle reste dans les fiches détaillées).'}</p>
 
       <div className="h2">Micro et prononciation</div>
       <div className="list" style={{ padding: '4px 14px' }}><div className="status"><i>{recorder.supported ? '✅' : '❌'}</i><span>Enregistrement de ma voix et analyse du ton</span></div><div className="status"><i>{recognizer.supported ? '✅' : '❌'}</i><span>Reconnaissance vocale thaïe (th-TH){recognizer.supported ? '' : ' — non disponible sur ce navigateur'}</span></div></div>
       <label className="f">Sévérité du contrôle de prononciation</label>
-      <Segmented value={settings.pronStrictness ?? 'normal'} options={[{ v: 'lenient' as const, label: 'Indulgente' }, { v: 'normal' as const, label: 'Normale' }, { v: 'strict' as const, label: 'Stricte' }]} onChange={(v) => update({ pronStrictness: v })} />
-      <p className="sm mut" style={{ margin: '8px 2px 0' }}>{(settings.pronStrictness ?? 'normal') === 'lenient' ? 'Le moteur peut « deviner » : sa meilleure hypothèse compte, même si ce n’est pas la première.' : (settings.pronStrictness ?? 'normal') === 'normal' ? 'Seule la première hypothèse du moteur compte, comme dans une vraie conversation.' : 'Première hypothèse seulement, et rien d’approximatif : sans correspondance exacte, 7/10 au maximum.'}</p>
+      <Segmented value={strict} options={[{ v: 'lenient' as const, label: 'Indulgente' }, { v: 'normal' as const, label: 'Normale' }, { v: 'strict' as const, label: 'Stricte' }]} onChange={(v) => update({ pronStrictness: v })} />
+      <p className="sm mut" style={{ margin: '8px 2px 0' }}>{strict === 'lenient' ? 'Le moteur peut « deviner » : sa meilleure hypothèse compte, même si ce n’est pas la première. Les erreurs de ton ne sont pas plafonnées.' : strict === 'normal' ? 'Seule la première hypothèse du moteur compte. Une erreur de ton ou de longueur de voyelle plafonne à 5/10 ; un moteur peu sûr de lui plafonne aussi la note.' : 'Première hypothèse seulement, rien d’approximatif : sans correspondance exacte, 7/10 au maximum ; ton ou longueur faux, 4/10 au maximum.'}</p>
+    </>
+  );
+}
 
-      <div className="h2">{t.profile.transliteration}</div>
-      <Segmented value={settings.translit} options={[{ v: 'always', label: t.profile.translit.always }, { v: 'learning', label: t.profile.translit.learning }, { v: 'hidden', label: t.profile.translit.hidden }]} onChange={(v) => update({ translit: v })} />
-      <p className="sm mut" style={{ margin: '8px 2px 0' }}>{settings.translit === 'always' ? 'La phonétique est toujours affichée.' : settings.translit === 'learning' ? 'La phonétique disparaît progressivement : elle est masquée sur les mots que vous savez lire avec les lettres déjà apprises.' : 'La phonétique est masquée dans les listes et les exercices (elle reste dans les fiches détaillées).'}</p>
-
-      <div className="h2">{t.profile.theme}</div>
+function DisplayTab() {
+  const t = T();
+  const settings = useStore((s) => s.settings);
+  const update = useStore((s) => s.updateSettings);
+  return (
+    <>
+      <label className="f" style={{ marginTop: 0 }}>{t.profile.theme}</label>
       <Segmented value={settings.theme} options={[{ v: 'auto', label: 'Automatique' }, { v: 'light', label: 'Clair' }, { v: 'dark', label: 'Sombre' }]} onChange={(v) => update({ theme: v })} />
       <label className="f">{t.profile.thaiSize}</label>
       <Segmented value={settings.thaiSize} options={[{ v: 1, label: 'Normale' }, { v: 1.15, label: 'Grande' }, { v: 1.3, label: 'Très grande' }]} onChange={(v) => update({ thaiSize: v })} />
+      <p className="ctr" style={{ margin: '10px 0 0' }}><Thai text="สวัสดีครับ ยินดีที่ได้รู้จัก" style={{ fontSize: `calc(26px * ${settings.thaiSize})` }} /></p>
       <label className="f">Montrer aussi la forme moderne des lettres (sans boucles)</label>
       <Segmented value={settings.showModern} options={[{ v: true, label: 'Oui' }, { v: false, label: 'Non' }]} onChange={(v) => update({ showModern: v })} />
       <p className="xs mut" style={{ margin: '10px 2px 0' }}>Traditionnelle : <Thai text="ก ข ค ง จ" style={{ fontSize: 20, color: 'var(--ink)' }} /> · moderne : <Thai text="ก ข ค ง จ" modern style={{ fontSize: 20, color: 'var(--ink)' }} /></p>
+    </>
+  );
+}
+
+export function Settings() {
+  const t = T();
+  usePage(t.profile.settings, { back: '/profile' });
+  const [params, setParams] = useSearchParams();
+  const raw = params.get('tab');
+  const tab: Tab = (TABS.some((x) => x.id === raw) ? raw : 'profile') as Tab;
+  return (
+    <>
+      <div className="seg tabs" role="tablist" aria-label="Réglages">{TABS.map((x) => <button key={x.id} role="tab" aria-selected={tab === x.id} className={tab === x.id ? 'on' : ''} onClick={() => setParams({ tab: x.id }, { replace: true })}>{x.label}</button>)}</div>
+      <div className="tabpane" role="tabpanel">
+        {tab === 'profile' && <ProfileTab />}
+        {tab === 'voice' && <VoiceTab />}
+        {tab === 'exercises' && <ExercisesTab />}
+        {tab === 'display' && <DisplayTab />}
+      </div>
     </>
   );
 }

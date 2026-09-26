@@ -21,7 +21,7 @@ export const fr = {
     pair: 'Quelle langue apprenez-vous ?', name: 'Votre prénom', gender: 'Vous êtes…', genderHint: 'pour les particules de politesse',
     man: 'Un homme', woman: 'Une femme', levelsTitle: 'Votre niveau, compétence par compétence',
     levelsIntro: 'Le thaï se parle et s’écrit très différemment : on peut très bien parler sans lire une seule lettre. Soyez précis, le parcours s’adapte.',
-    placement: 'Pas sûr de votre niveau de lecture ? Faites le petit test', placementTitle: 'Test de lecture', placementIntro: 'Quelques lettres et mots à reconnaître. Répondez « je ne sais pas » sans hésiter.',
+    placement: 'Tester ma lecture (2 min)', placementTitle: 'Test de lecture', placementIntro: 'Quelques lettres et mots à reconnaître. Répondez « je ne sais pas » sans hésiter.',
     dontKnow: 'Je ne sais pas', done: 'Construire mon parcours', dailyGoal: 'Objectif quotidien',
   },
   home: {
@@ -33,8 +33,8 @@ export const fr = {
   lesson: {
     step: 'Étape', of: 'sur', theory: 'À retenir', discover: 'Découvrir', practice: 'S’entraîner', test: 'Défi', review: 'Révision',
     finished: 'Leçon terminée', score: 'Score', xpEarned: 'XP gagnés', newItems: 'Nouveautés', toReview: 'À retravailler', passed: 'Leçon validée',
-    failed: 'Pas encore acquis : la leçon se refait', nextLesson: 'Leçon suivante', backHome: 'Retour à l’accueil', quitConfirm: 'Quitter la leçon ? Votre avancement est conservé.',
-    tapToReveal: 'Touchez pour voir la réponse', howWell: 'Vous la connaissiez ?', rate: ['Encore', 'Difficile', 'Bien', 'Facile'],
+    failed: 'Pas encore acquis', nextLesson: 'Leçon suivante', backHome: 'Retour à l’accueil', quitConfirm: 'Quitter la leçon ?',
+    tapToReveal: 'Touchez pour voir la réponse', howWell: 'Comment ça s’est passé ?', rate: ['Encore', 'Difficile', 'Bien', 'Facile'],
     whichLetter: 'Quelle lettre entendez-vous ?', whichSound: 'Quel est le son de cette lettre ?', whichVowel: 'Quelle est cette voyelle ?',
     whichWord: 'Quel mot entendez-vous ?', meaningOf: 'Que veut dire…', howToSay: 'Comment dit-on…', readThis: 'Comment se lit…',
     whichTone: 'Quel est le ton de ce mot ?', whichToneHeard: 'Quel ton entendez-vous ?', liveOrDead: 'Cette syllabe est-elle vivante ou morte ?',
@@ -45,11 +45,11 @@ export const fr = {
   review: {
     title: 'Réviser', due: 'à réviser', nothingDue: 'Rien à réviser pour l’instant', startReview: 'Lancer la révision', train: 'S’entraîner',
     modes: {
-      flashcards: 'Flashcards', listening: 'Écoute', speed: 'Lecture rapide', match: 'Associer', dictation: 'Dictée', tones: 'Tons', quiz: 'Quiz', timed: 'Défi chrono', pronunciation: 'Prononciation',
+      flashcards: 'Cartes', listening: 'Écoute', speed: 'Lecture rapide', match: 'Associer', dictation: 'Dictée', tones: 'Tons', quiz: 'Quiz', timed: 'Défi chrono', pronunciation: 'Prononciation',
     },
     modesDesc: {
       flashcards: 'Revoir et noter ce que vous savez', listening: 'Lettres, mots et phrases à l’oreille', speed: 'Lire vite, sans phonétique', match: 'Relier thaï et sens',
-      dictation: 'Entendre, retrouver l’écrit', tones: 'Lire et entendre les tons', quiz: 'Un peu de tout', timed: 'Le plus de réponses en 60 secondes', pronunciation: 'Dire le mot, vérifier que le thaï est compris',
+      dictation: 'Entendre, retrouver l’écrit', tones: 'Lire et entendre les tons', quiz: 'Un peu de tout', timed: '25 questions, le plus vite possible', pronunciation: 'Dire le mot, vérifier que le thaï est compris',
     },
     weak: 'Points faibles', onlyLearned: 'Les entraînements n’utilisent que ce que vous avez déjà appris.',
   },

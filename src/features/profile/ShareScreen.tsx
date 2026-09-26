@@ -48,11 +48,12 @@ export function ShareScreen() {
 
   const share = async () => {
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+    const aborted = (e: unknown) => (e as Error)?.name === 'AbortError';
     if (blob && nav.share && nav.canShare?.({ files: [new File([blob], 'langue.png', { type: 'image/png' })] })) {
-      try { await nav.share({ files: [new File([blob], 'langue.png', { type: 'image/png' })], text }); return; } catch { /* annulé */ }
+      try { await nav.share({ files: [new File([blob], 'langue.png', { type: 'image/png' })], text }); return; } catch (e) { if (aborted(e)) return; }
     }
-    if (nav.share) { try { await nav.share({ text }); return; } catch { /* annulé */ } }
-    await navigator.clipboard?.writeText(text); toast('Résumé copié dans le presse-papiers.');
+    if (nav.share) { try { await nav.share({ text }); return; } catch (e) { if (aborted(e)) return; } }
+    try { await navigator.clipboard.writeText(text); toast('Résumé copié dans le presse-papiers.'); } catch { toast('Partage et copie impossibles ici : téléchargez l’image.'); }
   };
   const download = () => { if (!blob) return; const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'langue-progression.png'; a.click(); };
   return (

@@ -1,5 +1,5 @@
 /** À vous : écouter, dire, vérifier que le moteur comprend (jamais bloquant ; noté seulement en entraînement Prononciation). */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { RuntimeStep } from '../engine';
 import type { StepResult } from '../LessonRunner';
 import { ITEMS } from '@/content/th';
@@ -13,10 +13,13 @@ export function RepeatStep({ step, onDone }: { step: RuntimeStep & { type: 'repe
   const [i, setI] = useState(0);
   const [scores, setScores] = useState<Record<string, number>>({});
   const it = items[i];
-  if (!it) { onDone({}); return null; }
+  useEffect(() => { if (!items.length) onDone({}); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  if (!it) return null;
   const finish = () => {
     const done = Object.values(scores);
-    const good = done.filter((s) => s >= 8).length;
+    // Mêmes seuils que le verdict du contrôle : ≥ 9 compris, < 6 pas compris
+    const good = done.filter((s) => s >= 9).length;
     if (step.graded) onDone({ ok: good, total: items.length, xp: good * 3 + done.length, wrong: items.filter((x) => scores[x.id] != null && scores[x.id] < 6).map((x) => x.id) });
     else onDone({ xp: items.length * 2 + good * 2 });
   };
@@ -29,8 +32,8 @@ export function RepeatStep({ step, onDone }: { step: RuntimeStep & { type: 'repe
       <div className="sp" />
       <StepFooter meta={<><span>{best != null ? `Note : ${best}/10` : step.graded ? 'Dites le mot pour obtenir une note' : 'Facultatif : jamais bloquant.'}</span><span className="b">{i + 1} / {items.length}</span></>}>
         <div className="btns">
-          {!step.graded && <button className="btn ghost" onClick={() => onDone({ xp: i + 1 })}>{t.common.skip}</button>}
-          <ContinueButton onClick={() => (i + 1 < items.length ? setI(i + 1) : finish())} label={i + 1 < items.length ? t.common.continue : t.common.finish} />
+          {!step.graded && <button className="btn ghost" onClick={() => onDone({ xp: i + 1 })}>Passer l’exercice</button>}
+          <ContinueButton onClick={() => (i + 1 < items.length ? setI(i + 1) : finish())} label={i + 1 < items.length ? 'Mot suivant' : t.common.finish} />
         </div>
       </StepFooter>
     </>

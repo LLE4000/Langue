@@ -12,7 +12,7 @@ export function PlayHub() {
   const people = readRegistry().list.filter((p) => p.name).length;
   return (
     <>
-      <p className="lead">Apprendre à deux, c’est tenir plus longtemps. Quatre façons de jouer, sans compte ni classement mondial : on se mesure à quelqu’un qu’on connaît.</p>
+      <p className="lead">Apprendre à deux, c’est tenir plus longtemps. {recognizer.supported ? 'Quatre' : 'Trois'} façons de jouer, sans compte ni classement mondial : on se mesure à quelqu’un qu’on connaît.</p>
       <div className="list">
         <Link className="row" to="/play/duel"><span className="ico">⚔️</span><span className="mid"><span className="t">Duel sur un écran</span><span className="s">Deux joueurs, un appareil posé entre vous, la même question des deux côtés. Le plus rapide marque.</span></span><span className="end"><span className="chev">›</span></span></Link>
         <Link className="row" to="/play/turns"><span className="ico">🔁</span><span className="mid"><span className="t">Tour à tour</span><span className="s">De 2 à 6 joueurs, on se passe l’appareil : même série, chrono, résultats à la fin.</span></span><span className="end"><span className="chev">›</span></span></Link>

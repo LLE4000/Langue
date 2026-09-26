@@ -18,7 +18,18 @@ export function TrainingStart() {
     const st = useStore.getState();
     const ctx = { known: known.concepts, srs: st.srs, levels, knownOrally: false, seen: st.seen, micAvailable: recorder.supported || recognizer.supported };
     const session = buildTraining(mode as TrainingMode, ctx, { theme: sp.get('theme') ?? undefined });
-    if (!session) { toast('Pas encore assez d’éléments appris pour cet entraînement. Faites d’abord quelques leçons.'); nav('/review', { replace: true }); return; }
+    if (!session) {
+      const why: Partial<Record<TrainingMode, string>> = {
+        pronunciation: 'Il faut quelques mots appris pour l’entraînement de prononciation. Faites d’abord une leçon de conversation.',
+        speed: 'La lecture rapide demande des mots lisibles avec les lettres que vous avez apprises.',
+        dictation: 'La dictée demande des mots lisibles avec les lettres que vous avez apprises.',
+        tones: 'L’entraînement aux tons commence après la première leçon sur les tons.',
+        weak: 'Pas encore de points faibles repérés (il en faut au moins 3).',
+        review: 'Rien n’est à réviser pour l’instant.',
+      };
+      toast(why[mode as TrainingMode] ?? 'Pas encore assez d’éléments appris pour cet entraînement. Faites d’abord quelques leçons.');
+      nav('/review', { replace: true }); return;
+    }
     st.startSession(session);
     nav('/lesson/training', { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps

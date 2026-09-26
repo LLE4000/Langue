@@ -12,7 +12,7 @@ import { ITEMS, type LearnItem } from '@/content/th';
 import { RECOGNITION_ERRORS } from '@/engine/audio/mic';
 import { scorePronunciation, type PronResult } from '@/engine/audio/pronunciation';
 import { resolveTokens } from '@/engine/tokens';
-import { AudioPair, Icon, Rom, Segmented, Thai, useTokens } from '@/components/ui';
+import { AudioPair, Icon, Rom, Segmented, Thai, useTokens, useToast } from '@/components/ui';
 import { SourcePicker, usePlayerDefaults } from './PlaySetup';
 import { defaultSource, poolFor, type PlaySource } from './quiz';
 
@@ -65,11 +65,12 @@ function Turn({ item, player, onScored }: { item: LearnItem; player: string; onS
   const listen = () => {
     if (listening) { recognizer.stop(); return; }
     setRes(null); setMsg(''); setListening(true); sp.cancel();
+    let got = false;
     try {
       recognizer.start((ev) => {
-        if (ev.type === 'result') setRes(scorePronunciation(ev.alts, targets, [{ t: resolveTokens(item.thai, tok), r: resolveTokens(item.rom, tok) }], strictness, ev.confidence));
-        else if (ev.type === 'error') { if (ev.code !== 'aborted') setMsg(RECOGNITION_ERRORS[ev.code] ?? `Reconnaissance interrompue (${ev.code}).`); }
-        else setListening(false);
+        if (ev.type === 'result') { got = true; setRes(scorePronunciation(ev.alts, targets, [{ t: resolveTokens(item.thai, tok), r: resolveTokens(item.rom, tok) }], strictness, ev.confidence)); }
+        else if (ev.type === 'error') { got = true; if (ev.code !== 'aborted') setMsg(RECOGNITION_ERRORS[ev.code] ?? `Reconnaissance interrompue (${ev.code}).`); }
+        else { setListening(false); if (!got) setMsg('Rien entendu : touchez le micro et dites le mot.'); }
       });
     } catch { setListening(false); setMsg('La reconnaissance vocale n’a pas pu démarrer.'); }
   };
@@ -112,9 +113,10 @@ export function VoiceDuel() {
   const [scores, setScores] = useState<Scores>([]);
   const [phase, setPhase] = useState<'setup' | 'handoff' | 'say' | 'end'>('setup');
 
+  const toast = useToast((s) => s.show);
   const start = (c: Cfg) => {
     const pool = shuffle(poolFor(c.source, srs).filter(sayable)).slice(0, c.count);
-    if (pool.length < 3) return;
+    if (pool.length < 3) { toast('Pas assez de mots dans cette source : choisissez un thème.'); return; }
     setCfg(c); setItems(pool); setW(0); setP(0); setScores(pool.map(() => c.players.map(() => 0))); setPhase('handoff');
   };
   const totals = useMemo(() => (cfg ? cfg.players.map((_, k) => scores.reduce((a, row) => a + (row[k] ?? 0), 0)) : []), [cfg, scores]);
@@ -148,7 +150,7 @@ export function VoiceDuel() {
   const name = cfg.players[p];
   if (phase === 'handoff') {
     return (
-      <FullScreen title={`Mot ${w + 1} / ${items.length}`} onBack={() => setPhase('setup')}>
+      <FullScreen title={`Mot ${w + 1} / ${items.length}`} onBack={() => { if ((w === 0 && p === 0) || window.confirm('Abandonner la partie en cours ?')) setPhase('setup'); }}>
         <div className="recap" style={{ marginTop: 24 }}>
           <div style={{ fontSize: 40 }}>🎙️</div>
           <div className="serif" style={{ fontSize: 30, marginTop: 6 }}>À {name}</div>

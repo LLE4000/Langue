@@ -14,12 +14,14 @@ export function RecapStep({ session, lesson, next, onClose, onNext, onRetry }: {
   const wrong = session.wrong.map((id) => ITEMS[id]).filter(Boolean).slice(0, 10);
   const news = lesson ? lesson.newConcepts.map((id) => ITEMS[id]).filter((x) => x && x.kind !== 'rule' && x.kind !== 'grammar').slice(0, 12) : [];
   const nextIsDifferent = next && next.lesson.id !== session.lessonId;
+  const minPct = Math.round((lesson?.minScore ?? 0.6) * 100);
   return (
     <>
       <div className={`recap ${passed ? 'ok' : 'ko'}`}>
         <div style={{ fontSize: 44 }}>{session.training ? '🎯' : passed ? (pct >= 90 ? '🌟' : '✅') : '🔁'}</div>
         <div className="score" style={{ fontSize: 52 }}>{session.total ? <>{session.ok}<small> / {session.total}</small></> : '✓'}</div>
-        <div className="b" style={{ fontSize: 18, marginTop: 6 }}>{session.training ? 'Entraînement terminé' : passed ? (pct >= 90 ? 'Excellent · ' + t.lesson.passed : t.lesson.passed) : t.lesson.failed}</div>
+        {session.total > 0 && <div className="xs mut">bonnes réponses du premier coup · {pct} %</div>}
+        <div className="b" style={{ fontSize: 18, marginTop: 6 }}>{session.training ? 'Entraînement terminé' : passed ? (pct >= 90 ? 'Excellent · ' + t.lesson.passed : t.lesson.passed) : `${t.lesson.failed} : il faut ${minPct} %`}</div>
         <div className="mut sm">{session.title} · +{session.xp} XP</div>
       </div>
       {news.length > 0 && passed && (

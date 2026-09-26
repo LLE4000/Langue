@@ -426,3 +426,58 @@ details.note summary { cursor: pointer; font-weight: 600; }
 .vword:active { background: var(--surface2); }
 .vscore { display: grid; place-items: center; min-height: 40px; border-radius: 12px; font-family: var(--f-display); font-size: 21px; }
 .vscore.ok { background: var(--ok-soft); color: var(--ok); } .vscore.near { background: var(--acc-soft); color: var(--acc-deep); } .vscore.ko { background: var(--ko-soft); color: var(--ko); }
+
+/* ---------- Accueil : l'essentiel du jour, « Plus » ---------- */
+.today { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
+.today .tk { display: flex; flex-direction: column; gap: 6px; padding: 12px 12px 10px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); color: var(--ink2); text-decoration: none; font-size: 12.5px; min-height: 74px; }
+.today .tk svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; color: var(--ink2); }
+.today .tk b { color: var(--ink); font-size: 18px; font-family: var(--f-display); font-weight: 400; margin-right: 2px; } .today .tk .lbl { display: block; font-size: 11.5px; }
+.today .tk.due { background: var(--acc-soft); border-color: transparent; color: var(--acc-deep); } .today .tk.due svg, .today .tk.due b { color: var(--acc-deep); }
+.today .bar { margin-top: auto; }
+.more { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 18px; padding: 12px 14px; border-radius: 14px; background: transparent; border: 1.5px dashed var(--line2); font-weight: 600; font-size: 14.5px; color: var(--ink); text-align: left; }
+.more .mut { font-weight: 500; font-size: 13px; flex: 1; } .more svg { stroke: currentColor; fill: none; stroke-width: 2; transition: transform .2s; }
+.more-body { animation: reveal .25s cubic-bezier(.2, .8, .2, 1); }
+
+/* ---------- Onglets (réglages) ---------- */
+.seg.tabs { position: sticky; top: 0; z-index: 4; margin: 0 -18px 10px; padding: 8px 18px; border-radius: 0; border: 0; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 92%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.seg.tabs button { min-height: 40px; }
+.tabpane { animation: reveal .2s ease-out; }
+
+/* ---------- Parcours ---------- */
+.lrow.avail .ico { background: var(--surface2); color: var(--ink); font-family: var(--f-ui); font-size: 14px; font-weight: 700; }
+.lrow.cur { background: color-mix(in srgb, var(--acc-soft) 55%, var(--surface)); }
+.list button.row { background: transparent; color: inherit; font: inherit; cursor: pointer; } .list button.row:disabled { cursor: default; opacity: 1; }
+
+/* ---------- Retours visuels, replis, listes ---------- */
+.ib.speaking { background: var(--acc-soft); border-color: var(--acc); color: var(--acc-deep); animation: speak 1s ease-in-out infinite; }
+@keyframes speak { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--acc) 45%, transparent); } 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--acc) 0%, transparent); } }
+.fold { margin-top: 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); padding: 0 14px; }
+.fold > summary { list-style: none; cursor: pointer; min-height: 52px; display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15.5px; padding: 12px 0; }
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary::after { content: "›"; margin-left: auto; font-size: 22px; color: var(--ink2); opacity: .6; transform: rotate(90deg); transition: transform .2s; }
+.fold[open] > summary::after { transform: rotate(-90deg); }
+.fold[open] { padding-bottom: 14px; } .fold.sm > summary { min-height: 44px; font-size: 14px; padding: 8px 0; }
+.chip .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.chip.cls-M .dot { background: var(--c-M); } .chip.cls-H .dot { background: var(--c-H); } .chip.cls-L .dot { background: var(--c-L); }
+.chip.on .dot { box-shadow: 0 0 0 2px var(--bg); }
+.cell.locked { opacity: .62; }
+.link { background: none; border: 0; padding: 0; color: var(--jade); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.list .row.tap { cursor: pointer; } .list .row.tap:active { background: var(--surface2); }
+.done-dot { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--ok); color: #fff; font-size: 11px; display: grid; place-items: center; border: 2px solid var(--surface); }
+
+/* Dialogues : barre d'aides compacte, bulle en cours de lecture, boutons à 40 px */
+.dlgbar { display: flex; gap: 8px; margin-bottom: 14px; } .dlgbar .btn { flex: 1 1 0; min-width: 0; padding: 8px 6px; font-size: 14px; }
+.bub .acts { gap: 6px; } .mini { min-width: 40px; height: 40px; border-radius: 12px; } .mini.txt { font-size: 12.5px; font-weight: 600; padding: 0 10px; }
+.bub.playing { box-shadow: 0 0 0 2px var(--acc); } .bub.playing .who::after { content: " · lecture"; color: var(--acc-deep); }
+
+/* Fiche : légendes sous les actions rondes */
+.audio.acts { gap: 6px; } .audio.acts .act { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; } .audio.acts .act small { font-size: 11px; color: var(--ink2); font-weight: 600; }
+
+/* Flashcards : balayage */
+.fcard { touch-action: pan-y; user-select: none; }
+.fcard .sw-hint { position: absolute; top: 14px; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 99px; opacity: 0; transition: opacity .15s; z-index: 3; }
+.fcard .sw-hint.left { left: 12px; background: var(--ko-soft); color: var(--ko); } .fcard .sw-hint.right { right: 12px; background: var(--ok-soft); color: var(--ok); }
+.fcard.sw-left .sw-hint.left, .fcard.sw-right .sw-hint.right { opacity: 1; }
+.fcard.sw-left { box-shadow: 0 0 0 2px var(--ko); } .fcard.sw-right { box-shadow: 0 0 0 2px var(--ok); }
+.rate button .k { display: none; font-size: 10.5px; color: var(--ink2); opacity: .6; }
+@media (pointer: fine) { .choice .k, .rate button .k { display: block; } }
