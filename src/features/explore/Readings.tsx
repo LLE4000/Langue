@@ -7,7 +7,7 @@ import { READING_BY_ID, th } from '@/content/th';
 import { isReadable } from '@/engine/thai/reading';
 import { L, T } from '@/i18n';
 import { ReadingView } from '@/components/ReadingView';
-import { Empty, Ico } from '@/components/ui';
+import { Empty, Ico, Icon } from '@/components/ui';
 
 export function Readings() {
   const t = T();
@@ -35,5 +35,10 @@ export function ReadingScreen() {
   const addXp = useStore((s) => s.addXp);
   usePage(r ? L(r.title) : 'Lecture', { back: '/explore/readings' });
   if (!r) return <Empty icon="search">Texte introuvable.</Empty>;
-  return <ReadingView id={r.id} onDone={() => { log('reading', r.id); recordActivity('reading:' + r.id); addXp(5); nav('/explore/readings'); }} />;
+  return (
+    <>
+      <Link className="ra-home mb-4" to={`/read/text/${encodeURIComponent(r.id)}`}><span className="ic"><Icon name="mic" /></span><span className="mid"><span className="k">Lecture à voix haute</span><span className="t">Lire ce texte au micro</span><span className="s">Mots lus, déformés, manqués · débit · pauses</span></span><span className="chev">›</span></Link>
+      <ReadingView id={r.id} onDone={() => { log('reading', r.id); recordActivity('reading:' + r.id); addXp(5); nav('/explore/readings'); }} />
+    </>
+  );
 }

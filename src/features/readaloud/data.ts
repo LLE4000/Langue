@@ -1,6 +1,8 @@
 /** Lecture à voix haute : préférences locales, séries « Mes erreurs » et « Chrono », séance conseillée. */
 import { raProgram, series, type RaSession } from '@/engine/readaloud/program';
 import type { RaItem } from '@/engine/readaloud/compose';
+import { tonesOf } from '@/engine/thai/transcription';
+import type { ToneId } from '@/content/types';
 import type { ReadAloudState } from '@/app/store';
 import type { RaMode, Tempo } from './run';
 
@@ -29,7 +31,8 @@ export function weakItems(ra: ReadAloudState): RaItem[] {
   return Object.entries(ra.items)
     .filter(([, s]) => s.last !== 'ok' || s.ok / Math.max(1, s.n) < 0.7)
     .sort(([, a], [, b]) => a.ok / a.n - b.ok / b.n || b.t - a.t)
-    .map(([k]) => idx.get(k))
+    // lectures du programme, ou mots manqués dans un texte (lecture longue) reconstitués depuis leur fiche
+    .map(([k, s]) => idx.get(k) ?? (s.rom ? { key: k, thai: s.thai, rom: s.rom, tone: (tonesOf(s.rom)[0] ?? 'M') as ToneId, kind: 'word' as const, tags: [] } : undefined))
     .filter((x): x is RaItem => !!x)
     .slice(0, 40);
 }

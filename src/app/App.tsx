@@ -16,6 +16,7 @@ import { Vowels } from '@/features/explore/Vowels';
 import { Listen } from '@/features/explore/Listen';
 import { ReadHub } from '@/features/readaloud/ReadHub';
 import { ReadRunner } from '@/features/readaloud/ReadRunner';
+import { LongReadRunner } from '@/features/readaloud/LongReadRunner';
 import { ComprehensionHub, ComprehensionRun } from '@/features/explore/Comprehension';
 import { VoiceDuel } from '@/features/play/VoiceDuel';
 import { Tones } from '@/features/explore/Tones';
@@ -132,6 +133,7 @@ export function App() {
         <Route path="/play/defi/:code" element={<RequireProfile><ChallengePlay /></RequireProfile>} />
         <Route path="/lesson/:id" element={<RequireProfile><LessonRunner /></RequireProfile>} />
         <Route path="/train/:mode" element={<RequireProfile><TrainingStart /></RequireProfile>} />
+        <Route path="/read/text/:id" element={<RequireProfile><LongReadRunner /></RequireProfile>} />
         <Route path="/read/:id" element={<RequireProfile><ReadRunner /></RequireProfile>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

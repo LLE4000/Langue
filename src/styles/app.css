@@ -867,6 +867,24 @@ pre.note { white-space: pre-wrap; font-family: inherit; }
 .th-story { color: var(--ink2); font-size: var(--fs-2); line-height: 1.45; }
 .th-more { font-size: var(--fs-2); font-weight: 700; color: var(--acc-deep); }
 
+/* Lecture longue à voix haute : le texte qui défile, la phrase en cours en grand, les mots qui se colorent */
+.lr-app { height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
+.lr-text { flex: 1; min-height: 0; overflow-y: auto; padding: var(--s-4) var(--s-5) var(--s-6); display: flex; flex-direction: column; gap: var(--s-4); scroll-behavior: smooth; }
+.lr-s { transition: opacity .3s var(--ease), font-size .3s var(--ease); }
+.lr-s .th { font-family: var(--f-th); line-height: 1.6; margin: 0; }
+.lr-s.past .th { font-size: 20px; opacity: .8; } .lr-s.next .th { font-size: 20px; color: var(--ink3); }
+.lr-s.cur { padding: var(--s-4); border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--e1); }
+.lr-s.cur .th { font-size: 32px; font-weight: 500; }
+.lr-s.cur.voice { border-color: var(--acc); box-shadow: 0 0 0 3px var(--acc-soft), var(--e1); }
+.lr-s .rom { font-size: var(--fs-2); color: var(--jade); margin-top: var(--s-2); line-height: 1.5; }
+.lr-text .w { border-radius: 4px; transition: background .2s, color .2s; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.lr-text .w.ok { background: var(--ok-soft); color: var(--ok); } .lr-text .w.near { background: var(--acc-soft); color: var(--acc-deep); } .lr-s.past .w.missed, .lr-text.res .w.missed { background: var(--ko-soft); color: var(--ko); }
+.lr-text.res { padding: var(--s-4); border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--line); flex: none; overflow: visible; gap: var(--s-2); }
+.lr-text.res .th { font-family: var(--f-th); font-size: 22px; line-height: 1.7; margin: 0; } .lr-text.res .w.none { color: var(--ink3); }
+.lr-preview { font-family: var(--f-th); font-size: 24px; line-height: 1.6; color: var(--ink2); padding: var(--s-3) 0; }
+.lr-sub { display: flex; gap: var(--s-4); justify-content: center; }
+.lr-app.paused .lr-text { opacity: .5; }
+
 /* ---------- Utilitaires : en dernier, pour primer sur les marges par défaut des composants ---------- */
 /* Utilitaires d'espacement (grille de 4 px) */
 .note-under { margin: calc(-1 * var(--s-1)) 2px var(--s-3); font-size: var(--fs-2); color: var(--ink2); }

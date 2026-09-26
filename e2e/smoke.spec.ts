@@ -393,3 +393,16 @@ test('lire à voix haute : programme, tapis de lecture (sans micro : un toucher 
   await expect(page.getByText('La séquence')).toBeVisible();
   await expect(page.getByRole('button', { name: /Retour au programme/ })).toBeVisible();
 });
+
+test('lecture longue : un texte entier, phrase par phrase, puis le bilan', async ({ page }) => {
+  await onboard(page);
+  await page.goto('/#/read');
+  await page.getByRole('link', { name: /Grand-père et le crabe/ }).click();
+  await page.getByRole('button', { name: /Commencer la lecture/ }).click();
+  await expect(page.locator('.ra-count')).toHaveText('1 / 4');
+  await page.getByRole('button', { name: 'Phrase suivante' }).click();
+  await expect(page.locator('.ra-count')).toHaveText('2 / 4');
+  await page.getByRole('button', { name: 'Terminer' }).click();
+  await expect(page.getByText('Le texte', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Relire le texte/ })).toBeVisible();
+});

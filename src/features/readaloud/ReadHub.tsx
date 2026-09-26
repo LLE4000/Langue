@@ -1,6 +1,6 @@
 /**
  * Lire à voix haute — l'accueil de l'entraînement : la séance conseillée (avec le mode), les raccourcis
- * « Mes erreurs » et « Chrono », puis le programme complet, étape par étape.
+ * « Mes erreurs » et « Chrono », le programme complet étape par étape, puis les textes entiers (lecture longue).
  */
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -10,6 +10,8 @@ import { raProgram } from '@/engine/readaloud/program';
 import { azureConfig } from '@/engine/audio/azure';
 import { Icon, Segmented } from '@/components/ui';
 import { nextSession, PASS, raPrefs, saveRaPrefs, weakItems, type RaPrefs } from './data';
+import { longTexts } from './LongReadRunner';
+import { L } from '@/i18n';
 
 export const MODE_INFO: Record<RaPrefs['mode'], { label: string; desc: string }> = {
   listen: { label: 'Écouter + lire', desc: 'La voix thaïe d’abord, puis vous : idéal pour une séance nouvelle.' },
@@ -20,6 +22,7 @@ export const MODE_INFO: Record<RaPrefs['mode'], { label: string; desc: string }>
 export function ReadHub() {
   usePage('Lire à voix haute', { back: '/', thai: { th: 'อ่านออกเสียง', rom: 'àan ɔ̀ɔk-sǐang' } });
   const ra = useStore((s) => s.readAloud) ?? emptyReadAloud();
+  const acts = useStore((s) => s.activities);
   const nav = useNavigate();
   const [prefs, setPrefs] = useState(raPrefs());
   const set = (p: Partial<RaPrefs>) => { saveRaPrefs(p); setPrefs({ ...prefs, ...p }); };
@@ -69,6 +72,21 @@ export function ReadHub() {
           </div>
         </section>
       ))}
+
+      <div className="h2">Textes entiers <span className="sp" /><span className="sm mut">lecture longue</span></div>
+      <p className="note-under">Lisez un texte d’un bout à l’autre : mots lus, déformés ou manqués, débit, pauses.</p>
+      <div className="list">
+        {longTexts().map((r) => {
+          const best = acts['readtext:' + r.id]?.best;
+          return (
+            <Link key={r.id} className="row ra-row" to={`/read/text/${encodeURIComponent(r.id)}`}>
+              <span className="ico"><Icon name="bookOpen" /></span>
+              <span className="mid"><span className="t">{L(r.title)}</span><span className="meta"><span>niveau {r.level}</span><span>{r.sentences.length} phrases</span>{best != null && <span className={best >= 85 ? 'okc' : ''}>meilleur {best} %</span>}</span></span>
+              <span className="end"><span className="chev">›</span></span>
+            </Link>
+          );
+        })}
+      </div>
 
       <details className="note plain sm mt-4">
         <summary><b>Comment la lecture est évaluée</b></summary>
