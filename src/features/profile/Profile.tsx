@@ -2,13 +2,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
-import { useStore, streakDays, levelFromXp } from '@/app/store';
-import { useMetrics, useLevels, useGoals } from '@/app/hooks';
+import { useStore, streakDays } from '@/app/store';
+import { useGoals, useProgress } from '@/app/hooks';
 import { readRegistry } from '@/app/profiles';
 import { T } from '@/i18n';
-import { Bar, Icon } from '@/components/ui';
+import { Icon } from '@/components/ui';
+import { SkillBars, TierRing } from '@/components/Progress';
+import { TIER_STORY, remainingLine, tierLine } from '@/engine/progress';
 import { BADGES } from '@/features/lesson/badges';
-import { goalSkills } from '@/curriculum/types';
 import { GOAL_OPTIONS, goalKey } from '@/features/onboarding/Onboarding';
 
 const plural = (n: number, s: string, p = s + 's') => `${n} ${n > 1 ? p : s}`;
@@ -20,9 +21,7 @@ export function Profile() {
   const xp = useStore((s) => s.xp);
   const days = useStore((s) => s.days);
   const badges = useStore((s) => s.badges);
-  const m = useMetrics();
-  const levels = useLevels();
-  const lvl = levelFromXp(xp);
+  const p = useProgress();
   const streak = streakDays(days);
   const nDays = Object.keys(days).length;
   const goals = useGoals();
@@ -35,18 +34,13 @@ export function Profile() {
   const Row = ({ to, ico, t: title, s }: { to: string; ico: string; t: string; s: string }) => <Link className="row" to={to}><span className="ico">{ico}</span><span className="mid"><span className="t">{title}</span><span className="s">{s}</span></span><span className="end"><span className="chev">›</span></span></Link>;
   return (
     <>
-      <div className="chead">
-        <div className="cring" style={{ ['--p' as string]: Math.round((lvl.into / lvl.next) * 100) }}><b>{lvl.level}</b><small>niveau</small></div>
-        <div className="mid"><div style={{ fontSize: 20, fontWeight: 700 }}>{profile.name}</div><div className="xs mut">{xp} XP · {lvl.next - lvl.into} XP avant le niveau {lvl.level + 1}</div><div className="row-flex" style={{ marginTop: 6, gap: 6, flexWrap: 'wrap' }}><span className="tag gold">🔥 {plural(streak, 'jour')} de suite</span><span className="tag">{plural(nDays, 'jour')} d’étude</span><span className="tag">{plural(m.lessonsDone, 'leçon')}</span></div></div>
-      </div>
-      <div className="h2">Mes compétences <span className="sp" /><span className="sm mut">{goalLabel}</span></div>
-      <div className="prog">
-        {goalSkills(goals).map((sk) => <div key={sk}><div className="k"><span>{t.skills[sk]}</span><b>{['0', 'A1', 'A2', 'B1', 'B2+'][levels[sk]]}</b></div><Bar p={m.skills[sk]} thin /></div>)}
-      </div>
-      <div className="prog" style={{ marginTop: 10 }}>
-        {goals.read && <div><div className="k"><span>Lettres connues</span><b>{m.letters.known} / {m.letters.total}</b></div><Bar p={m.letters.progress} thin /></div>}
-        <div><div className="k"><span>Mots connus</span><b>{m.words.known}</b></div><Bar p={Math.min(1, m.words.known / 300)} thin /></div>
-      </div>
+      <Link to="/profile/progress" className="chead" style={{ textDecoration: 'none', color: 'inherit' }}>
+        <TierRing p={p} />
+        <div className="mid"><div style={{ fontSize: 20, fontWeight: 700 }}>{profile.name}</div><div className="sm" style={{ fontWeight: 650 }}>{TIER_STORY[p.tier].title} · {tierLine(p)}</div><div className="xs mut">{remainingLine(p)}</div><div className="row-flex" style={{ marginTop: 6, gap: 6, flexWrap: 'wrap' }}><span className="tag gold"><Icon name="flame" size={13} /> {plural(streak, 'jour')} de suite</span><span className="tag">{plural(nDays, 'jour')} d’étude</span><span className="tag">{xp} XP</span></div></div>
+      </Link>
+      <div className="h2">Mes compétences <span className="sp" /><Link to="/profile/progress">Tout voir ›</Link></div>
+      <SkillBars p={p} compact limit={4} />
+      <div className="kv" style={{ marginTop: 8 }}><span><b>{p.counts.wordsAcquired}</b> mots acquis</span><span><b>{p.counts.lessonsDone}</b> / {p.counts.lessonsTotal} leçons</span><span>{goalLabel}</span></div>
       <div className="h2">{t.profile.badges} <span className="sp" /><span className="sm mut">{earned.length} / {BADGES.length}</span></div>
       <div className="badges">{shown.map((b) => <div key={b.id} className={`badge ${badges[b.id] ? 'on' : ''}`} title={b.desc}><span className="e">{b.icon}</span>{b.title}<span className="xs mut" style={{ fontWeight: 500 }}>{b.desc}</span></div>)}</div>
       {BADGES.length > shown.length || allBadges ? <button className="btn ghost sm" style={{ marginTop: 10 }} onClick={() => setAllBadges(!allBadges)}>{allBadges ? 'Voir moins' : `Voir tous les badges (${BADGES.length})`}</button> : null}

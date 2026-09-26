@@ -16,8 +16,9 @@ import { rate as srsRate, qualityFromAnswer, type SrsState, type Quality } from 
 import type { Gender } from '@/engine/tokens';
 import { todayKey } from '@/engine/util';
 import type { RuntimeStep } from '@/features/lesson/engine';
+import type { ActivityRecord } from '@/engine/progress';
 
-export const STORE_VERSION = 1;
+export const STORE_VERSION = 2;
 /** Clé de stockage du profil actif (voir profiles.ts). */
 export const STORE_KEY = storageKeyFor(activeProfileId());
 
@@ -115,6 +116,12 @@ export interface PersistedState {
   challenges: ChallengeRecord[];
   /** notes de prononciation (reconnaissance vocale) par élément */
   pron: Record<string, PronStat>;
+  /** date à laquelle chaque élément a été su pour la première fois (ne baisse jamais, base de la progression) */
+  acquired: Record<string, number>;
+  /** activités de contenu : « comp:<dialogue> » (meilleur score), « dialog:<id> », « reading:<id> » */
+  activities: Record<string, ActivityRecord>;
+  /** instantané quotidien de la progression : jour → [global, ...compétences] */
+  progressLog: Record<string, number[]>;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -124,8 +131,11 @@ export const DEFAULT_SETTINGS: Settings = {
 
 export const initialState = (): PersistedState => ({
   version: STORE_VERSION, profile: null, settings: { ...DEFAULT_SETTINGS }, srs: {}, lessons: {}, errors: {}, ruleStats: {}, seen: {}, days: {}, xp: 0,
-  badges: {}, favorites: {}, history: [], session: null, lastVisit: Date.now(), challenges: [], pron: {},
+  badges: {}, favorites: {}, history: [], session: null, lastVisit: Date.now(), challenges: [], pron: {}, acquired: {}, activities: {}, progressLog: {},
 });
+
+/** Marque comme acquis les éléments dont la nouvelle note vaut « connu » (3) ou plus. */
+const acquire = (acquired: Record<string, number>, id: string, st: SrsState) => (st.q >= 3 && !acquired[id] ? { ...acquired, [id]: Date.now() } : acquired);
 
 const idbStorage: StateStorage = {
   getItem: async (name) => (await idbGet<string>(name)) ?? null,
@@ -162,6 +172,10 @@ export interface Actions {
   removeChallenge(id: string): void;
   /** Note de prononciation 0–10 pour un élément (une bonne note compte aussi comme une réponse juste). */
   recordPronunciation(itemId: string, score: number): void;
+  /** Activité de contenu terminée (compréhension, dialogue, lecture) : garde le meilleur score. */
+  recordActivity(key: string, score?: number, total?: number): void;
+  /** Instantané du jour de la progression (n'écrit que si les valeurs changent). */
+  logProgress(day: string, values: number[]): void;
 }
 
 export type Store = PersistedState & Actions;
@@ -186,7 +200,8 @@ export const useStore = create<Store>()(
         else if (errors[itemId]) { const e = { ...errors[itemId], ok: errors[itemId].ok + 1 }; if (e.ok >= 2) delete errors[itemId]; else errors[itemId] = e; }
         const ruleStats = { ...s.ruleStats };
         if (ruleKey) { const r = ruleStats[ruleKey] ?? { ok: 0, ko: 0 }; ruleStats[ruleKey] = ok ? { ...r, ok: r.ok + 1 } : { ...r, ko: r.ko + 1 }; }
-        set({ srs: { ...s.srs, [itemId]: srsRate(prev, q) }, days: { ...s.days, [todayKey()]: day }, errors, ruleStats });
+        const next = srsRate(prev, q);
+        set({ srs: { ...s.srs, [itemId]: next }, days: { ...s.days, [todayKey()]: day }, errors, ruleStats, acquired: acquire(s.acquired, itemId, next) });
       },
       rateItem: (itemId, q) => {
         const s = get();
@@ -195,7 +210,8 @@ export const useStore = create<Store>()(
         const errors = { ...s.errors };
         if (q <= 1) errors[itemId] = { n: (errors[itemId]?.n ?? 0) + 1, ok: 0, t: Date.now() };
         else if (q >= 3 && errors[itemId]) delete errors[itemId];
-        set({ srs: { ...s.srs, [itemId]: srsRate(s.srs[itemId], q) }, days: { ...s.days, [todayKey()]: day }, errors });
+        const next = srsRate(s.srs[itemId], q);
+        set({ srs: { ...s.srs, [itemId]: next }, days: { ...s.days, [todayKey()]: day }, errors, acquired: acquire(s.acquired, itemId, next) });
       },
       markSeen: (key) => set((s) => ({ seen: { ...s.seen, [key]: Date.now() } })),
       addXp: (n) => set((s) => { const day = { ...(s.days[todayKey()] ?? emptyDay()) }; day.xp += n; return { xp: s.xp + n, days: { ...s.days, [todayKey()]: day } }; }),
@@ -216,7 +232,7 @@ export const useStore = create<Store>()(
       },
       logHistory: (kind, label, score, total) => set((s) => ({ history: [{ t: Date.now(), kind, label, score, total }, ...s.history].slice(0, 200) })),
       awardBadge: (id) => set((s) => (s.badges[id] ? {} : { badges: { ...s.badges, [id]: Date.now() } })),
-      importState: (incoming) => { if (incoming.profile) syncActiveName(incoming.profile.name); set({ ...initialState(), ...incoming, version: STORE_VERSION, session: null, challenges: incoming.challenges ?? [], pron: incoming.pron ?? {} }); },
+      importState: (incoming) => { if (incoming.profile) syncActiveName(incoming.profile.name); set({ ...initialState(), ...incoming, version: STORE_VERSION, session: null, challenges: incoming.challenges ?? [], pron: incoming.pron ?? {}, acquired: incoming.acquired ?? {}, activities: incoming.activities ?? {}, progressLog: incoming.progressLog ?? {} }); },
       resetAll: () => { syncActiveName(''); set({ ...initialState() }); },
       touch: () => set({ lastVisit: Date.now() }),
       saveChallenge: (c) => set((s) => ({ challenges: [c, ...s.challenges.filter((x) => x.id !== c.id)].slice(0, 50) })),
@@ -226,6 +242,19 @@ export const useStore = create<Store>()(
         if (score >= 9) get().answer(itemId, true);
         get().addXp(score >= 9 ? 3 : score >= 6 ? 1 : 0);
       },
+      recordActivity: (key, score, total) => set((s) => {
+        const prev = s.activities[key];
+        const rec: ActivityRecord = { n: (prev?.n ?? 0) + 1, t: Date.now(), total: total ?? prev?.total, best: score == null ? prev?.best : Math.max(prev?.best ?? 0, score) };
+        return { activities: { ...s.activities, [key]: rec } };
+      }),
+      logProgress: (day, values) => set((s) => {
+        const prev = s.progressLog[day];
+        if (prev && prev.length === values.length && prev.every((v, i) => v === values[i])) return {};
+        const keys = Object.keys(s.progressLog).sort();
+        const log = { ...s.progressLog, [day]: values };
+        for (const k of keys.slice(0, Math.max(0, keys.length - 180))) delete log[k]; // 180 jours d'historique
+        return { progressLog: log };
+      }),
     }),
     {
       name: STORE_KEY,
@@ -234,11 +263,13 @@ export const useStore = create<Store>()(
       // Les réglages ajoutés dans une nouvelle version prennent leur valeur par défaut chez les anciens utilisateurs.
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<PersistedState>;
-        return { ...current, ...p, settings: { ...DEFAULT_SETTINGS, ...(p.settings ?? {}) }, challenges: p.challenges ?? [], pron: p.pron ?? {} };
+        return { ...current, ...p, version: STORE_VERSION, settings: { ...DEFAULT_SETTINGS, ...(p.settings ?? {}) }, challenges: p.challenges ?? [], pron: p.pron ?? {}, acquired: p.acquired ?? {}, activities: p.activities ?? {}, progressLog: p.progressLog ?? {} };
       },
+      // zustand ne rappelle `migrate` qu'en cas de changement de version : les nouvelles clés ont déjà leur défaut via `merge`.
+      migrate: (persisted) => persisted as Store,
       partialize: (s) => {
-        const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version, challenges, pron } = s;
-        return { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version, challenges, pron } as Store;
+        const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version, challenges, pron, acquired, activities, progressLog } = s;
+        return { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version, challenges, pron, acquired, activities, progressLog } as Store;
       },
     },
   ),
@@ -247,8 +278,8 @@ export const useStore = create<Store>()(
 /** Sélection sérialisable de l'état pour l'export. */
 export function exportState(): PersistedState {
   const s = useStore.getState();
-  const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, lastVisit, challenges, pron } = s;
-  return { version: STORE_VERSION, profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session: null, lastVisit, challenges, pron };
+  const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, lastVisit, challenges, pron, acquired, activities, progressLog } = s;
+  return { version: STORE_VERSION, profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session: null, lastVisit, challenges, pron, acquired, activities, progressLog };
 }
 
 /** Objectifs effectifs d'un profil (les anciens profils n'en ont pas : les deux). */

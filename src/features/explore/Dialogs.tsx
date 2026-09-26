@@ -26,8 +26,9 @@ export function DialogScreen() {
   const d = DIALOG_BY_ID[decodeURIComponent(id)];
   const nav = useNavigate();
   const log = useStore((s) => s.logHistory);
+  const recordActivity = useStore((s) => s.recordActivity);
   const addXp = useStore((s) => s.addXp);
   usePage(d ? L(d.title) : 'Conversation', { back: '/explore/dialogs' });
   if (!d) return <Empty e="🔍">Conversation introuvable.</Empty>;
-  return <><div className="btns" style={{ marginBottom: 10 }}><Link className="btn ghost sm" to={`/explore/comprehension/${encodeURIComponent(d.id)}`}>🎧 L’écouter sans le texte, puis répondre</Link></div><DialogView id={d.id} onDone={() => { log('dialog', d.id); addXp(5); nav('/explore/dialogs'); }} /></>;
+  return <><div className="btns" style={{ marginBottom: 10 }}><Link className="btn ghost sm" to={`/explore/comprehension/${encodeURIComponent(d.id)}`}>🎧 L’écouter sans le texte, puis répondre</Link></div><DialogView id={d.id} onDone={() => { log('dialog', d.id); recordActivity('dialog:' + d.id); addXp(5); nav('/explore/dialogs'); }} /></>;
 }

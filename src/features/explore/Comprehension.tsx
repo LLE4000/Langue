@@ -48,6 +48,7 @@ export function ComprehensionRun() {
   const nav = useNavigate();
   const sp = useSpeaker();
   const log = useStore((s) => s.logHistory);
+  const recordActivity = useStore((s) => s.recordActivity);
   const addXp = useStore((s) => s.addXp);
   usePage(d ? `Écoute · ${L(d.title)}` : 'Compréhension orale', { back: '/explore/comprehension' });
   const [phase, setPhase] = useState<'listen' | 'quiz' | 'result'>('listen');
@@ -85,6 +86,7 @@ export function ComprehensionRun() {
     if (qi + 1 < quiz.length) { setQi(qi + 1); setPicked(null); return; }
     const total = quiz.length;
     log(KIND, d.id, score, total);
+    recordActivity('comp:' + d.id, score, total); // alimente la compétence « compréhension orale »
     addXp(3 + score * 2);
     setPhase('result');
   };

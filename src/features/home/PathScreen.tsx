@@ -2,8 +2,9 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
-import { useNextLesson, usePath } from '@/app/hooks';
+import { useNextLesson, usePath, useProgress } from '@/app/hooks';
 import { curriculum } from '@/content/packs';
+import { remainingLine, tierLine } from '@/engine/progress';
 import { L, T } from '@/i18n';
 
 export function PathScreen() {
@@ -12,6 +13,7 @@ export function PathScreen() {
   const path = usePath();
   const next = useNextLesson();
   const cur = curriculum();
+  const prog = useProgress();
   const visible = path.filter((p) => p.status !== 'granted');
   const granted = path.length - visible.length;
   const done = visible.filter((p) => p.status === 'done').length;
@@ -29,13 +31,14 @@ export function PathScreen() {
     <>
       <div className="chead">
         <div className="cring" style={{ ['--p' as string]: Math.round((done / Math.max(1, visible.length)) * 100) }}><b>{done}</b><small>/ {visible.length}</small></div>
-        <div className="mid"><div style={{ fontSize: 18, fontWeight: 700 }}>{done} leçon{done > 1 ? 's' : ''} validée{done > 1 ? 's' : ''}</div><div className="xs mut">{granted ? `${granted} leçon${granted > 1 ? 's' : ''} déjà acquise${granted > 1 ? 's' : ''} d’après votre niveau · ` : ''}Suivez l’ordre conseillé, ou piochez librement.</div></div>
+        <div className="mid"><div style={{ fontSize: 18, fontWeight: 700 }}>{done} leçon{done > 1 ? 's' : ''} validée{done > 1 ? 's' : ''} sur {visible.length}</div><div className="sm" style={{ fontWeight: 650 }}>{tierLine(prog)} · {remainingLine(prog)}</div><div className="xs mut">{granted ? `${granted} leçon${granted > 1 ? 's' : ''} déjà acquise${granted > 1 ? 's' : ''} d’après votre niveau · ` : ''}Suivez l’ordre conseillé, ou piochez librement.</div></div>
       </div>
       {groups.map((g, gi) => {
-        const unitDone = g.items.every((p) => p.status === 'done');
+        const unitDoneN = g.items.filter((p) => p.status === 'done').length;
+        const unitDone = unitDoneN === g.items.length;
         return (
           <div key={g.unit.id + gi}>
-            <div className="unit-head"><div><h3>{L(g.unit.title)}{unitDone ? ' ✓' : ''}</h3><div className="s">{L(g.unit.description)}</div></div></div>
+            <div className="unit-head"><div style={{ flex: 1 }}><h3>{L(g.unit.title)}{unitDone ? ' ✓' : ''}</h3><div className="s">{L(g.unit.description)}</div></div><span className={`tag ${unitDone ? 'ok' : ''}`}>{unitDoneN} / {g.items.length}</span></div>
             <div className="list">
               {g.items.map((p) => {
                 n++;

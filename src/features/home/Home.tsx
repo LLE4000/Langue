@@ -5,11 +5,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
-import { useStore, streakDays, levelFromXp } from '@/app/store';
-import { useDueItems, useMetrics, useNextLesson, usePath, useLearnedItems, useGoals } from '@/app/hooks';
+import { useStore, streakDays } from '@/app/store';
+import { useDueItems, useNextLesson, usePath, useLearnedItems, useGoals, useProgress, progressContent } from '@/app/hooks';
 import { curriculum } from '@/content/packs';
 import { T, L } from '@/i18n';
 import { Bar, Icon, Thai, VoiceStatusNote } from '@/components/ui';
+import { TierRing } from '@/components/Progress';
+import { remainingLine, tierLine } from '@/engine/progress';
 import { todayKey } from '@/engine/util';
 import { item } from '@/content/th';
 
@@ -22,15 +24,13 @@ export function Home() {
   const profile = useStore((s) => s.profile)!;
   const session = useStore((s) => s.session);
   const days = useStore((s) => s.days);
-  const xp = useStore((s) => s.xp);
   const next = useNextLesson();
   const path = usePath();
   const due = useDueItems();
-  const m = useMetrics();
+  const prog = useProgress();
   const learned = useLearnedItems();
   const streak = streakDays(days);
   const today = days[todayKey()];
-  const lvl = levelFromXp(xp);
   const cur = curriculum();
   const unit = next ? cur.units.find((u) => u.id === next.lesson.unit) : null;
   const active = path.filter((p) => p.status !== 'granted');
@@ -51,7 +51,7 @@ export function Home() {
     <>
       <div className="hello">
         <div><Thai text={profile.gender === 'f' ? 'สวัสดีค่ะ' : 'สวัสดีครับ'} /><h2>{profile.name}</h2></div>
-        <span className="streak">{streak ? `🔥 ${streak} ${streak > 1 ? t.home.days : t.home.day}` : '✨ Premier jour'}</span>
+        {!streak && <span className="streak">Premier jour</span>}
       </div>
 
       {resumable ? (
@@ -79,23 +79,29 @@ export function Home() {
         <Link to="/path" className="tk" aria-label={`${t.home.path} : ${doneCount} leçons sur ${active.length}`}><Icon name="flag" size={18} /><span><b>{doneCount}</b> / {active.length} <span className="lbl">{t.home.path}</span></span><Bar p={doneCount / Math.max(1, active.length)} thin /></Link>
       </div>
 
+      {/* Où j'en suis : toujours visible, chaque nombre avec son total */}
+      <Link to="/profile/progress" className="prog-card" aria-label={`Ma progression : ${tierLine(prog)}`}>
+        <TierRing p={prog} size={60} />
+        <span className="mid">
+          <span className="t">{tierLine(prog)}</span>
+          <span className="s">{remainingLine(prog)}</span>
+          <span className="kv" style={{ marginTop: 6 }}>
+            <span><b>{prog.counts.wordsAcquired}</b> mots</span>
+            {goals.read && <span><b>{prog.counts.consAcquired}</b> / {progressContent().cons.length} lettres</span>}
+            {prog.counts.toReview > 0 && <span><b>{prog.counts.toReview}</b> à réviser</span>}
+          </span>
+        </span>
+        <span className="chev">›</span>
+      </Link>
+
       <div className="list" style={{ marginTop: 12 }}>
         <Link className="row" to="/play"><span className="ico" style={{ background: 'var(--acc-soft)' }}>⚔️</span><span className="mid"><span className="t">Jouer à plusieurs</span><span className="s">Duel, prononciation, tour à tour, défi à distance{pendingChallenges ? ` · ${pendingChallenges} défi${pendingChallenges > 1 ? 's' : ''} en attente` : ''}</span></span><span className="end"><span className="chev">›</span></span></Link>
       </div>
 
-      <button className="more" onClick={toggleMore} aria-expanded={more}>{more ? 'Moins' : 'Plus'} <span className="mut">· où j’en suis, la suite du parcours</span><Icon name="next" size={16} style={{ transform: more ? 'rotate(-90deg)' : 'rotate(90deg)' }} /></button>
+      <button className="more" onClick={toggleMore} aria-expanded={more}>{more ? 'Moins' : 'Plus'} <span className="mut">· appris récemment, la suite du parcours</span><Icon name="next" size={16} style={{ transform: more ? 'rotate(-90deg)' : 'rotate(90deg)' }} /></button>
 
       {more && (
         <div className="more-body">
-          <div className="h2" style={{ marginTop: 8 }}>Où j’en suis <span className="sp" /><Link to="/path">{t.home.path} ›</Link></div>
-          <div className="prog">
-            <Link to="/profile"><div className="k"><span>{t.home.level} {lvl.level}</span><b>{xp} XP</b></div><Bar p={lvl.into / lvl.next} thin /></Link>
-            {goals.read && <Link to="/explore/alphabet"><div className="k"><span>Lettres</span><b>{m.letters.known} / {m.letters.total}</b></div><Bar p={m.letters.progress} thin /></Link>}
-            {goals.read && <Link to="/explore/vowels"><div className="k"><span>Voyelles</span><b>{m.vowels.known} / {m.vowels.total}</b></div><Bar p={m.vowels.progress} thin /></Link>}
-            <Link to="/explore/vocab"><div className="k"><span>Mots</span><b>{m.words.known}</b></div><Bar p={Math.min(1, m.words.known / 300)} thin /></Link>
-            {goals.read && <Link to="/explore/tones"><div className="k"><span>Tons</span><b>{Math.round(m.tones.progress * 100)} %</b></div><Bar p={m.tones.progress} thin /></Link>}
-          </div>
-
           {recent.length > 0 && (
             <>
               <div className="h2">{t.home.recentlyLearned}</div>

@@ -1,14 +1,16 @@
 /**
  * Hooks dérivés de l'état : parcours, notions connues, maîtrise, éléments à réviser.
  */
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useStore } from './store';
 import { curriculum } from '@/content/packs';
 import { computePath, grantedLessons, knownConcepts, nextLesson, type PathLesson, type SkillLevels } from '@/curriculum/path';
 import { ALL_GOALS, type Goals } from '@/curriculum/types';
-import { ITEMS, CONS_ITEMS, TAUGHT_VOWELS, MAIN_WORDS, TONE_ITEMS, NUM_ITEMS, CLF_ITEMS, type LearnItem } from '@/content/th';
+import { ITEMS, CONS_ITEMS, TAUGHT_VOWELS, MAIN_WORDS, TONE_ITEMS, NUM_ITEMS, CLF_ITEMS, GRAMMAR_ITEMS, th, type LearnItem } from '@/content/th';
 import { isDue, mastery, type SrsState } from '@/engine/srs';
 import { scriptUnits } from '@/engine/thai/script';
+import { computeProgress, type Progress, type ProgressContent } from '@/engine/progress';
+import { todayKey } from '@/engine/util';
 
 export const DEFAULT_LEVELS: SkillLevels = { listening: 0, speaking: 0, reading: 0, writing: 0 };
 
@@ -122,6 +124,53 @@ export function useMetrics(): Metrics {
       lessonsTotal: cur.lessons.length,
     };
   }, [srs, completed, levels]);
+}
+
+let contentCache: ProgressContent | null = null;
+/** Le contenu vu par la progression (calculé une fois : les listes ne changent pas à l'exécution). */
+export function progressContent(): ProgressContent {
+  if (contentCache) return contentCache;
+  const cur = curriculum();
+  const lessons = cur.lessons;
+  contentCache = {
+    cons: CONS_ITEMS.filter((c) => !c.ref.obsolete).map((c) => c.id),
+    vowels: TAUGHT_VOWELS.map((v) => v.id),
+    words: MAIN_WORDS.map((w) => w.id),
+    grammar: GRAMMAR_ITEMS.map((g) => g.id),
+    toneItems: TONE_ITEMS.map((t) => t.id),
+    scriptLessons: lessons.filter((l) => l.track === 'script' || l.track === 'tones').map((l) => l.id),
+    talkLessons: lessons.filter((l) => l.track === 'talk' || l.track === 'numbers').map((l) => l.id),
+    allLessons: lessons.map((l) => l.id),
+    lessonMinutes: lessons.length ? lessons.reduce((a, l) => a + l.minutes, 0) / lessons.length : 10,
+    dialogs: th.DIALOGS.map((d) => d.id),
+    readings: th.READINGS.map((r) => r.id),
+  };
+  return contentCache;
+}
+
+/** Progression par compétences, palier et chemin restant (voir engine/progress.ts). */
+export function useProgress(): Progress {
+  const srs = useStore((s) => s.srs);
+  const acquired = useStore((s) => s.acquired);
+  const ruleStats = useStore((s) => s.ruleStats);
+  const pron = useStore((s) => s.pron);
+  const activities = useStore((s) => s.activities);
+  const completed = useCompleted();
+  const levels = useLevels();
+  const goals = useGoals();
+  return useMemo(() => {
+    const cur = curriculum();
+    const doneLessons = new Set([...completed, ...grantedLessons(cur, levels)]);
+    return computeProgress({ content: progressContent(), srs, acquired, doneLessons, completedLessons: completed, ruleStats, pron, activities, levels, goals });
+  }, [srs, acquired, ruleStats, pron, activities, completed, levels, goals]);
+}
+
+/** Garde une trace quotidienne de la progression (pour la courbe d'évolution). À monter une fois, dans la coque. */
+export function useProgressLog() {
+  const p = useProgress();
+  const log = useStore((s) => s.logProgress);
+  const hasProfile = useStore((s) => !!s.profile);
+  useEffect(() => { if (hasProfile) log(todayKey(), [p.overall, ...p.skills.map((s) => s.value)]); }, [p, log, hasProfile]);
 }
 
 /** Les signes d'un mot sont-ils tous connus (concepts) ? */

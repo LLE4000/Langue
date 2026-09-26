@@ -4,8 +4,9 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { usePage } from '@/app/Shell';
-import { useStore, streakDays, levelFromXp } from '@/app/store';
-import { useMetrics } from '@/app/hooks';
+import { useStore, streakDays } from '@/app/store';
+import { useProgress } from '@/app/hooks';
+import { tierLine } from '@/engine/progress';
 import { T } from '@/i18n';
 import { Icon, useToast } from '@/components/ui';
 
@@ -14,14 +15,14 @@ export function ShareScreen() {
   usePage(t.profile.share, { back: '/profile' });
   const profile = useStore((s) => s.profile)!;
   const days = useStore((s) => s.days);
-  const xp = useStore((s) => s.xp);
-  const m = useMetrics();
+  const p = useProgress();
   const toast = useToast((s) => s.show);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [blob, setBlob] = useState<Blob | null>(null);
   const streak = streakDays(days);
-  const lvl = levelFromXp(xp);
-  const text = `${profile.name} apprend le thaï 🇹🇭\nNiveau ${lvl.level} · ${xp} XP\n${m.words.known} mots appris · ${m.letters.known} lettres maîtrisées\n${m.lessonsDone} leçons · Série : ${streak} jour${streak > 1 ? 's' : ''}`;
+  const level = tierLine(p);
+  const words = p.counts.wordsAcquired, letters = p.counts.consAcquired, lessons = p.counts.lessonsDone;
+  const text = `${profile.name} apprend le thaï 🇹🇭\n${level}\n${words} mots acquis · ${letters} lettres acquises\n${lessons} leçons · Série : ${streak} jour${streak > 1 ? 's' : ''}`;
 
   useEffect(() => {
     const c = canvas.current; if (!c) return;
@@ -38,13 +39,13 @@ export function ShareScreen() {
     ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
     ctx.font = '600 150px Sarabun, sans-serif'; ctx.fillText('ภาษาไทย', 120, 290);
     ctx.font = '700 64px "Bricolage Grotesque Variable", system-ui, sans-serif'; ctx.fillText(`${profile.name} apprend le thaï`, 120, 400);
-    ctx.font = '500 40px system-ui, sans-serif'; ctx.globalAlpha = .85; ctx.fillText(`Niveau ${lvl.level} · ${xp} XP`, 120, 470); ctx.globalAlpha = 1;
-    const stats: [string, string][] = [[String(m.words.known), 'mots appris'], [String(m.letters.known), 'lettres maîtrisées'], [String(m.lessonsDone), 'leçons validées'], [`${streak} j`, 'de suite']];
+    ctx.font = '500 40px system-ui, sans-serif'; ctx.globalAlpha = .85; ctx.fillText(level, 120, 470); ctx.globalAlpha = 1;
+    const stats: [string, string][] = [[String(words), 'mots acquis'], [String(letters), 'lettres acquises'], [String(lessons), 'leçons validées'], [`${streak} j`, 'de suite']];
     stats.forEach(([v, k], i) => { const x = 120 + (i % 2) * 440, y = 620 + Math.floor(i / 2) * 230; ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.beginPath(); ctx.roundRect(x, y - 110, 400, 190, 32); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '700 96px system-ui, sans-serif'; ctx.fillText(v, x + 36, y); ctx.font = '500 34px system-ui, sans-serif'; ctx.globalAlpha = .85; ctx.fillText(k, x + 36, y + 52); ctx.globalAlpha = 1; });
     ctx.font = '600 44px Sarabun, sans-serif'; ctx.fillText('สู้ ๆ นะ · courage !', 120, 1180);
     ctx.font = '500 30px system-ui, sans-serif'; ctx.globalAlpha = .7; ctx.fillText('Langue · apprendre le thaï, un pas après l’autre', 120, 1240); ctx.globalAlpha = 1;
     c.toBlob((b) => setBlob(b), 'image/png');
-  }, [profile.name, xp, m.words.known, m.letters.known, m.lessonsDone, streak, lvl.level]);
+  }, [profile.name, level, words, letters, lessons, streak]);
 
   const share = async () => {
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };

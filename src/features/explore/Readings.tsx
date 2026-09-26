@@ -31,8 +31,9 @@ export function ReadingScreen() {
   const r = READING_BY_ID[decodeURIComponent(id)];
   const nav = useNavigate();
   const log = useStore((s) => s.logHistory);
+  const recordActivity = useStore((s) => s.recordActivity);
   const addXp = useStore((s) => s.addXp);
   usePage(r ? L(r.title) : 'Lecture', { back: '/explore/readings' });
   if (!r) return <Empty e="🔍">Texte introuvable.</Empty>;
-  return <ReadingView id={r.id} onDone={() => { log('reading', r.id); addXp(5); nav('/explore/readings'); }} />;
+  return <ReadingView id={r.id} onDone={() => { log('reading', r.id); recordActivity('reading:' + r.id); addXp(5); nav('/explore/readings'); }} />;
 }

@@ -42,6 +42,8 @@ const PATHS: Record<string, ReactNode> = {
   upload: <><path d="M12 15V3" /><path d="M8 7l4-4 4 4" /><path d="M5 19h14" /></>,
   trash: <><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></>,
   rotate: <><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /></>,
+  flame: <path d="M12 22c4 0 7-2.8 7-7 0-3-1.5-5-3-7-.3 2-1.2 3-2.5 3.5C13 8.5 12.5 5 9.5 2c.3 3-.8 5-2.3 7C5.8 10.8 5 12.5 5 15c0 4.2 3 7 7 7z" />,
+  trend: <><path d="M3 17l6-6 4 4 8-8" /><path d="M14 7h7v7" /></>,
 };
 export function Icon({ name, size = 22, style }: { name: keyof typeof PATHS | string; size?: number; style?: CSSProperties }) {
   return <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" style={style} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">{PATHS[name] ?? null}</svg>;

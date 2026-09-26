@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { Icon } from '@/components/ui';
+import { ProgressPill } from '@/components/Progress';
+import { useProgressLog } from './hooks';
 import { T } from '@/i18n';
 
 interface TopBarState { title: string; back?: boolean | string; right?: ReactNode; hidden?: boolean }
@@ -20,7 +22,7 @@ export function TopBar({ state }: { state: TopBarState }) {
     <header className="topbar">
       {state.back ? <button className="tb" aria-label="Retour" onClick={() => (typeof state.back === 'string' ? nav(state.back) : nav(-1))}><Icon name="back" /></button> : <span style={{ width: 8 }} />}
       <h1>{state.title}</h1>
-      {state.right ?? <NavLink to="/explore/search" className="tb" aria-label="Rechercher"><Icon name="search" /></NavLink>}
+      {state.right ?? <ProgressPill />}
     </header>
   );
 }
@@ -38,6 +40,7 @@ export function Shell() {
   const loc = useLocation();
   const navType = useNavigationType();
   const t = T();
+  useProgressLog(); // trace quotidienne pour la courbe d'évolution
   // Nouvelle page : on repart du haut. Retour arrière : on garde la position (longues listes du parcours, d'Explorer).
   useEffect(() => { if (navType !== 'POP') window.scrollTo(0, 0); }, [loc.pathname, navType]);
   // Valeur de contexte stable : sinon chaque rendu de la coque ferait re-rendre tous les écrans (boucle avec usePage)

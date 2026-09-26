@@ -1,15 +1,20 @@
 /** Explorer : la bibliothèque — alphabet, voyelles, tons, nombres, vocabulaire, conversations, lectures, grammaire… */
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
-import { useMetrics } from '@/app/hooks';
+import { useMetrics, useProgress } from '@/app/hooks';
 import { th, MAIN_WORDS } from '@/content/th';
 import { T } from '@/i18n';
-import { Bar } from '@/components/ui';
+import { Bar, Icon } from '@/components/ui';
+
+// La loupe vit dans Explorer (élément stable : un nouvel élément à chaque rendu relancerait usePage)
+const SEARCH_BUTTON = <NavLink to="/explore/search" className="tb" aria-label="Rechercher"><Icon name="search" /></NavLink>;
 
 export function Explore() {
   const t = T();
-  usePage(t.explore.title);
+  usePage(t.explore.title, { right: SEARCH_BUTTON });
   const m = useMetrics();
+  const prog = useProgress();
+  const vocab = prog.skills.find((s) => s.id === 'vocab')!;
   const Tile = ({ to, glyph, title, sub, p, cls = '', thai }: { to: string; glyph: string; title: string; sub: string; p?: number; cls?: string; thai?: boolean }) => (
     <Link to={to} className={`tile ${cls}`}><span className={thai ? 'th' : 'e'} lang={thai ? 'th' : undefined}>{glyph}</span><span className="t">{title}</span><span className="s">{sub}</span>{p != null && <Bar p={p} thin />}</Link>
   );
@@ -28,7 +33,7 @@ export function Explore() {
       </div>
       <div className="h2">Au quotidien</div>
       <div className="tiles">
-        <Tile to="/explore/vocab" glyph="🗂️" title={t.explore.vocabulary} sub={`${MAIN_WORDS.length} mots · ${th.VOCAB_THEMES.length} thèmes`} p={Math.min(1, m.words.known / 300)} />
+        <Tile to="/explore/vocab" glyph="🗂️" title={t.explore.vocabulary} sub={`${prog.counts.wordsAcquired} acquis sur ${MAIN_WORDS.length} · ${th.VOCAB_THEMES.length} thèmes`} p={vocab.value / 100} />
         <Tile to="/explore/dialogs" glyph="💬" title={t.explore.conversations} sub={`${th.DIALOGS.length} situations réelles`} cls="indigo" />
         <Tile to="/explore/comprehension" glyph="🎧" title="Compréhension orale" sub="Écouter, puis répondre en français" cls="red" />
         <Tile to="/explore/numbers" glyph="๑ ๒ ๓" thai title={t.explore.numbers} sub="๐–๙, prix, convertisseur" p={m.numbers.progress} cls="gold" />

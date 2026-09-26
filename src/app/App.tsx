@@ -31,6 +31,7 @@ import { Profile } from '@/features/profile/Profile';
 import { Settings } from '@/features/profile/Settings';
 import { DataScreen } from '@/features/profile/DataScreen';
 import { LevelsScreen } from '@/features/profile/LevelsScreen';
+import { ProgressScreen } from '@/features/profile/ProgressScreen';
 import { ShareScreen } from '@/features/profile/ShareScreen';
 import { StatsScreen } from '@/features/profile/StatsScreen';
 import { PeopleScreen } from '@/features/profile/PeopleScreen';
@@ -114,6 +115,7 @@ export function App() {
           <Route path="profile/settings" element={<Settings />} />
           <Route path="profile/data" element={<DataScreen />} />
           <Route path="profile/levels" element={<LevelsScreen />} />
+          <Route path="profile/progress" element={<ProgressScreen />} />
           <Route path="profile/share" element={<ShareScreen />} />
           <Route path="profile/stats" element={<StatsScreen />} />
           <Route path="profile/people" element={<PeopleScreen />} />

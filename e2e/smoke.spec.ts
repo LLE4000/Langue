@@ -321,3 +321,30 @@ test('compréhension orale : écouter sans texte, répondre en français, voir l
   await expect(page.locator('.bub').first()).toBeVisible();
   await expect(page.locator('.recap .score')).toBeVisible();
 });
+
+test('progression : pastille permanente, palier avec critères chiffrés, chaque nombre avec son total', async ({ page }) => {
+  await onboard(page, [1, 1, 1, 1]);
+  // la pastille est visible sur l'accueil et mène à l'écran de progression
+  const pill = page.getByTestId('progress-pill');
+  await expect(pill).toContainText('A0');
+  await pill.click();
+  await expect(page).toHaveURL(/#\/profile\/progress$/);
+  await expect(page.getByText('Premiers pas').first()).toBeVisible();
+  await expect(page.getByText(/Pour atteindre A1/)).toBeVisible();
+  await expect(page.getByText(/il faut \d+ consonnes/)).toBeVisible();
+  await expect(page.getByText(/leçons?, soit .* avant A1/).first()).toBeVisible();
+  // les compétences hors objectif « parler » disparaissent du palier
+  await page.goto('/#/profile/levels');
+  await page.getByRole('radio', { name: /Parler et comprendre/ }).click();
+  await page.getByRole('button', { name: /Recalculer mon parcours/ }).click();
+  await page.goto('/#/profile/progress');
+  await expect(page.getByRole('link', { name: /^Vocabulaire/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /^Consonnes/ })).toHaveCount(0);
+  // réglages : trois onglets, dépannage replié
+  await page.goto('/#/profile/settings?tab=voice');
+  await expect(page.getByRole('tab')).toHaveCount(3);
+  await expect(page.getByText('Je préfère entendre')).toBeVisible();
+  await expect(page.getByText('Copier le diagnostic')).toBeHidden();
+  await page.getByText('La voix pose problème ?').click();
+  await expect(page.getByText('Copier le diagnostic')).toBeVisible();
+});
