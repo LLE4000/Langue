@@ -8,6 +8,7 @@ import { usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { tts, clips, useSpeaker, useVoices, recognizer, recorder } from '@/app/services/speech';
 import { WebSpeechProvider, type VoiceGender } from '@/engine/audio/tts';
+import { azureConfig, saveAzureConfig, testAzure } from '@/engine/audio/azure';
 import { T } from '@/i18n';
 import { Icon, Segmented, Thai, useToast } from '@/components/ui';
 
@@ -94,6 +95,38 @@ function VoiceTroubleshooting() {
   );
 }
 
+/**
+ * Évaluation Azure de la lecture à voix haute : facultative, avec la clé personnelle de l'apprenant, gardée sur cet
+ * appareil uniquement (hors sauvegardes). Repliée : la plupart des gens n'en ont pas besoin.
+ */
+function AzureAssessment() {
+  const toast = useToast((s) => s.show);
+  const cur = azureConfig();
+  const [key, setKey] = useState(cur?.key ?? '');
+  const [region, setRegion] = useState(cur?.region ?? 'northeurope');
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    if (!key.trim()) { saveAzureConfig(null); toast('Évaluation Azure désactivée.'); return; }
+    setBusy(true);
+    const err = await testAzure({ key, region });
+    setBusy(false);
+    if (err) { toast(err); return; }
+    saveAzureConfig({ key, region });
+    toast('Clé Azure vérifiée : la lecture à voix haute l’utilisera.');
+  };
+  return (
+    <details className="fold sm mt-5">
+      <summary>Évaluation Azure de la lecture {cur ? '· active' : '(facultatif)'}</summary>
+      <p className="sm mut mt-1">Avec votre propre clé <b>Azure Speech</b> (niveau gratuit F0), chaque bloc de six lectures du tapis de lecture est comparé au texte attendu : précision par syllabe, lectures omises. Azure ne note pas les tons en thaï. La clé reste sur cet appareil, hors des sauvegardes.</p>
+      <label className="f" htmlFor="azkey">Clé</label>
+      <input id="azkey" className="field" type="password" autoComplete="off" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Clé 1 de la ressource Speech" />
+      <label className="f" htmlFor="azreg">Région</label>
+      <input id="azreg" className="field" value={region} onChange={(e) => setRegion(e.target.value)} placeholder="northeurope" />
+      <div className="btns mt-3 mb-4"><button className="btn soft sm" onClick={save} disabled={busy}>{busy ? 'Vérification…' : key.trim() ? 'Vérifier et enregistrer' : 'Désactiver'}</button>{cur && <button className="btn ghost sm" onClick={() => { saveAzureConfig(null); setKey(''); toast('Clé effacée de cet appareil.'); }}>Effacer la clé</button>}</div>
+    </details>
+  );
+}
+
 const SLOW_OPTIONS = [{ v: 0.7, label: 'Un peu' }, { v: 0.6, label: 'Lente' }, { v: 0.5, label: 'Très lente' }];
 const nearestSlow = (r: number) => SLOW_OPTIONS.reduce((a, o) => (Math.abs(o.v - r) < Math.abs(a - r) ? o.v : a), SLOW_OPTIONS[0].v);
 
@@ -113,6 +146,7 @@ function VoiceTab() {
       <label className="f">Lire à voix haute automatiquement</label>
       <Segmented value={settings.autoAudio} options={[{ v: true, label: 'Oui' }, { v: false, label: 'Non' }]} onChange={(v) => update({ autoAudio: v })} />
       <NativeVoices />
+      <AzureAssessment />
       <VoiceTroubleshooting />
     </>
   );

@@ -7,6 +7,7 @@ import { ITEMS, th, sentenceThai } from './th';
 import { TONES } from './th/tones';
 import { speakable, hasTokens } from '@/engine/tokens';
 import { normalizeClipText } from '@/engine/audio/clipKey';
+import { raVoiceTexts } from '@/engine/readaloud/program';
 
 export const SAMPLE_SENTENCE = 'สวัสดี{P} ยินดีที่ได้รู้จัก';
 export const TONE_TONGUE_TWISTER = 'ไม้ใหม่ไม่ไหม้ไหม';
@@ -27,6 +28,8 @@ export function collectVoiceTexts(): string[] {
   for (const t of TONES) add(t.example.thai);
   for (const p of th.CLF_PATTERNS) add(p.thai);
   add(SAMPLE_SENTENCE); add(TONE_TONGUE_TWISTER);
+  // lecture à voix haute : chaque syllabe, mot et phrase du programme (modèle « Écouter puis lire »)
+  for (const t of raVoiceTexts()) add(t);
   const out = new Set<string>();
   for (const s of raw) {
     if (/\{N\}/.test(s)) continue; // dépend du prénom : voix de l'appareil

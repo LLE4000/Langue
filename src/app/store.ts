@@ -122,6 +122,24 @@ export interface PersistedState {
   activities: Record<string, ActivityRecord>;
   /** instantané quotidien de la progression : jour → [global, ...compétences] */
   progressLog: Record<string, number[]>;
+  /** lecture à voix haute : séances, maîtrise par consonne / voyelle / règle de ton, lectures ratées à reprendre */
+  readAloud: ReadAloudState;
+}
+
+export interface RaStat { ok: number; n: number; t: number }
+export interface RaItemStat extends RaStat { thai: string; rom: string; last: string; detail?: string }
+export interface ReadAloudState {
+  sessions: Record<string, { runs: number; best: number; last: number; total: number; t: number }>;
+  /** pondéré vers le récent : chaque séance compte davantage que les anciennes */
+  tags: Record<string, RaStat>;
+  items: Record<string, RaItemStat>;
+}
+export const emptyReadAloud = (): ReadAloudState => ({ sessions: {}, tags: {}, items: {} });
+export interface ReadAloudRunResult {
+  sessionId?: string; label: string; minutes: number;
+  ok: number; total: number;
+  tags: Record<string, { ok: number; n: number }>;
+  items: { key: string; thai: string; rom: string; verdict: string; detail?: string }[];
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -131,7 +149,7 @@ export const DEFAULT_SETTINGS: Settings = {
 
 export const initialState = (): PersistedState => ({
   version: STORE_VERSION, profile: null, settings: { ...DEFAULT_SETTINGS }, srs: {}, lessons: {}, errors: {}, ruleStats: {}, seen: {}, days: {}, xp: 0,
-  badges: {}, favorites: {}, history: [], session: null, lastVisit: Date.now(), challenges: [], pron: {}, acquired: {}, activities: {}, progressLog: {},
+  badges: {}, favorites: {}, history: [], session: null, lastVisit: Date.now(), challenges: [], pron: {}, acquired: {}, activities: {}, progressLog: {}, readAloud: emptyReadAloud(),
 });
 
 /** Marque comme acquis les éléments dont la nouvelle note vaut « connu » (3) ou plus. */
@@ -176,6 +194,8 @@ export interface Actions {
   recordActivity(key: string, score?: number, total?: number): void;
   /** Instantané du jour de la progression (n'écrit que si les valeurs changent). */
   logProgress(day: string, values: number[]): void;
+  /** Fin d'une série de lecture à voix haute : maîtrise par étiquette, lectures à reprendre, répétition espacée. */
+  recordReadAloud(r: ReadAloudRunResult): void;
 }
 
 export type Store = PersistedState & Actions;
@@ -232,7 +252,7 @@ export const useStore = create<Store>()(
       },
       logHistory: (kind, label, score, total) => set((s) => ({ history: [{ t: Date.now(), kind, label, score, total }, ...s.history].slice(0, 200) })),
       awardBadge: (id) => set((s) => (s.badges[id] ? {} : { badges: { ...s.badges, [id]: Date.now() } })),
-      importState: (incoming) => { if (incoming.profile) syncActiveName(incoming.profile.name); set({ ...initialState(), ...incoming, version: STORE_VERSION, session: null, challenges: incoming.challenges ?? [], pron: incoming.pron ?? {}, acquired: incoming.acquired ?? {}, activities: incoming.activities ?? {}, progressLog: incoming.progressLog ?? {} }); },
+      importState: (incoming) => { if (incoming.profile) syncActiveName(incoming.profile.name); set({ ...initialState(), ...incoming, version: STORE_VERSION, session: null, challenges: incoming.challenges ?? [], pron: incoming.pron ?? {}, acquired: incoming.acquired ?? {}, activities: incoming.activities ?? {}, progressLog: incoming.progressLog ?? {}, readAloud: incoming.readAloud ?? emptyReadAloud() }); },
       resetAll: () => { syncActiveName(''); set({ ...initialState() }); },
       touch: () => set({ lastVisit: Date.now() }),
       saveChallenge: (c) => set((s) => ({ challenges: [c, ...s.challenges.filter((x) => x.id !== c.id)].slice(0, 50) })),
@@ -247,6 +267,32 @@ export const useStore = create<Store>()(
         const rec: ActivityRecord = { n: (prev?.n ?? 0) + 1, t: Date.now(), total: total ?? prev?.total, best: score == null ? prev?.best : Math.max(prev?.best ?? 0, score) };
         return { activities: { ...s.activities, [key]: rec } };
       }),
+      recordReadAloud: (r) => {
+        const now = Date.now();
+        set((s) => {
+          const ra = s.readAloud ?? emptyReadAloud();
+          const tags = { ...ra.tags };
+          for (const [k, v] of Object.entries(r.tags)) { const p = tags[k]; tags[k] = { ok: (p?.ok ?? 0) * 0.8 + v.ok, n: (p?.n ?? 0) * 0.8 + v.n, t: now }; }
+          const items = { ...ra.items };
+          for (const it of r.items) {
+            if (it.verdict === 'none') continue;
+            const p = items[it.key];
+            items[it.key] = { thai: it.thai, rom: it.rom, ok: (p?.ok ?? 0) + (it.verdict === 'ok' ? 1 : 0), n: (p?.n ?? 0) + 1, t: now, last: it.verdict, detail: it.verdict === 'ok' ? undefined : it.detail };
+          }
+          // on garde les 900 lectures les plus récentes
+          const keys = Object.keys(items);
+          if (keys.length > 900) for (const k of keys.sort((a, b) => items[a].t - items[b].t).slice(0, keys.length - 900)) delete items[k];
+          const sessions = { ...ra.sessions };
+          if (r.sessionId) { const p = sessions[r.sessionId]; const pct = r.total ? Math.round((100 * r.ok) / r.total) : 0; sessions[r.sessionId] = { runs: (p?.runs ?? 0) + 1, best: Math.max(p?.best ?? 0, pct), last: pct, total: r.total, t: now }; }
+          return { readAloud: { sessions, tags, items } };
+        });
+        // Répétition espacée : une réponse par consonne / voyelle / règle travaillée au moins trois fois (l’appelant ne transmet que des éléments connus)
+        for (const [k, v] of Object.entries(r.tags)) if (v.n >= 3 && /^(c|v|rule):/.test(k)) get().answer(k, v.ok / v.n >= 0.8);
+        if (r.minutes > 0) get().addMinutes(r.minutes);
+        get().addXp(Math.round(r.ok / 3));
+        get().logHistory('readaloud', r.label, r.ok, r.total);
+        if (r.sessionId) get().recordActivity('read:' + r.sessionId, r.ok, r.total);
+      },
       logProgress: (day, values) => set((s) => {
         const prev = s.progressLog[day];
         if (prev && prev.length === values.length && prev.every((v, i) => v === values[i])) return {};
@@ -263,13 +309,13 @@ export const useStore = create<Store>()(
       // Les réglages ajoutés dans une nouvelle version prennent leur valeur par défaut chez les anciens utilisateurs.
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<PersistedState>;
-        return { ...current, ...p, version: STORE_VERSION, settings: { ...DEFAULT_SETTINGS, ...(p.settings ?? {}) }, challenges: p.challenges ?? [], pron: p.pron ?? {}, acquired: p.acquired ?? {}, activities: p.activities ?? {}, progressLog: p.progressLog ?? {} };
+        return { ...current, ...p, version: STORE_VERSION, settings: { ...DEFAULT_SETTINGS, ...(p.settings ?? {}) }, challenges: p.challenges ?? [], pron: p.pron ?? {}, acquired: p.acquired ?? {}, activities: p.activities ?? {}, progressLog: p.progressLog ?? {}, readAloud: p.readAloud ?? emptyReadAloud() };
       },
       // zustand ne rappelle `migrate` qu'en cas de changement de version : les nouvelles clés ont déjà leur défaut via `merge`.
       migrate: (persisted) => persisted as Store,
       partialize: (s) => {
-        const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version, challenges, pron, acquired, activities, progressLog } = s;
-        return { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version, challenges, pron, acquired, activities, progressLog } as Store;
+        const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version, challenges, pron, acquired, activities, progressLog, readAloud } = s;
+        return { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session, lastVisit, version, challenges, pron, acquired, activities, progressLog, readAloud } as Store;
       },
     },
   ),
@@ -278,8 +324,8 @@ export const useStore = create<Store>()(
 /** Sélection sérialisable de l'état pour l'export. */
 export function exportState(): PersistedState {
   const s = useStore.getState();
-  const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, lastVisit, challenges, pron, acquired, activities, progressLog } = s;
-  return { version: STORE_VERSION, profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session: null, lastVisit, challenges, pron, acquired, activities, progressLog };
+  const { profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, lastVisit, challenges, pron, acquired, activities, progressLog, readAloud } = s;
+  return { version: STORE_VERSION, profile, settings, srs, lessons, errors, ruleStats, seen, days, xp, badges, favorites, history, session: null, lastVisit, challenges, pron, acquired, activities, progressLog, readAloud };
 }
 
 /** Objectifs effectifs d'un profil (les anciens profils n'en ont pas : les deux). */

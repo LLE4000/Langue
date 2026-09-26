@@ -58,7 +58,7 @@ export function TopBar({ state }: { state: TopBarState }) {
  * Le profil n'est pas un onglet (on y va rarement) : on l'ouvre en touchant son prénom, en haut à gauche.
  */
 const TABS = [
-  { to: '/', icon: 'lessons', key: 'learn' as const, tone: 'acc', end: true, also: ['/path'] },
+  { to: '/', icon: 'lessons', key: 'learn' as const, tone: 'acc', end: true, also: ['/path', '/read'] },
   { to: '/review', icon: 'review', key: 'review' as const, tone: 'jade', also: ['/train'] },
   { to: '/play', icon: 'challenge', key: 'play' as const, tone: 'plum', also: [] },
   { to: '/explore', icon: 'library', key: 'explore' as const, tone: 'indigo', also: [] },

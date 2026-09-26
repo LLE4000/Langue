@@ -98,6 +98,51 @@ export class Recognizer {
   stop() { try { this.cur?.stop(); } catch { /* ignore */ } }
 }
 
+/**
+ * Reconnaissance CONTINUE (lecture à voix haute) : le moteur reste à l'écoute pendant toute la série et rend des
+ * morceaux de texte au fil de l'eau (résultats définitifs seulement). Il se relance tout seul quand le navigateur
+ * l'arrête (Chrome coupe après un silence ou au bout d'une minute). `onFatal` : micro refusé, service absent…
+ */
+export interface ContinuousResult { alts: string[]; t: number }
+export class ContinuousRecognizer {
+  private Ctor: SRCtor | null;
+  private cur: SRInstance | null = null;
+  private wanted = false;
+  private restarts = 0;
+  constructor(private lang: string) {
+    const w = globalThis as unknown as { SpeechRecognition?: SRCtor; webkitSpeechRecognition?: SRCtor };
+    this.Ctor = w.SpeechRecognition || w.webkitSpeechRecognition || null;
+  }
+  get supported() { return !!this.Ctor; }
+
+  start(onResult: (r: ContinuousResult) => void, onFatal: (code: string) => void) {
+    if (!this.Ctor) return onFatal('unsupported');
+    this.wanted = true;
+    const run = () => {
+      if (!this.wanted || !this.Ctor) return;
+      const r = new this.Ctor();
+      this.cur = r;
+      r.lang = this.lang; r.maxAlternatives = 3; r.interimResults = false; r.continuous = true;
+      let done = 0;
+      r.onresult = (e) => {
+        for (let i = done; i < e.results.length; i++) {
+          const res = e.results[i];
+          const alts: string[] = [];
+          for (let j = 0; j < res.length; j++) if (res[j]?.transcript) alts.push(res[j].transcript.trim());
+          if (alts.length) onResult({ alts, t: performance.now() });
+        }
+        done = e.results.length;
+        this.restarts = 0;
+      };
+      r.onerror = (e) => { if (['not-allowed', 'service-not-allowed', 'language-not-supported', 'audio-capture'].includes(e.error)) { this.wanted = false; onFatal(e.error); } };
+      r.onend = () => { this.cur = null; if (this.wanted && this.restarts++ < 50) setTimeout(run, 120); };
+      try { r.start(); } catch { setTimeout(run, 400); }
+    };
+    run();
+  }
+  stop() { this.wanted = false; try { this.cur?.stop(); } catch { /* ignore */ } this.cur = null; }
+}
+
 export const RECOGNITION_ERRORS: Record<string, string> = {
   'not-allowed': 'Accès au micro refusé. Autorisez le micro pour cette page dans le navigateur.',
   'service-not-allowed': 'Le service de reconnaissance vocale est bloqué sur cet appareil.',

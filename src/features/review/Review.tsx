@@ -12,6 +12,8 @@ import { item } from '@/content/th';
 import { L } from '@/i18n';
 import { recognizer } from '@/app/services/speech';
 import type { TrainingMode } from './training';
+import { weakItems } from '@/features/readaloud/data';
+import { emptyReadAloud } from '@/app/store';
 
 const MODES: { id: TrainingMode; icon: string; needsReading?: boolean; needsMic?: boolean }[] = [
   { id: 'flashcards', icon: 'cards' }, { id: 'listening', icon: 'ear' }, { id: 'pronunciation', icon: 'mic', needsMic: true }, { id: 'quiz', icon: 'shuffle' },
@@ -31,6 +33,7 @@ export function Review() {
   const modes = MODES.filter((m) => (goals.read || !m.needsReading) && (!m.needsMic || recognizer.supported));
   const dueToday = Math.min(20, due.length);
   // Appris récemment (déplacé de l'accueil) : les derniers éléments entrés dans la mémoire de révision
+  const raWeak = weakItems(useStore((s) => s.readAloud) ?? emptyReadAloud()).length;
   const recent = learned.slice().sort((a, b) => (srs[b.id]?.first ?? 0) - (srs[a.id]?.first ?? 0)).slice(0, 10);
   return (
     <>
@@ -61,7 +64,9 @@ export function Review() {
       <div className="list">
         {weak >= 3 ? (
           <Link className="row" to="/train/weak"><Ico name="target" tone="ko" /><span className="mid"><span className="t">{weak} élément{weak > 1 ? 's' : ''} souvent raté{weak > 1 ? 's' : ''}</span><span className="s">Une série courte, rien que sur eux</span></span><span className="end"><span className="chev">›</span></span></Link>
-        ) : (
+        ) : null}
+        {goals.read && raWeak > 0 && <Link className="row" to="/read/errors?mode=read"><Ico name="mic" tone="ko" /><span className="mid"><span className="t">{raWeak} lecture{raWeak > 1 ? 's' : ''} à reprendre à voix haute</span><span className="s">Les syllabes ratées au tapis de lecture</span></span><span className="end"><span className="chev">›</span></span></Link>}
+        {weak < 3 && !(goals.read && raWeak > 0) && (
           <div className="row muted"><Ico name="checkCircle" tone="ok" /><span className="mid"><span className="t">Aucun point faible pour l’instant</span><span className="s">Ce que vous ratez plusieurs fois apparaîtra ici.</span></span></div>
         )}
       </div>
@@ -76,6 +81,7 @@ export function Review() {
             <span className="grow"><span className="t">{t.review.modes[m.id as keyof typeof t.review.modes]}</span><span className="s">{t.review.modesDesc[m.id as keyof typeof t.review.modesDesc]}</span></span>
           </Link>
         ))}
+        {goals.read && <Link to="/read" className="mode feature"><span className="ico"><Icon name="mic" /></span><span className="grow"><span className="t">Lire à voix haute</span><span className="s">Le tapis de syllabes, micro ouvert</span></span></Link>}
         <Link to="/explore/comprehension" className="mode"><span className="ico"><Icon name="headphones" /></span><span className="grow"><span className="t">Compréhension orale</span><span className="s">Écouter une conversation, répondre</span></span></Link>
         <Link to="/explore/listen" className="mode"><span className="ico"><Icon name="repeat" /></span><span className="grow"><span className="t">Écoute en boucle</span><span className="s">Sans les mains, en voiture</span></span></Link>
       </div>

@@ -373,3 +373,19 @@ test('navigation : quatre onglets, le profil s’ouvre sur le prénom, le mot th
   await expect(page.getByText('Jouer à plusieurs')).toHaveCount(0);
   await expect(page.getByRole('link', { name: /Mon parcours complet/ })).toBeVisible();
 });
+
+test('lire à voix haute : programme, tapis de lecture (sans micro : un toucher avance), bilan', async ({ page }) => {
+  await onboard(page);
+  await page.getByRole('link', { name: 'Lire à voix haute' }).click();
+  await expect(page).toHaveURL(/#\/read$/);
+  await expect(page.getByText('Le programme')).toBeVisible();
+  await page.getByRole('button', { name: /Commencer la séance/ }).click();
+  await expect(page).toHaveURL(/#\/read\/ra-01/);
+  await page.getByRole('button', { name: /Démarrer · 35 lectures/ }).click();
+  await expect(page.locator('.ra-count')).toHaveText('1 / 35');
+  for (let k = 0; k < 5; k++) { await page.locator('.ra-stage').click(); await page.waitForTimeout(120); }
+  await expect(page.locator('.ra-count')).toHaveText('6 / 35');
+  await page.getByRole('button', { name: /Terminer et voir le bilan/ }).click();
+  await expect(page.getByText('La séquence')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Retour au programme/ })).toBeVisible();
+});

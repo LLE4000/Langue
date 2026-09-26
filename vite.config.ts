@@ -40,7 +40,7 @@ export default defineConfig({
       workbox: {
         // Tout le contenu pédagogique est dans le bundle : l'app fonctionne entièrement hors ligne.
         globPatterns: ['**/*.{js,css,html,woff,woff2,png,svg,json}'],
-        globIgnores: ['voices/**'], // les clips audio ne sont pas pré-installés : mis en cache à la première écoute (ou « Télécharger »)
+        globIgnores: ['voices/**', 'assets/azure-speech-*.js'], // les clips audio ne sont pas pré-installés : mis en cache à la première écoute (ou « Télécharger »)
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
@@ -59,6 +59,8 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('/src/content/th/')) return 'content';
+          // SDK Azure Speech : chargé seulement si l'apprenant a branché sa clé (lecture à voix haute)
+          if (id.includes('microsoft-cognitiveservices-speech-sdk')) return 'azure-speech';
           if (id.includes('node_modules')) return 'vendor';
         },
       },
