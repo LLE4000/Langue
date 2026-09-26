@@ -1,0 +1,46 @@
+name: Générer les voix natives (Azure)
+
+# À lancer à la main (onglet Actions › ce workflow › Run workflow) une fois les secrets AZURE_SPEECH_KEY et
+# AZURE_SPEECH_REGION renseignés (Settings › Secrets and variables › Actions). Les clips MP3 sont ajoutés au
+# dépôt (public/voices/) et poussés sur main, ce qui déclenche le déploiement. Relançable après un ajout de
+# contenu : seuls les textes nouveaux sont synthétisés.
+
+on:
+  workflow_dispatch:
+    inputs:
+      voices:
+        description: 'Voix à générer : m,f (homme et femme), m ou f'
+        default: 'm,f'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: voices
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Synthétiser les clips manquants
+        env:
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
+          VOICES: ${{ github.event.inputs.voices }}
+        run: npx vite-node scripts/gen-voices.ts
+      - name: Publier les clips
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/voices
+          if git diff --cached --quiet; then echo "Aucun nouveau clip."; else git commit -m "Voix natives : clips Azure (${{ github.event.inputs.voices }})" && git push origin main; fi

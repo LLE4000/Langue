@@ -13,14 +13,23 @@ import { Empty } from '@/components/ui';
 import { ItemRow } from './Vocabulary';
 import { ItemDetailSheet } from '@/components/ItemCard';
 
+// Élément stable (hors composant) : un nouvel élément à chaque rendu relancerait usePage en boucle
+const NO_SEARCH_BUTTON = <span style={{ width: 44 }} />;
+
 export function Search() {
   const t = T();
-  usePage(t.explore.search, { back: true, right: <span style={{ width: 44 }} /> });
+  usePage(t.explore.search, { back: true, right: NO_SEARCH_BUTTON });
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState(params.get('q') ?? '');
   const [detail, setDetail] = useState<number | null>(null);
   const tok = useTokens();
-  useEffect(() => { const h = setTimeout(() => setParams(q ? { q } : {}, { replace: true }), 300); return () => clearTimeout(h); }, [q, setParams]);
+  // Reflète la saisie dans l'URL (retour arrière, partage) sans boucler : on n'écrit que si la valeur change.
+  const urlQ = params.get('q') ?? '';
+  useEffect(() => {
+    if (urlQ === q) return;
+    const h = setTimeout(() => setParams(q ? { q } : {}, { replace: true }), 300);
+    return () => clearTimeout(h);
+  }, [q, urlQ, setParams]);
   const index = useMemo(() => Object.values(ITEMS).filter((it) => it.kind !== 'rule' && it.kind !== 'grammar').map((it) => { const r = resolveTokens(it.rom, tok).replace(/\.\.\./g, ' '); return { it, fr: stripAccents(resolveTokens(L(it.meaning), tok) + ' ' + (it.kind === 'cons' ? L(it.ref.nameMeaning) : '')), th: resolveTokens(it.thai, tok), r1: asciiRom(r), r2: asciiRom(romToRTGS(r)) }; }), [tok]);
   const res = useMemo(() => {
     const s = q.trim(); if (!s) return null;

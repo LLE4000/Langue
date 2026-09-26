@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
-import { tts, useSpeaker, useVoices, recognizer, recorder } from '@/app/services/speech';
+import { tts, clips, useSpeaker, useVoices, recognizer, recorder } from '@/app/services/speech';
 import { WebSpeechProvider, chooseVoice, type VoiceGender } from '@/engine/audio/tts';
 import { activePack } from '@/content/packs';
 import { T } from '@/i18n';
@@ -75,6 +75,34 @@ function ProfileTab() {
   );
 }
 
+/** Voix natives pré-générées (Azure) : état, téléchargement pour le hors-ligne. */
+function NativeVoicesSection() {
+  const { native } = useVoices();
+  const [prog, setProg] = useState<Record<string, string>>({});
+  const toast = useToast((s) => s.show);
+  if (!native) {
+    return (
+      <details className="fold sm">
+        <summary>Voix natives (homme et femme) : pas encore générées</summary>
+        <p className="sm mut" style={{ margin: '6px 0 0' }}>Les voix neuronales Niwat (homme) et Premwadee (femme) se génèrent une fois pour toutes, gratuitement, avec un compte Azure : renseignez les secrets <code>AZURE_SPEECH_KEY</code> et <code>AZURE_SPEECH_REGION</code> dans GitHub, puis lancez le workflow « Générer les voix natives ». En attendant, l’application utilise la voix de l’appareil.</p>
+      </details>
+    );
+  }
+  const dl = async (g: 'm' | 'f') => {
+    setProg((p) => ({ ...p, [g]: '0 %' }));
+    const n = await clips.downloadAll(g, (done, total) => setProg((p) => ({ ...p, [g]: `${Math.round((done / total) * 100)} %` })));
+    setProg((p) => ({ ...p, [g]: 'prêt' }));
+    toast(`${n} clips ${g === 'm' ? 'de la voix d’homme' : 'de la voix de femme'} gardés pour le hors-ligne.`);
+  };
+  return (
+    <>
+      <div className="note info" style={{ marginTop: 0 }}>✅ Voix natives disponibles : <b>{clips.count('m')}</b> phrases avec la voix d’homme, <b>{clips.count('f')}</b> avec la voix de femme. Elles sont lues en priorité ; la voix de l’appareil ne sert que pour le reste (prénoms, nombres tapés).</div>
+      <label className="f">Garder les voix pour le hors-ligne <span className="xs">(quelques dizaines de Mo par voix, une fois)</span></label>
+      <div className="btns"><button className="btn soft sm" onClick={() => dl('m')} disabled={!!prog.m && prog.m !== 'prêt'}>♂ Voix d’homme {prog.m ? `· ${prog.m}` : ''}</button><button className="btn soft sm" onClick={() => dl('f')} disabled={!!prog.f && prog.f !== 'prêt'}>♀ Voix de femme {prog.f ? `· ${prog.f}` : ''}</button></div>
+    </>
+  );
+}
+
 function VoiceTab() {
   const t = T();
   const settings = useStore((s) => s.settings);
@@ -93,7 +121,8 @@ function VoiceTab() {
   };
   return (
     <>
-      <div className={`note ${status === 'ok' ? 'info' : status === 'none' || status === 'unsupported' ? 'warn' : ''}`} style={{ marginTop: 0 }}>{msg[status]}</div>
+      <NativeVoicesSection />
+      <div className={`note ${status === 'ok' ? 'info' : status === 'none' || status === 'unsupported' ? 'warn' : ''}`}>{msg[status]}</div>
       <div className="btns"><button className="btn soft sm" onClick={() => sp.speak(sample)}>▶ Tester la voix</button><button className="btn soft sm" onClick={() => sp.speak(sample, { slow: true })}>🐢 Lentement</button></div>
       {status === 'none' && <>
         <p className="sm mut" style={{ margin: '10px 2px 8px' }}><b>Si la voix thaïe Google est pourtant installée</b>, Chrome utilise sans doute un autre moteur vocal (Samsung, etc.) : Paramètres › Système › Langues et saisie › Synthèse vocale › Moteur préféré › Services de synthèse vocale Google. Puis touchez « Relancer la détection ».</p>

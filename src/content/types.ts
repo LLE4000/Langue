@@ -118,6 +118,13 @@ export interface DialogLine {
   tr: Localized;
 }
 
+/** Question de compréhension orale sur un dialogue : posée en français, après écoute sans texte. */
+export interface DialogQuestion {
+  q: Localized;
+  choices: Localized[];
+  answer: number; // index de la bonne réponse dans `choices`
+}
+
 export interface Dialog {
   id: string; // "d:market"
   title: Localized;
@@ -126,6 +133,8 @@ export interface Dialog {
   /** Genre de l'interlocuteur (voix) ; sinon déduit de ses particules de politesse puis du rôle. */
   otherGender?: 'm' | 'f';
   lines: DialogLine[];
+  /** Questions rédigées (complétées par des questions générées à partir des répliques). */
+  questions?: DialogQuestion[];
 }
 
 export interface ReadingToken {

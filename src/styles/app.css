@@ -481,3 +481,4 @@ details.note summary { cursor: pointer; font-weight: 600; }
 .fcard.sw-left { box-shadow: 0 0 0 2px var(--ko); } .fcard.sw-right { box-shadow: 0 0 0 2px var(--ok); }
 .rate button .k { display: none; font-size: 10.5px; color: var(--ink2); opacity: .6; }
 @media (pointer: fine) { .choice .k, .rate button .k { display: block; } }
+.toneline.ok { color: var(--ok); } .toneline.near { color: var(--acc-deep); } .toneline.ko { color: var(--ko); }

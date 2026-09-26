@@ -299,3 +299,25 @@ test('duel de prononciation : chacun dit le mot à son tour, résultats mot par 
   await expect(page.locator('.vgrid .vscore.ok')).toHaveCount(6);
   await expect(page.getByText('à égalité')).toBeVisible();
 });
+
+test('compréhension orale : écouter sans texte, répondre en français, voir le texte à la fin', async ({ page }) => {
+  await onboard(page);
+  await page.goto('/#/explore/comprehension');
+  await expect(page.getByText(/Une conversation, deux voix/)).toBeVisible();
+  await page.getByRole('link', { name: /Commander un café/ }).click();
+  await expect(page.getByTestId('comp-play')).toBeVisible();
+  await expect(page.locator('.bub')).toHaveCount(0); // pas de texte pendant l'écoute
+  await page.getByRole('button', { name: /Passer aux questions/ }).click();
+  for (let k = 0; k < 8; k++) {
+    if (await page.getByText(/Le texte de la conversation/).isVisible().catch(() => false)) break;
+    await expect(page.locator('.choices .choice').first()).toBeVisible();
+    const q = await page.locator('.qprompt').innerText();
+    // on répond juste à la question rédigée connue, au hasard sinon
+    const target = /Que commande/.test(q) ? page.locator('.choices .choice', { hasText: 'Un café glacé' }) : page.locator('.choices .choice').first();
+    await target.click();
+    await page.locator('.qfoot .btn').click();
+  }
+  await expect(page.getByText(/Le texte de la conversation/)).toBeVisible();
+  await expect(page.locator('.bub').first()).toBeVisible();
+  await expect(page.locator('.recap .score')).toBeVisible();
+});

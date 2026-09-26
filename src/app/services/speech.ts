@@ -1,9 +1,10 @@
 /**
  * Service audio de l'application : une instance du fournisseur de synthèse vocale pour la langue cible,
- * et des hooks React pour parler / observer l'état des voix.
+ * les voix natives pré-générées (clips) quand elles existent, et des hooks React pour parler / observer l'état.
  */
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { NullSpeechProvider, WebSpeechProvider, type SpeechProvider, type TtsStatus, type VoiceGender } from '@/engine/audio/tts';
+import { ClipPlayer } from '@/engine/audio/clips';
 import { Recognizer, Recorder } from '@/engine/audio/mic';
 import { speakable, type Gender } from '@/engine/tokens';
 import { useStore } from '../store';
@@ -14,15 +15,21 @@ export const tts: SpeechProvider =
   typeof window !== 'undefined' && 'speechSynthesis' in window ? new WebSpeechProvider(pack.speechLang, pack.langBase, pack.voiceNameRe) : new NullSpeechProvider();
 export const recognizer = new Recognizer(pack.speechLang);
 export const recorder = new Recorder();
+/** Voix natives (Niwat / Premwadee) si elles ont été générées ; sinon le manifeste est absent et tout passe par l'appareil. */
+export const clips = new ClipPlayer(typeof window !== 'undefined' ? import.meta.env.BASE_URL : '/');
+if (typeof window !== 'undefined') clips.load();
 
 let version = 0;
 const listeners = new Set<() => void>();
 tts.subscribe(() => { version++; listeners.forEach((l) => l()); });
+clips.subscribe(() => { version++; listeners.forEach((l) => l()); });
 
-/** État réactif des voix (statut, liste). */
-export function useVoices(): { status: TtsStatus; version: number } {
+/** État réactif des voix (statut, liste, voix natives). */
+export function useVoices(): { status: TtsStatus; version: number; native: boolean } {
   const v = useSyncExternalStore((cb) => { listeners.add(cb); return () => { listeners.delete(cb); }; }, () => version, () => 0);
-  return { status: tts.status(), version: v };
+  // Avec les voix natives, l'audio marche même sans voix thaïe installée sur l'appareil
+  const status = tts.status();
+  return { status: clips.ready && status !== 'ok' && status !== 'searching' ? 'ok' : status, version: v, native: clips.ready };
 }
 
 export interface SpeakOpts {
@@ -56,12 +63,18 @@ export function useSpeaker(): Speaker {
     speak: (text, opts) => {
       const who = opts?.speaker ?? me;
       const voiceGender = opts?.speaker ?? pref;
-      return tts.speak(speakable(text, { gender: who, name: profile?.name ?? '' }), {
+      const said = speakable(text, { gender: who, name: profile?.name ?? '' });
+      // 1. Voix native pré-générée si elle existe
+      const rate = opts?.rate != null ? (opts.rate >= 0.9 ? 1 : opts.rate) : opts?.slow ? settings.slowRate : 1;
+      tts.cancel();
+      if (clips.play(said, voiceGender, { rate, onend: opts?.onend })) return true;
+      // 2. Sinon, la voix de l'appareil
+      return tts.speak(said, {
         slow: opts?.slow, slowRate: settings.slowRate, rate: opts?.rate, voiceId: settings.voiceId, force: settings.forceTTS,
         gender: voiceGender, voiceGenders: settings.voiceGenders, approxGender: settings.voiceApprox !== false, onend: opts?.onend,
       });
     },
-    cancel: () => tts.cancel(),
+    cancel: () => { clips.stop(); tts.cancel(); },
     status,
     gender: pref,
   }), [me, pref, profile?.name, settings.slowRate, settings.voiceId, settings.forceTTS, settings.voiceGenders, settings.voiceApprox, status]);

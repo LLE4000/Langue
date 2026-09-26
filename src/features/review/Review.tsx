@@ -60,7 +60,9 @@ export function Review() {
           </Link>
         ))}
       </div>
-      <div className="list" style={{ marginTop: 12 }}><Link className="row" to="/explore/listen"><span className="ico">🎧</span><span className="mid"><span className="t">Écoute en boucle, sans les mains</span><span className="s">Lettres, voyelles ou vos mots, normal puis lent, en continu · en voiture, en marchant</span></span><span className="end"><span className="chev">›</span></span></Link></div>
+      <div className="list" style={{ marginTop: 12 }}>
+        <Link className="row" to="/explore/comprehension"><span className="ico">🎧</span><span className="mid"><span className="t">Compréhension orale</span><span className="s">Une conversation à deux voix, sans texte, puis des questions en français</span></span><span className="end"><span className="chev">›</span></span></Link>
+        <Link className="row" to="/explore/listen"><span className="ico">🎧</span><span className="mid"><span className="t">Écoute en boucle, sans les mains</span><span className="s">Lettres, voyelles ou vos mots, normal puis lent, en continu · en voiture, en marchant</span></span><span className="end"><span className="chev">›</span></span></Link></div>
       <p className="xs mut ctr" style={{ marginTop: 16 }}>{learned.length} élément{learned.length > 1 ? 's' : ''} dans votre mémoire de révision.</p>
     </>
   );

@@ -14,6 +14,7 @@ import { Explore } from '@/features/explore/Explore';
 import { Alphabet } from '@/features/explore/Alphabet';
 import { Vowels } from '@/features/explore/Vowels';
 import { Listen } from '@/features/explore/Listen';
+import { ComprehensionHub, ComprehensionRun } from '@/features/explore/Comprehension';
 import { VoiceDuel } from '@/features/play/VoiceDuel';
 import { Tones } from '@/features/explore/Tones';
 import { Numbers } from '@/features/explore/Numbers';
@@ -91,6 +92,8 @@ export function App() {
           <Route path="explore/alphabet" element={<Alphabet />} />
           <Route path="explore/vowels" element={<Vowels />} />
           <Route path="explore/listen" element={<Listen />} />
+          <Route path="explore/comprehension" element={<ComprehensionHub />} />
+          <Route path="explore/comprehension/:id" element={<ComprehensionRun />} />
           <Route path="explore/tones/*" element={<Tones />} />
           <Route path="explore/numbers" element={<Numbers />} />
           <Route path="explore/vocab" element={<Vocabulary />} />

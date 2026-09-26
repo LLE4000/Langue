@@ -30,6 +30,7 @@ export function Explore() {
       <div className="tiles">
         <Tile to="/explore/vocab" glyph="🗂️" title={t.explore.vocabulary} sub={`${MAIN_WORDS.length} mots · ${th.VOCAB_THEMES.length} thèmes`} p={Math.min(1, m.words.known / 300)} />
         <Tile to="/explore/dialogs" glyph="💬" title={t.explore.conversations} sub={`${th.DIALOGS.length} situations réelles`} cls="indigo" />
+        <Tile to="/explore/comprehension" glyph="🎧" title="Compréhension orale" sub="Écouter, puis répondre en français" cls="red" />
         <Tile to="/explore/numbers" glyph="๑ ๒ ๓" thai title={t.explore.numbers} sub="๐–๙, prix, convertisseur" p={m.numbers.progress} cls="gold" />
         <Tile to="/explore/phrasebook" glyph="✈️" title={t.explore.phrasebook} sub="À montrer en très grand" cls="plum" />
       </div>

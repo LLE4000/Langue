@@ -15,6 +15,7 @@ export function Dialogs() {
   return (
     <>
       <p className="lead">Des situations réelles. La traduction est masquée au départ : essayez d’abord de comprendre seul.</p>
+      <div className="btns" style={{ marginBottom: 12 }}><Link className="btn soft sm" to="/explore/comprehension">🎧 Tester ma compréhension orale</Link></div>
       <div className="list">{th.DIALOGS.map((d) => <Link key={d.id} className={`row ${done.has(d.id) ? 'done' : ''}`} to={`/explore/dialogs/${encodeURIComponent(d.id)}`}><span className="ico">{done.has(d.id) ? '✓' : d.icon}</span><span className="mid"><span className="t">{L(d.title)}</span><span className="s">{d.lines.length} répliques · avec : {L(d.other).toLowerCase()}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div>
     </>
   );
@@ -28,5 +29,5 @@ export function DialogScreen() {
   const addXp = useStore((s) => s.addXp);
   usePage(d ? L(d.title) : 'Conversation', { back: '/explore/dialogs' });
   if (!d) return <Empty e="🔍">Conversation introuvable.</Empty>;
-  return <DialogView id={d.id} onDone={() => { log('dialog', d.id); addXp(5); nav('/explore/dialogs'); }} />;
+  return <><div className="btns" style={{ marginBottom: 10 }}><Link className="btn ghost sm" to={`/explore/comprehension/${encodeURIComponent(d.id)}`}>🎧 L’écouter sans le texte, puis répondre</Link></div><DialogView id={d.id} onDone={() => { log('dialog', d.id); addXp(5); nav('/explore/dialogs'); }} /></>;
 }

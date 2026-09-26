@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { Icon } from '@/components/ui';
 import { T } from '@/i18n';
@@ -40,8 +40,10 @@ export function Shell() {
   const t = T();
   // Nouvelle page : on repart du haut. Retour arrière : on garde la position (longues listes du parcours, d'Explorer).
   useEffect(() => { if (navType !== 'POP') window.scrollTo(0, 0); }, [loc.pathname, navType]);
+  // Valeur de contexte stable : sinon chaque rendu de la coque ferait re-rendre tous les écrans (boucle avec usePage)
+  const ctx = useMemo(() => ({ set: setBar }), []);
   return (
-    <TopBarCtx.Provider value={{ set: setBar }}>
+    <TopBarCtx.Provider value={ctx}>
       <div className="app">
         <TopBar state={bar} />
         <main className="view"><Outlet /></main>

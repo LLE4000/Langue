@@ -47,6 +47,15 @@ describe('contrôle de prononciation', () => {
     expect(scorePronunciation([h], [t]).hints[0]).toMatch(/ton/);
     // longueur de voyelle seule : même plafond
     expect(scorePronunciation(['กิน'], ['กีน']).score).toBeLessThanOrEqual(5);
+    // หมา (chien) dit pour มา (venir) : mêmes sons, autre ton (ห นำ), donc un autre mot
+    const dog = scorePronunciation(['หมา'], ['มา']);
+    expect(dog.score).toBeLessThanOrEqual(5);
+    expect(dog.hints[0]).toMatch(/ton/);
+    // ข้าว (riz) pour ขาว (blanc), ไหม pour ไม่ : idem
+    expect(scorePronunciation(['ข้าว'], ['ขาว']).score).toBeLessThanOrEqual(5);
+    expect(scorePronunciation(['ไหม'], ['ไม่']).score).toBeLessThanOrEqual(5);
+    // en revanche กิน pour ดิน : un autre son, pas un ton
+    expect(scorePronunciation(['กิน'], ['ดิน']).hints[0] ?? '').not.toMatch(/ton/);
   });
   it('la certitude du moteur plafonne la note', () => {
     expect(scorePronunciation(['สวัสดีครับ'], ['สวัสดีครับ'], words, 'normal', 0.95).score).toBe(10);

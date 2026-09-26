@@ -1,27 +1,27 @@
 /**
- * Panneau « Je le dis » : contrôle de prononciation.
- *  - Reconnaissance vocale thaïe de l'appareil : note sur 10, mot par mot, ce que le moteur a compris,
- *    indice (ton, longueur de voyelle, mot manquant). Sévérité réglable.
- *  - Sur une syllabe : analyse de la hauteur de la voix, courbe superposée au ton attendu, ton entendu.
- *  - Enregistrement pour se comparer au modèle.
- * Aide honnête : la reconnaissance dit si l'on est COMPRIS ; la courbe dit si le TON a la bonne forme.
+ * Panneau « Je le dis » : UN bouton, UNE note.
+ *  - Le moteur de reconnaissance thaï de l'appareil écrit ce qu'il comprend : note sur 10, mot par mot,
+ *    ce qui a été entendu, indice (ton, longueur de voyelle, mot manquant). Sévérité réglable.
+ *  - En même temps, la voix est enregistrée ; sur une syllabe, sa hauteur est analysée et comparée au ton
+ *    attendu : un ton faux plafonne la note (5/10), car en thaï c'est un autre mot (หมา / มา).
+ *  - L'enregistrement sert aussi à se réécouter face au modèle.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { recognizer, recorder, useSpeaker } from '@/app/services/speech';
 import { useStore } from '@/app/store';
 import { RECOGNITION_ERRORS } from '@/engine/audio/mic';
-import { scorePronunciation, type PronResult } from '@/engine/audio/pronunciation';
+import { applyToneCheck, scorePronunciation, type PronResult } from '@/engine/audio/pronunciation';
 import { analyzeToneFromBlob, type ToneCheckResult } from '@/engine/audio/toneCheck';
 import { parseSyl, sylsOf } from '@/engine/thai/transcription';
 import { TONE_BY_ID, type LearnItem } from '@/content/th';
 import { TONES } from '@/content/th/tones';
 import { resolveTokens } from '@/engine/tokens';
 import { L } from '@/i18n';
-import { Icon, Thai, Rom, useTokens, AudioPair, Segmented, Sheet } from './ui';
+import { Icon, Thai, Rom, useTokens, AudioPair, Sheet } from './ui';
 import { useWbw } from './WordByWord';
 
 const VERDICT_TEXT: Record<PronResult['verdict'], string> = { ok: 'Compris !', near: 'Presque compris', ko: 'Pas compris' };
-const TONE_MS = 1700;
+const TONE_ONLY_MS = 1700;
 
 /** Courbe du ton : gabarit attendu (couleur du ton) et courbe de la voix (pointillés). */
 function ToneOverlay({ points, expected }: { points: number[]; expected: keyof typeof TONE_BY_ID }) {
@@ -42,13 +42,12 @@ export function MicPanel({ item, onClose, inline, onScore }: { item: LearnItem; 
   const stat = useStore((s) => s.pron[item.id]);
   const strictness = useStore((s) => s.settings.pronStrictness ?? 'normal');
   const [listening, setListening] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<PronResult | null>(null);
+  const [toneRes, setToneRes] = useState<ToneCheckResult | null>(null);
   const [msg, setMsg] = useState('');
   const [rec, setRec] = useState(false);
   const [url, setUrl] = useState('');
-  const [toneState, setToneState] = useState<'idle' | 'rec' | 'busy'>('idle');
-  const [toneRes, setToneRes] = useState<ToneCheckResult | null>(null);
-  const [tab, setTab] = useState<'say' | 'tone'>(recognizer.supported ? 'say' : 'tone');
   const audio = useRef<HTMLAudioElement>(null);
   const thai = item.kind === 'cons' ? item.thai + ' ' + item.ref.nameWord : item.thai;
   const seg = useWbw(item.kind === 'cons' ? item.ref.nameWord : item.thai, item.kind === 'cons' ? item.rom.split(' ').slice(1).join(' ') : item.rom);
@@ -60,111 +59,123 @@ export function MicPanel({ item, onClose, inline, onScore }: { item: LearnItem; 
     const syls = sylsOf(resolveTokens(item.rom, tok)).filter((s) => !/[{…]/.test(s));
     return syls.length === 1 ? parseSyl(syls[0])?.tone ?? null : null;
   }, [item, tok]);
+  const canTone = !!expectedTone && recorder.supported;
   useEffect(() => () => { if (recorder.active) recorder.stop(); recognizer.stop(); }, []);
 
-  const listen = () => {
+  const toneLabel = (id: keyof typeof TONE_BY_ID) => L(TONE_BY_ID[id].name);
+  const analyze = async (): Promise<ToneCheckResult | null> => {
+    if (!expectedTone || !recorder.active) return null;
+    const u = await recorder.stop();
+    if (u) setUrl(u);
+    if (!recorder.blob) return null;
+    const t = await analyzeToneFromBlob(recorder.blob, expectedTone);
+    return 'error' in t ? null : t;
+  };
+  const finish = (r: PronResult, tone: ToneCheckResult | null) => {
+    const final = applyToneCheck(r, tone && expectedTone ? { ok: tone.ok, similarity: tone.similarity, predicted: toneLabel(tone.predicted), expected: toneLabel(expectedTone) } : null, strictness);
+    setRes(final); setToneRes(tone); record(item.id, final.score); onScore?.(final.score);
+  };
+
+  /** Le bouton unique : reconnaissance + enregistrement en même temps, puis une seule note. */
+  const listen = async () => {
     if (listening) { recognizer.stop(); return; }
-    setRes(null); setMsg(''); setListening(true); sp.cancel();
+    setRes(null); setToneRes(null); setMsg(''); sp.cancel();
+    if (!recognizer.supported) { await toneOnly(); return; }
+    setListening(true);
+    if (canTone) { try { await recorder.start(); } catch { /* sans micro brut : la reconnaissance seule */ } }
+    let got = false;
     try {
-      recognizer.start((ev) => {
+      recognizer.start(async (ev) => {
         if (ev.type === 'result') {
+          got = true;
           const r = scorePronunciation(ev.alts, targets, words, strictness, ev.confidence);
-          setRes(r); record(item.id, r.score); onScore?.(r.score);
-        } else if (ev.type === 'error') { if (ev.code !== 'aborted') setMsg(RECOGNITION_ERRORS[ev.code] ?? `Reconnaissance interrompue (${ev.code}).`); }
-        else setListening(false);
+          setBusy(true);
+          const tone = await analyze().catch(() => null);
+          setBusy(false);
+          finish(r, tone);
+        } else if (ev.type === 'error') {
+          got = true;
+          if (recorder.active) recorder.stop();
+          if (ev.code !== 'aborted') setMsg(RECOGNITION_ERRORS[ev.code] ?? `Reconnaissance interrompue (${ev.code}).`);
+        } else {
+          setListening(false);
+          if (recorder.active) recorder.stop();
+          if (!got) setMsg('Rien entendu : touchez le micro, puis dites le mot.');
+        }
       });
-    } catch { setListening(false); setMsg('La reconnaissance vocale n’a pas pu démarrer.'); }
+    } catch { setListening(false); if (recorder.active) recorder.stop(); setMsg('La reconnaissance vocale n’a pas pu démarrer.'); }
+  };
+  /** Sans reconnaissance vocale : on juge au moins le ton (une syllabe). */
+  const toneOnly = async () => {
+    if (!canTone) return;
+    setListening(true);
+    try { await recorder.start(); } catch (e) { setListening(false); setMsg((e as Error)?.name === 'NotAllowedError' ? 'Accès au micro refusé. Autorisez le micro pour cette page.' : 'Micro inaccessible : il exige une page sécurisée (https) ou l’application installée.'); return; }
+    await new Promise((r) => setTimeout(r, TONE_ONLY_MS));
+    setListening(false); setBusy(true);
+    const tone = await analyze().catch(() => null);
+    setBusy(false);
+    setToneRes(tone);
+    if (!tone) setMsg('Rien n’a été enregistré.');
   };
   const toggleRec = async () => {
     if (rec) { const u = await recorder.stop(); setUrl(u ?? ''); setRec(false); return; }
     try { await recorder.start(); setRec(true); setMsg(''); }
     catch (e) { setMsg((e as Error)?.name === 'NotAllowedError' ? 'Accès au micro refusé. Autorisez le micro pour cette page.' : 'Micro inaccessible : il exige une page sécurisée (https) ou l’application installée.'); }
   };
-  const checkTone = async () => {
-    if (!expectedTone || toneState !== 'idle') return;
-    setToneRes(null); setMsg(''); sp.cancel(); setToneState('rec');
-    try { await recorder.start(); }
-    catch (e) { setToneState('idle'); setMsg((e as Error)?.name === 'NotAllowedError' ? 'Accès au micro refusé. Autorisez le micro pour cette page.' : 'Micro inaccessible : il exige une page sécurisée (https) ou l’application installée.'); return; }
-    await new Promise((r) => setTimeout(r, TONE_MS));
-    const u = await recorder.stop();
-    if (u) setUrl(u);
-    setToneState('busy');
-    const r = recorder.blob ? await analyzeToneFromBlob(recorder.blob, expectedTone) : { error: 'Rien n’a été enregistré.' };
-    if ('error' in r) setMsg(r.error); else setToneRes(r);
-    setToneState('idle');
-  };
 
-  const hasToneTab = recorder.supported;
+  const modeNote = strictness === 'strict' ? ' · mode strict' : strictness === 'lenient' ? ' · mode indulgent' : '';
   const body = (
     <>
       <div className="stage compact"><div className="big s3"><Thai text={thai} /></div><Rom text={item.rom} /><span className="mut sm">{resolveTokens(L(item.meaning), tok)}</span></div>
       <div className="audio"><AudioPair text={item.say} big /></div>
-      {hasToneTab && recognizer.supported && <div style={{ marginBottom: 12 }}><Segmented value={tab} options={[{ v: 'say' as const, label: '🎙️ Je le dis' }, { v: 'tone' as const, label: '🎵 Mon ton et ma voix' }]} onChange={setTab} /></div>}
 
-      {tab === 'say' && (recognizer.supported ? (
+      {(recognizer.supported || canTone) ? (
         <>
-          <button className={`btn ${listening ? 'listening' : ''}`} onClick={listen} data-testid="mic-say">
-            <Icon name="mic" size={20} /> {listening ? 'Je vous écoute… parlez maintenant' : res ? 'Je le redis' : 'Je le dis'}
+          <button className={`btn ${listening ? 'listening' : ''}`} onClick={listen} disabled={busy} data-testid="mic-say">
+            <Icon name="mic" size={20} /> {busy ? 'Analyse…' : listening ? 'Je vous écoute… parlez maintenant' : res || toneRes ? 'Je le redis' : 'Je le dis'}
           </button>
-          <p className="xs mut ctr" style={{ marginTop: 6 }}>{listening ? 'Touchez à nouveau pour arrêter.' : `Dites « ${resolveTokens(thai, tok)} » : le moteur thaï écrit ce qu’il comprend${strictness === 'strict' ? ' · mode strict' : strictness === 'lenient' ? ' · mode indulgent' : ''}.`}</p>
+          <p className="xs mut ctr" style={{ marginTop: 6 }}>
+            {listening ? (recognizer.supported ? 'Touchez à nouveau pour arrêter.' : 'Dites la syllabe, un peu longuement.') : recognizer.supported ? `Dites « ${resolveTokens(thai, tok)} ». Le moteur thaï écrit ce qu’il comprend${canTone ? ' et la courbe de votre voix est comparée au ton attendu' : ''}${modeNote}.` : 'Sans reconnaissance vocale sur ce navigateur, l’application juge au moins le ton.'}
+          </p>
           {msg && <div className="note warn sm">{msg}</div>}
-          {res && (
-            <div className={`pron ${res.verdict}`} aria-live="polite">
-              <div className="cring" data-tone={res.verdict} style={{ ['--p' as string]: res.score * 10 }}><b>{res.score}</b><small>/ 10</small></div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className={`verdict ${res.verdict}`}>{VERDICT_TEXT[res.verdict]}</div>
-                {res.words.length > 1 && <div className="pwords">{res.words.map((w, k) => <span key={k} className={`pw ${w.ok ? 'ok' : w.near ? 'near' : 'ko'}`} lang="th"><b>{w.t}</b>{w.r && <em>{w.r}</em>}</span>)}</div>}
-                {res.verdict !== 'ok' && res.heard && <div className="sm" style={{ marginTop: 6 }}>Le moteur a compris : <b className="th" style={{ fontSize: 18 }}>{res.heard}</b></div>}
-                {typeof res.confidence === 'number' && <div className="xs mut" style={{ marginTop: 4 }}>Certitude du moteur : {Math.round(res.confidence * 100)} %</div>}
-                {res.verdict !== 'ok' && res.alts.length > 1 && <div className="xs mut" style={{ marginTop: 2 }}>Il hésitait aussi avec : <span className="th">{res.alts.slice(1, 3).join(' · ')}</span></div>}
-                {res.hints.map((h, k) => <div key={k} className="sm mut" style={{ marginTop: 4 }}>{h}</div>)}
-                {stat && stat.n > 1 && <div className="xs mut" style={{ marginTop: 6 }}>Meilleur : {stat.best}/10 · {stat.n} essais</div>}
-              </div>
-            </div>
-          )}
-          {!res && stat && <p className="xs mut ctr">Meilleur : {stat.best}/10 · dernier : {stat.last}/10 · {stat.n} essai{stat.n > 1 ? 's' : ''}</p>}
         </>
       ) : (
-        <div className="note plain sm">La reconnaissance vocale n’est pas disponible sur ce navigateur (elle fonctionne dans Chrome pour Android et Safari). L’analyse du ton et l’enregistrement restent possibles.</div>
-      ))}
-
-      {tab === 'tone' && hasToneTab && (
-        <>
-          {expectedTone ? (
-            <div className="tonecheck">
-              <div className="row-flex" style={{ gap: 8 }}>
-                <b style={{ flex: 1 }}>Mon ton <span className="mut" style={{ fontWeight: 500 }}>· attendu : {L(TONE_BY_ID[expectedTone].name)}</span></b>
-                <button className={`btn auto sm ${toneState === 'rec' ? 'listening' : 'soft'}`} onClick={checkTone} disabled={toneState !== 'idle'} data-testid="tone-check">
-                  {toneState === 'rec' ? 'Parlez…' : toneState === 'busy' ? 'Analyse…' : '🎵 Vérifier mon ton'}
-                </button>
-              </div>
-              <p className="xs mut" style={{ margin: '4px 0 8px' }}>{toneState === 'rec' ? `Dites la syllabe seule, un peu longuement (${(TONE_MS / 1000).toFixed(1).replace('.', ',')} s d’enregistrement).` : 'L’application mesure la hauteur de votre voix et la compare à la forme du ton. Cette analyse se fait sur l’appareil.'}</p>
-              {toneRes && (
-                <>
-                  <ToneOverlay points={toneRes.points} expected={expectedTone} />
-                  <div className={`verdict ${toneRes.ok ? 'ok' : toneRes.similarity >= 0.6 ? 'near' : 'ko'}`} style={{ marginTop: 8 }}>
-                    {toneRes.ok ? `Ton ${L(TONE_BY_ID[expectedTone].name)} reconnu` : `On entend plutôt un ton ${L(TONE_BY_ID[toneRes.predicted].name)}`} · ressemblance {Math.round(toneRes.similarity * 100)} %
-                  </div>
-                  {!toneRes.ok && <div className="sm mut" style={{ marginTop: 4 }}>{L(TONES.find((t) => t.id === expectedTone)!.desc)} Réécoutez le modèle et exagérez le mouvement.</div>}
-                </>
-              )}
-            </div>
-          ) : (
-            <p className="sm mut" style={{ margin: '0 2px 10px' }}>L’analyse du ton se fait sur les mots d’une syllabe. Ici, comparez votre voix au modèle.</p>
-          )}
-          <div className="note plain sm" style={{ marginTop: 12 }}>
-            <b>Me comparer au modèle</b>
-            <div className="btns" style={{ marginTop: 10 }}>
-              <button className="btn soft sm" onClick={() => sp.speak(item.say)}><Icon name="speaker" size={16} /> Modèle</button>
-              <button className={`btn sm ${rec ? 'danger' : 'ghost'}`} onClick={toggleRec}><Icon name={rec ? 'pause' : 'mic'} size={16} /> {rec ? 'Arrêter' : 'M’enregistrer'}</button>
-              <button className="btn soft sm" disabled={!url} onClick={() => { if (audio.current) { audio.current.src = url; audio.current.play().catch(() => setMsg('Lecture impossible sur ce navigateur.')); } }}><Icon name="play" size={16} /> Ma voix</button>
-            </div>
-            <p className="xs mut" style={{ marginTop: 8 }}>La reconnaissance juge si le mot est compréhensible ; la courbe juge la forme du ton sur une syllabe. Pour le reste, l’oreille : comparez « Modèle » et « Ma voix ».</p>
-            <audio ref={audio} preload="none" />
-          </div>
-          {msg && <div className="note warn sm">{msg}</div>}
-        </>
+        <div className="note plain sm">La reconnaissance vocale n’est pas disponible sur ce navigateur (elle fonctionne dans Chrome pour Android et Safari). Vous pouvez tout de même vous enregistrer pour vous comparer au modèle.</div>
       )}
+
+      {(res || toneRes) && (
+        <div className={`pron ${res?.verdict ?? (toneRes?.ok ? 'ok' : 'ko')}`} aria-live="polite">
+          {res && <div className="cring" data-tone={res.verdict} style={{ ['--p' as string]: res.score * 10 }}><b>{res.score}</b><small>/ 10</small></div>}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {res && <div className={`verdict ${res.verdict}`}>{VERDICT_TEXT[res.verdict]}</div>}
+            {res && res.words.length > 1 && <div className="pwords">{res.words.map((w, k) => <span key={k} className={`pw ${w.ok ? 'ok' : w.near ? 'near' : 'ko'}`} lang="th"><b>{w.t}</b>{w.r && <em>{w.r}</em>}</span>)}</div>}
+            {toneRes && expectedTone && (
+              <div className={`sm toneline ${toneRes.ok ? 'ok' : toneRes.similarity >= 0.6 ? 'near' : 'ko'}`} style={{ marginTop: 6 }}>
+                🎵 {toneRes.ok ? <>Ton <b>{toneLabel(expectedTone)}</b> reconnu ✓</> : <>Ton entendu : <b>{toneLabel(toneRes.predicted)}</b> · attendu : <b>{toneLabel(expectedTone)}</b></>} <span className="mut">· ressemblance {Math.round(toneRes.similarity * 100)} %</span>
+              </div>
+            )}
+            {res && res.verdict !== 'ok' && res.heard && <div className="sm" style={{ marginTop: 6 }}>Le moteur a compris : <b className="th" style={{ fontSize: 18 }}>{res.heard}</b></div>}
+            {res && typeof res.confidence === 'number' && <div className="xs mut" style={{ marginTop: 4 }}>Certitude du moteur : {Math.round(res.confidence * 100)} %</div>}
+            {res && res.verdict !== 'ok' && res.alts.length > 1 && <div className="xs mut" style={{ marginTop: 2 }}>Il hésitait aussi avec : <span className="th">{res.alts.slice(1, 3).join(' · ')}</span></div>}
+            {(res?.hints ?? []).map((h, k) => <div key={k} className="sm mut" style={{ marginTop: 4 }}>{h}</div>)}
+            {!res && toneRes && !toneRes.ok && <div className="sm mut" style={{ marginTop: 4 }}>{L(TONES.find((t) => t.id === expectedTone)!.desc)} Réécoutez le modèle et exagérez le mouvement.</div>}
+            {stat && stat.n > 1 && <div className="xs mut" style={{ marginTop: 6 }}>Meilleur : {stat.best}/10 · {stat.n} essais</div>}
+          </div>
+        </div>
+      )}
+      {toneRes && expectedTone && <details className="fold sm"><summary>Voir la courbe de mon ton</summary><div className="tonecheck" style={{ marginTop: 0 }}><ToneOverlay points={toneRes.points} expected={expectedTone} /></div></details>}
+      {!res && !toneRes && stat && <p className="xs mut ctr">Meilleur : {stat.best}/10 · dernier : {stat.last}/10 · {stat.n} essai{stat.n > 1 ? 's' : ''}</p>}
+
+      <details className="fold sm">
+        <summary>Me réécouter face au modèle</summary>
+        <div className="btns" style={{ marginTop: 10 }}>
+          <button className="btn soft sm" onClick={() => sp.speak(item.say)}><Icon name="speaker" size={16} /> Modèle</button>
+          <button className="btn soft sm" disabled={!url} onClick={() => { if (audio.current) { audio.current.src = url; audio.current.play().catch(() => setMsg('Lecture impossible sur ce navigateur.')); } }}><Icon name="play" size={16} /> Ma voix</button>
+          {recorder.supported && <button className={`btn sm ${rec ? 'danger' : 'ghost'}`} onClick={toggleRec}><Icon name={rec ? 'pause' : 'mic'} size={16} /> {rec ? 'Arrêter' : 'Enregistrer'}</button>}
+        </div>
+        <p className="xs mut" style={{ marginTop: 8 }}>{url ? 'Votre dernier essai est gardé : comparez-le au modèle à l’oreille.' : 'Après « Je le dis », votre voix est gardée ici pour la comparer au modèle.'}</p>
+        <audio ref={audio} preload="none" />
+      </details>
     </>
   );
   if (inline) return <div>{body}</div>;

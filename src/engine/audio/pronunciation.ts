@@ -25,6 +25,16 @@ export interface PronResult {
 const POLITE_END = /(ครับ|คับ|ค่ะ|คะ|ค่า)$/;
 const TONE_MARKS = /[่-๋]/g; // ่ ้ ๊ ๋
 const norm = (s: string) => normThai(s).replace(/\s+/g, '');
+/**
+ * Squelette « sons seuls » d'un mot : on retire tout ce qui ne change que le TON (marques de ton, ห นำ et อ นำ,
+ * classe de la consonne : ข/ค, ถ/ท, ผ/พ, ส/ศ/ษ…). Deux mots au même squelette ne diffèrent que par le ton :
+ * หมา (chien) et มา (venir), ไม่ et ไหม, ข้าว et ขาว.
+ */
+const SAME_SOUND: Record<string, string> = {
+  ข: 'ค', ฃ: 'ค', ฅ: 'ค', ฆ: 'ค', ถ: 'ท', ฐ: 'ท', ธ: 'ท', ฑ: 'ท', ฒ: 'ท', ผ: 'พ', ภ: 'พ', ฝ: 'ฟ', ศ: 'ส', ษ: 'ส', ซ: 'ส',
+  ฉ: 'ช', ฌ: 'ช', ณ: 'น', ญ: 'ย', ฬ: 'ล', ฎ: 'ด', ฏ: 'ต', ฤ: 'ร',
+};
+export const soundSkeleton = (s: string) => norm(s).replace(TONE_MARKS, '').replace(/[หอ](?=[งญนมยรลว])/g, '').replace(/[ขฃฅฆถฐธฑฒผภฝศษซฉฌณญฬฎฏฤ]/g, (c) => SAME_SOUND[c] ?? c);
 const forms = (x: string) => { const n = norm(x), b = n.replace(POLITE_END, ''); return b && b !== n ? [n, b] : [n]; };
 const similarity = (a: string, b: string) => (!a || !b ? 0 : a === b ? 1 : 1 - lev(a, b) / Math.max(a.length, b.length));
 /** Voyelles longues ramenées à leur forme courte, pour repérer une erreur de longueur seule. */
@@ -77,8 +87,8 @@ export function scorePronunciation(alts: string[], targets: string[], words: Tar
 
   const tN = forms(bestTarget)[forms(bestTarget).length - 1] ?? '';
   const hN = heardN.replace(POLITE_END, '');
-  const toneOnly = !!hN && sim < 0.999 && hN.replace(TONE_MARKS, '') === tN.replace(TONE_MARKS, '');
-  const lengthOnly = !toneOnly && !!hN && sim < 0.999 && shorten(hN.replace(TONE_MARKS, '')) === shorten(tN.replace(TONE_MARKS, ''));
+  const toneOnly = !!hN && sim < 0.999 && soundSkeleton(hN) === soundSkeleton(tN);
+  const lengthOnly = !toneOnly && !!hN && sim < 0.999 && shorten(soundSkeleton(hN)) === shorten(soundSkeleton(tN));
   const hints: string[] = [];
   if (strictness !== 'lenient') {
     // Un ton ou une longueur de voyelle faux = un autre mot : jamais « presque compris » à 8.
@@ -100,6 +110,23 @@ export function scorePronunciation(alts: string[], targets: string[], words: Tar
   }
   if (verdict === 'near' && !hints.length) hints.push('Presque : le moteur hésite. Répétez en articulant les consonnes finales.');
   return { score, sim, heard, alts, words: ws, verdict, hints, confidence };
+}
+
+/**
+ * Intègre l'analyse acoustique du ton (mots d'une syllabe) à la note : un ton faux n'est jamais « compris ».
+ * Modes normal et strict : ton faux → 5 au plus (4 en strict) ; ton approximatif → 7 au plus. Indulgent : rien.
+ */
+export function applyToneCheck(res: PronResult, tone: { ok: boolean; similarity: number; predicted: string; expected: string } | null, strictness: Strictness = 'normal'): PronResult {
+  if (!tone || strictness === 'lenient' || !res.alts.length) return res;
+  if (tone.ok) return res;
+  const near = tone.similarity >= 0.6;
+  const cap = near ? 7 : strictness === 'strict' ? 4 : 5;
+  const score = Math.min(res.score, cap);
+  const verdict: PronResult['verdict'] = score >= 9 ? 'ok' : score >= 6 ? 'near' : 'ko';
+  const hint = near
+    ? `Le ton est approximatif : on attend un ton ${tone.expected}, la courbe de votre voix hésite. Exagérez le mouvement.`
+    : `Le ton entendu est ${tone.predicted} au lieu de ${tone.expected} : en thaï, c’est un autre mot. Réécoutez le modèle et refaites la courbe.`;
+  return { ...res, score, verdict, hints: [hint, ...res.hints.filter((h) => !/ton/i.test(h))] };
 }
 
 /** Note lissée sur les dernières tentatives (pour l'affichage « meilleur / dernier »). */

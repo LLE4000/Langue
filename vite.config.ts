@@ -40,9 +40,14 @@ export default defineConfig({
       workbox: {
         // Tout le contenu pédagogique est dans le bundle : l'app fonctionne entièrement hors ligne.
         globPatterns: ['**/*.{js,css,html,woff,woff2,png,svg,json}'],
+        globIgnores: ['voices/**'], // les clips audio ne sont pas pré-installés : mis en cache à la première écoute (ou « Télécharger »)
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
+        runtimeCaching: [
+          { urlPattern: /\/voices\/[mf]\/[0-9a-f]+\.mp3$/, handler: 'CacheFirst', options: { cacheName: 'voices', expiration: { maxEntries: 8000, maxAgeSeconds: 365 * 24 * 3600 }, cacheableResponse: { statuses: [0, 200] } } },
+          { urlPattern: /\/voices\/manifest\.json$/, handler: 'NetworkFirst', options: { cacheName: 'voices-manifest' } },
+        ],
       },
       devOptions: { enabled: false },
     }),
