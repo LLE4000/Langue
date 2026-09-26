@@ -7,7 +7,7 @@ import { READING_BY_ID, th } from '@/content/th';
 import { isReadable } from '@/engine/thai/reading';
 import { L, T } from '@/i18n';
 import { ReadingView } from '@/components/ReadingView';
-import { Empty } from '@/components/ui';
+import { Empty, Ico } from '@/components/ui';
 
 export function Readings() {
   const t = T();
@@ -20,7 +20,7 @@ export function Readings() {
     <>
       <p className="lead">Lisez d’abord sans aide. Les textes marqués « lisible » n’utilisent que des signes déjà vus dans votre parcours.</p>
       {[1, 2, 3, 4, 5].map((lvl) => (
-        <div key={lvl}><div className="h2">Niveau {lvl}</div><div className="list">{th.READINGS.filter((r) => r.level === lvl).map((r) => <Link key={r.id} className={`row ${done.has(r.id) ? 'done' : ''}`} to={`/explore/readings/${encodeURIComponent(r.id)}`}><span className="ico">{done.has(r.id) ? '✓' : '📖'}</span><span className="mid"><span className="t">{L(r.title)}</span><span className="s">{r.sentences.length} phrases{readable(r.id) ? ' · lisible avec ce que vous savez' : ''}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></div>
+        <div key={lvl}><div className="h2">Niveau {lvl}</div><div className="list">{th.READINGS.filter((r) => r.level === lvl).map((r) => <Link key={r.id} className={`row ${done.has(r.id) ? 'done' : ''}`} to={`/explore/readings/${encodeURIComponent(r.id)}`}><Ico name={done.has(r.id) ? 'check' : 'bookOpen'} /><span className="mid"><span className="t">{L(r.title)}</span><span className="s">{r.sentences.length} phrases{readable(r.id) ? ' · lisible avec ce que vous savez' : ''}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></div>
       ))}
     </>
   );
@@ -34,6 +34,6 @@ export function ReadingScreen() {
   const recordActivity = useStore((s) => s.recordActivity);
   const addXp = useStore((s) => s.addXp);
   usePage(r ? L(r.title) : 'Lecture', { back: '/explore/readings' });
-  if (!r) return <Empty e="🔍">Texte introuvable.</Empty>;
+  if (!r) return <Empty icon="search">Texte introuvable.</Empty>;
   return <ReadingView id={r.id} onDone={() => { log('reading', r.id); recordActivity('reading:' + r.id); addXp(5); nav('/explore/readings'); }} />;
 }

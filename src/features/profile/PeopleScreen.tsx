@@ -17,14 +17,14 @@ export function PeopleScreen() {
   return (
     <>
       <p className="lead">Chaque personne a son parcours, sa mémoire de révision, ses réglages et ses défis. Tout reste sur l’appareil.</p>
-      <div className="h2" style={{ marginTop: 0 }}>Profils <span className="sp" />{reg.list.length > 1 && <button onClick={() => setEdit(!edit)}>{edit ? 'Terminer' : 'Modifier'}</button>}</div>
+      <div className="h2 mt-0">Profils <span className="sp" />{reg.list.length > 1 && <button onClick={() => setEdit(!edit)}>{edit ? 'Terminer' : 'Modifier'}</button>}</div>
       <div className="list">
         {reg.list.map((p) => {
           const active = p.id === reg.active;
           const name = nameOf(p.id);
           return (
             <button className="row" key={p.id} onClick={() => { if (!active && !edit) { switchProfile(p.id); reloadToHome(); } }} disabled={active && !edit} aria-current={active ? 'true' : undefined}>
-              <span className="ico" style={active ? { background: 'var(--acc-soft)' } : undefined}>{name.slice(0, 1).toUpperCase() || '?'}</span>
+              <span className={`ico ${active ? 'acc' : ''}`}>{name.slice(0, 1).toUpperCase() || '?'}</span>
               <span className="mid"><span className="t">{name}</span><span className="s">{active ? 'Profil actif' : 'Touchez pour passer à ce profil'}</span></span>
               <span className="end">
                 {edit && reg.list.length > 1 ? <span className="ib sm" role="button" aria-label={`Supprimer le profil de ${name}`} onClick={(e) => { e.stopPropagation(); setAsk(p.id); }}><Icon name="trash" size={16} /></span> : active ? <Icon name="check" size={18} /> : <span className="chev">›</span>}
@@ -33,7 +33,7 @@ export function PeopleScreen() {
           );
         })}
       </div>
-      <p className="sm mut" style={{ margin: '14px 2px 8px' }}>Ajouter une personne redémarre l’application sur l’écran de bienvenue du nouveau profil. Pour revenir à votre profil, repassez par cet écran.</p>
+      <p className="sm mut mt-4 mb-2">Ajouter une personne redémarre l’application sur l’écran de bienvenue du nouveau profil. Pour revenir à votre profil, repassez par cet écran.</p>
       <button className="btn" onClick={() => setAskAdd(true)}>+ Ajouter une personne</button>
 
       <Sheet open={askAdd} onClose={() => setAskAdd(false)} title="Ajouter une personne ?" footer={null}>

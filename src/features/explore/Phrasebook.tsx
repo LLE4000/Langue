@@ -18,8 +18,8 @@ export function Phrasebook() {
     <>
       <p className="lead">Les phrases essentielles, sur place. Touchez une phrase pour l’afficher en très grand et la montrer à votre interlocuteur.</p>
       <div className="tiles">
-        {th.PHRASEBOOK.map((s, i) => <Link key={s.id} to={`/explore/phrasebook/${s.id}`} className={`tile ${['', 'gold', 'red', 'indigo', 'plum', 'orange'][i % 6]}`} style={{ alignItems: 'center', textAlign: 'center' }}><span className="e" style={{ fontSize: 38 }}>{s.icon}</span><span className="t">{L(s.title)}</span></Link>)}
-        <Link to="/explore/phrasebook/favs" className="tile gold" style={{ alignItems: 'center', textAlign: 'center' }}><span className="e" style={{ fontSize: 38 }}>⭐</span><span className="t">Mes favoris</span><span className="s">{nFav} phrase{nFav > 1 ? 's' : ''}</span></Link>
+        {th.PHRASEBOOK.map((s) => <Link key={s.id} to={`/explore/phrasebook/${s.id}`} className="tile ctr"><span className="e">{s.icon}</span><span className="t">{L(s.title)}</span></Link>)}
+        <Link to="/explore/phrasebook/favs" className="tile ctr"><span className="ic"><Icon name="star" /></span><span className="t">Mes favoris</span><span className="s">{nFav} phrase{nFav > 1 ? 's' : ''}</span></Link>
       </div>
     </>
   );
@@ -31,7 +31,7 @@ export function ShowBig({ it, onClose }: { it: LearnItem; onClose: () => void })
   const toggleFav = useStore((s) => s.toggleFavorite);
   return (
     <div className="showbig">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><button className={`ib fav ${fav ? 'on' : ''}`} onClick={() => toggleFav(it.id)} aria-label="Favori"><Icon name="star" /></button><button className="ib" onClick={onClose} aria-label="Fermer"><Icon name="close" /></button></div>
+      <div className="row-flex"><button className={`ib fav ${fav ? 'on' : ''}`} onClick={() => toggleFav(it.id)} aria-label="Favori"><Icon name="star" /></button><span className="sp" /><button className="ib" onClick={onClose} aria-label="Fermer"><Icon name="close" /></button></div>
       <div className="mid"><WordByWord thai={it.thai} rom={it.rom} /><span className="fr"><Fr text={it.meaning} /></span></div>
       <div className="audio"><AudioPair text={it.say} big /><button className="ib big" onClick={() => setMic(true)} aria-label="Vérifier ma prononciation" title="Vérifier ma prononciation"><Icon name="mic" /></button></div>
       {mic && <MicPanel item={it} onClose={() => setMic(false)} />}
@@ -43,15 +43,15 @@ export function PhrasebookSection() {
   const { id = '' } = useParams();
   const favs = useStore((s) => s.favorites);
   const sec = th.PHRASEBOOK.find((s) => s.id === id);
-  const title = id === 'favs' ? '⭐ Mes favoris' : sec ? `${sec.icon} ${L(sec.title)}` : 'Phrases';
+  const title = id === 'favs' ? 'Mes favoris' : sec ? `${sec.icon} ${L(sec.title)}` : 'Phrases';
   usePage(title, { back: '/explore/phrasebook' });
   const [big, setBig] = useState<LearnItem | null>(null);
   const items = id === 'favs' ? Object.keys(favs).sort((a, b) => favs[b] - favs[a]).map((k) => WORD_BY_THAI[k.slice(2)]).filter(Boolean) : (sec?.keys ?? []).map((k) => WORD_BY_THAI[k]).filter(Boolean);
-  if (!sec && id !== 'favs') return <Empty e="🔍">Section introuvable.</Empty>;
+  if (!sec && id !== 'favs') return <Empty icon="search">Section introuvable.</Empty>;
   return (
     <>
       {id === 'sos' && <div className="tel">{th.SOS_NUMBERS.map((n) => <a key={n.number} href={`tel:${n.number}`}><b>{n.number}</b>{L(n.label)}</a>)}</div>}
-      {!items.length && <Empty e="⭐">Touchez ☆ sur un mot ou une phrase pour les retrouver ici.</Empty>}
+      {!items.length && <Empty icon="star">Touchez <Icon name="star" size={16} /> sur un mot ou une phrase pour les retrouver ici.</Empty>}
       <div className="list">{items.map((w) => <div key={w.id} className="row tap" role="button" tabIndex={0} onClick={() => setBig(w)} onKeyDown={(e) => { if (e.key === 'Enter') setBig(w); }}><span className="mid"><span className="t"><Fr text={w.meaning} /></span><Thai text={w.thai} /><span className="s"><Rom text={w.rom} /></span></span><span className="end"><AudioButton text={w.say} className="sm" /></span></div>)}</div>
       {big && <ShowBig it={big} onClose={() => setBig(null)} />}
     </>

@@ -66,7 +66,7 @@ function ThemeApplier() {
 function UpdatePrompt() {
   const { needRefresh: [needRefresh, setNeedRefresh], updateServiceWorker } = useRegisterSW({ onRegisteredSW(_url, r) { if (r) setInterval(() => r.update(), 60 * 60 * 1000); } });
   if (!needRefresh) return null;
-  return <div className="update-banner"><span>Nouvelle version disponible.</span><button onClick={() => updateServiceWorker(true)}>Mettre à jour</button><button onClick={() => setNeedRefresh(false)} style={{ background: 'transparent', color: 'inherit' }}>Plus tard</button></div>;
+  return <div className="update-banner"><span>Nouvelle version disponible.</span><button onClick={() => updateServiceWorker(true)}>Mettre à jour</button><button className="ghost" onClick={() => setNeedRefresh(false)}>Plus tard</button></div>;
 }
 
 function RequireProfile({ children }: { children: React.ReactNode }) {
@@ -79,7 +79,7 @@ function RequireProfile({ children }: { children: React.ReactNode }) {
 export function App() {
   const hydrated = useHydrated();
   useEffect(() => { if (hydrated) useStore.getState().touch(); }, [hydrated]);
-  if (!hydrated) return <div className="app"><div className="view ctr mut" style={{ paddingTop: 80 }}>Chargement…</div></div>;
+  if (!hydrated) return <div className="app"><div className="view loading ctr mut">Chargement…</div></div>;
   return (
     <HashRouter>
       <ThemeApplier />

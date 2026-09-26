@@ -6,6 +6,7 @@ import { ITEMS } from '@/content/th';
 import { T } from '@/i18n';
 import { MicPanel } from '@/components/MicPanel';
 import { StepFooter, ContinueButton } from '@/components/StepFooter';
+import { useStepProgress } from '../progress';
 
 export function RepeatStep({ step, onDone }: { step: RuntimeStep & { type: 'repeat' }; onDone: (r: StepResult) => void }) {
   const t = T();
@@ -15,6 +16,7 @@ export function RepeatStep({ step, onDone }: { step: RuntimeStep & { type: 'repe
   const it = items[i];
   useEffect(() => { if (!items.length) onDone({}); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  const inLesson = useStepProgress((i + (scores[it?.id ?? ''] != null ? 1 : 0)) / Math.max(1, items.length));
   if (!it) return null;
   const finish = () => {
     const done = Object.values(scores);
@@ -27,10 +29,10 @@ export function RepeatStep({ step, onDone }: { step: RuntimeStep & { type: 'repe
   return (
     <>
       <p className="qprompt">{t.lesson.repeat}</p>
-      <p className="sm mut ctr" style={{ marginTop: -6 }}>Écoutez, puis dites-le : l’application vérifie que le thaï est compris.</p>
+      <p className="sm mut ctr mt-n1">Écoutez, puis dites-le : l’application vérifie que le thaï est compris.</p>
       <MicPanel key={it.id} item={it} inline onScore={(s) => setScores((prev) => ({ ...prev, [it.id]: Math.max(prev[it.id] ?? 0, s) }))} />
       <div className="sp" />
-      <StepFooter meta={<><span>{best != null ? `Note : ${best}/10` : step.graded ? 'Dites le mot pour obtenir une note' : 'Facultatif : jamais bloquant.'}</span><span className="b">{i + 1} / {items.length}</span></>}>
+      <StepFooter meta={<><span>{best != null ? `Note : ${best}/10` : step.graded ? 'Dites le mot pour obtenir une note' : 'Facultatif : jamais bloquant.'}</span>{!inLesson && <span className="b">{i + 1} / {items.length}</span>}</>}>
         <div className="btns">
           {!step.graded && <button className="btn ghost" onClick={() => onDone({ xp: i + 1 })}>Passer l’exercice</button>}
           <ContinueButton onClick={() => (i + 1 < items.length ? setI(i + 1) : finish())} label={i + 1 < items.length ? 'Mot suivant' : t.common.finish} />

@@ -81,7 +81,7 @@ export function ComprehensionRun() {
   const q = quiz[qi];
   const answer = (k: number) => { if (picked !== null || !q) return; setPicked(k); if (k === q.answer) setScore((s) => s + 1); };
   useDigitKeys(phase === 'quiz' && q && picked === null ? q.choices.length : 0, answer);
-  if (!d) return <Empty e="🔍">Conversation introuvable.</Empty>;
+  if (!d) return <Empty icon="search">Conversation introuvable.</Empty>;
   const nextQ = () => {
     if (qi + 1 < quiz.length) { setQi(qi + 1); setPicked(null); return; }
     const total = quiz.length;
@@ -94,14 +94,14 @@ export function ComprehensionRun() {
   if (phase === 'listen') {
     return (
       <>
-        <div className="stage listen-stage" style={{ minHeight: 220 }}>
+        <div className="stage">
           <div style={{ fontSize: 56 }}>{d.icon}</div>
-          <div className="serif" style={{ fontSize: 26, marginTop: 6 }}>{L(d.title)}</div>
-          <div className="mut sm" style={{ marginTop: 4 }}>Vous et {L(d.other).toLowerCase()} · {d.lines.length} répliques · ≈ {dialogSeconds(d)} s</div>
-          <div className="takes" aria-label="Répliques">{d.lines.map((l, k) => <span key={k} className={`take ${line === k ? 'on' : line !== null && k < line ? 'done' : ''}`}>{l.who === 'me' ? '♟' : '●'}</span>)}</div>
+          <div className="title-xl mt-2">{L(d.title)}</div>
+          <div className="mut sm mt-1">Vous et {L(d.other).toLowerCase()} · {d.lines.length} répliques · ≈ {dialogSeconds(d)} s</div>
+          <div className="takes" aria-label="Répliques">{d.lines.map((l, k) => <span key={k} className={`take ${line === k ? 'on' : line !== null && k < line ? 'done' : ''}`}>{l.who === 'me' ? <Icon name="user" size={12} /> : '●'}</span>)}</div>
         </div>
         <div className="audio"><button className={`ib big pri listen-play ${line !== null ? 'speaking' : ''}`} onClick={play} aria-label={line !== null ? 'Arrêter' : 'Écouter'} data-testid="comp-play"><Icon name={line !== null ? 'pause' : 'play'} /></button></div>
-        <p className="xs mut ctr" style={{ margin: '-2px 0 8px' }}>{line !== null ? `Réplique ${line + 1} / ${d.lines.length}` : plays ? `Écouté ${plays} fois. Réécoutez ou passez aux questions.` : 'Sans le texte : essayez de saisir la situation, les nombres, les décisions.'}</p>
+        <p className="xs mut ctr mt-n1 mb-2">{line !== null ? `Réplique ${line + 1} / ${d.lines.length}` : plays ? `Écouté ${plays} fois. Réécoutez ou passez aux questions.` : 'Sans le texte : essayez de saisir la situation, les nombres, les décisions.'}</p>
         <div className="note plain sm">Deux voix : la vôtre ({sp.gender === 'f' ? 'femme' : 'homme'}) et celle de l’interlocuteur ({other === 'f' ? 'femme' : 'homme'}). Vous pouvez écouter autant de fois que vous voulez.</div>
         <StepFooter meta={<span>{quiz.length} questions en français suivront.</span>}>
           <ContinueButton onClick={() => { stop(); setPhase('quiz'); }} label={plays ? 'Passer aux questions' : 'Passer aux questions sans avoir tout écouté'} className={plays ? 'btn' : 'btn ghost'} />
@@ -113,9 +113,9 @@ export function ComprehensionRun() {
     const done = picked !== null;
     return (
       <>
-        <div className="sess" style={{ marginBottom: 6 }}><span className="tag jade">Compréhension</span><span className="sp" /><span className="n">Question {qi + 1} / {quiz.length}</span></div>
-        <p className="qprompt" style={{ fontSize: 22 }}>{q.q}</p>
-        <div className="btns" style={{ marginBottom: 12 }}><button className="btn ghost sm" onClick={play}><Icon name={line !== null ? 'pause' : 'speaker'} size={16} /> {line !== null ? 'Arrêter' : 'Réécouter la conversation'}</button></div>
+        <div className="sess mb-2"><span className="tag jade">Compréhension</span><span className="sp" /><span className="n">Question {qi + 1} / {quiz.length}</span></div>
+        <p className="qprompt">{q.q}</p>
+        <div className="btns mb-3"><button className="btn ghost sm" onClick={play}><Icon name={line !== null ? 'pause' : 'speaker'} size={16} /> {line !== null ? 'Arrêter' : 'Réécouter la conversation'}</button></div>
         <div className={`choices ${done ? 'lock' : ''}`}>
           {q.choices.map((c, k) => (
             <button key={k} className={`choice ${done ? (k === q.answer ? 'ok' : k === picked ? 'ko' : 'dim') : ''}`} onClick={() => answer(k)} disabled={done}><span className="k" aria-hidden="true">{k + 1}</span><span>{c}</span></button>
@@ -124,7 +124,7 @@ export function ComprehensionRun() {
         <div className="sp" />
         {done && (
           <StepFooter tone={picked === q.answer ? 'ok' : 'ko'}>
-            <div className="qfin"><span className={`verdict ${picked === q.answer ? 'ok' : 'ko'}`}>{picked === q.answer ? '✓ Correct' : '✗ Pas tout à fait'}</span>{picked !== q.answer && <span className="good"> · Bonne réponse : {q.choices[q.answer]}</span>}</div>
+            <div className="qfin"><span className={`verdict ${picked === q.answer ? 'ok' : 'ko'}`}><Icon name={picked === q.answer ? 'check' : 'close'} />{picked === q.answer ? 'Correct' : 'Pas tout à fait'}</span>{picked !== q.answer && <span className="good"> · Bonne réponse : {q.choices[q.answer]}</span>}</div>
             <ContinueButton onClick={nextQ} label={qi + 1 < quiz.length ? 'Continuer' : 'Voir le résultat'} auto={picked === q.answer} autoMs={1200} autoFocus />
           </StepFooter>
         )}
@@ -135,15 +135,15 @@ export function ComprehensionRun() {
   return (
     <>
       <div className={`recap ${pct >= 60 ? 'ok' : 'ko'}`}>
-        <div style={{ fontSize: 44 }}>{pct >= 90 ? '🌟' : pct >= 60 ? '✅' : '🎧'}</div>
-        <div className="score" style={{ fontSize: 52 }}>{score}<small> / {quiz.length}</small></div>
-        <div className="b" style={{ fontSize: 18, marginTop: 6 }}>{pct >= 90 ? 'Tout compris' : pct >= 60 ? 'Bien compris' : 'À réécouter'}</div>
+        <div className="medal"><Icon name={pct >= 90 ? 'star' : pct >= 60 ? 'check' : 'headphones'} /></div>
+        <div className="score">{score}<small> / {quiz.length}</small></div>
+        <div className="verdict-t">{pct >= 90 ? 'Tout compris' : pct >= 60 ? 'Bien compris' : 'À réécouter'}</div>
         <div className="mut sm">{L(d.title)} · +{3 + score * 2} XP</div>
       </div>
       <div className="h2">Le texte de la conversation</div>
-      <p className="sm mut" style={{ margin: '-4px 2px 10px' }}>Relisez avec la phonétique et la traduction, puis réécoutez : les phrases devraient sonner plus clairement.</p>
+      <p className="note-under">Relisez avec la phonétique et la traduction, puis réécoutez : les phrases devraient sonner plus clairement.</p>
       <DialogView id={d.id} />
-      <div className="stack" style={{ marginTop: 14 }}>
+      <div className="stack mt-4">
         <button className="btn" onClick={() => nav('/explore/comprehension')}>Une autre conversation</button>
         <button className="btn ghost" onClick={() => { setPhase('listen'); setQi(0); setPicked(null); setScore(0); setPlays(0); }}>Réécouter celle-ci</button>
       </div>

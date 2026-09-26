@@ -6,10 +6,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FullScreen } from '@/app/Shell';
 import { useStore, type LessonSession } from '@/app/store';
-import { useKnown, useLevels, useNextLesson, usePath } from '@/app/hooks';
+import { useKnown, useLevels, useNextLesson } from '@/app/hooks';
 import { curriculum } from '@/content/packs';
 import { recognizer, recorder } from '@/app/services/speech';
-import { planLesson, planMinutes, type RuntimeStep } from './engine';
+import { planLesson } from './engine';
+import { StepProgressCtx, lessonProgress } from './progress';
 import { isKnownOrally } from '@/curriculum/path';
 import { L, T } from '@/i18n';
 import { Icon, Sheet } from '@/components/ui';
@@ -26,8 +27,6 @@ import { checkBadges } from './badges';
 
 export interface StepResult { ok?: number; total?: number; wrong?: string[]; xp?: number }
 
-const STEP_LABEL: Record<RuntimeStep['type'], string> = { theory: 'À retenir', flashcards: 'Découvrir', questions: 'S’entraîner', match: 'Associer', build: 'Construire', dialog: 'Conversation', reading: 'Lecture', repeat: 'Prononcer', recap: 'Bilan' };
-
 export function LessonRunner() {
   const { id = '' } = useParams();
   const nav = useNavigate();
@@ -40,7 +39,6 @@ export function LessonRunner() {
   const levels = useLevels();
   const srs = useStore((s) => s.srs);
   const seen = useStore((s) => s.seen);
-  const path = usePath();
   const next = useNextLesson();
   const lesson = useMemo(() => curriculum().lessons.find((l) => l.id === id) ?? null, [id]);
   const [quitAsk, setQuitAsk] = useState(false);
@@ -78,9 +76,14 @@ export function LessonRunner() {
     window.scrollTo(0, 0);
   }, [updateSession]);
 
+  // Barre unique : avancement dans l'étape en cours (jamais en arrière), remis à zéro à chaque étape
+  const step = session?.steps[session.index];
+  const stepKey = session ? `${session.lessonId}-${session.startedAt}-${session.index}` : '';
+  const [sub, setSub] = useState({ key: '', f: 0 });
+  const reportSub = useCallback((f: number) => setSub((s) => (s.key === stepKey && s.f >= f ? s : { key: stepKey, f: s.key === stepKey ? Math.max(s.f, f) : f })), [stepKey]);
+
   // Fin de leçon : validation, XP bonus, badges, minutes
   const completedRef = useRef<string | null>(null);
-  const step = session?.steps[session.index];
   useEffect(() => {
     if (!session || step?.type !== 'recap' || completedRef.current === session.lessonId + session.startedAt) return;
     completedRef.current = session.lessonId + session.startedAt;
@@ -106,26 +109,26 @@ export function LessonRunner() {
   if (conflict && lesson) {
     return (
       <FullScreen title={L(lesson.title)} onBack={() => nav(-1)}>
-        <div className="recap" style={{ marginTop: 20 }}><div style={{ fontSize: 40 }}>⏸️</div><div className="serif" style={{ fontSize: 26 }}>« {conflict.title} » est en pause</div><p className="mut sm" style={{ marginTop: 6 }}>Étape {conflict.index + 1} sur {conflict.steps.length}. Commencer une autre leçon abandonne cette tentative.</p></div>
-        <div className="stack" style={{ marginTop: 16 }}>
+        <div className="recap mt-5"><div className="medal"><Icon name="pause" /></div><div className="title-xl">« {conflict.title} » est en pause</div><p className="mut sm mt-2">Étape {conflict.index + 1} sur {conflict.steps.length}. Commencer une autre leçon abandonne cette tentative.</p></div>
+        <div className="stack mt-4">
           <button className="btn" onClick={() => nav(`/lesson/${conflict.lessonId}`, { replace: true })}>Reprendre « {conflict.title} »</button>
           <button className="btn ghost" onClick={() => { setConflict(null); endSession(); start(); }}>Abandonner et commencer « {L(lesson.title)} »</button>
         </div>
       </FullScreen>
     );
   }
-  if (!session || !step) return <FullScreen title={lesson ? L(lesson.title) : ''} onBack={() => nav(-1)}><div className="ctr mut" style={{ padding: 40 }}>{t.common.loading}</div></FullScreen>;
+  if (!session || !step) return <FullScreen title={lesson ? L(lesson.title) : ''} onBack={() => nav(-1)}><div className="ctr mut empty">{t.common.loading}</div></FullScreen>;
 
-  const total = session.steps.length;
-  const progress = session.index / Math.max(1, total - 1);
-  const minutesLeft = planMinutes(session.steps.slice(session.index));
-  const lessonNo = lesson ? path.filter((p) => p.status !== 'granted').findIndex((p) => p.lesson.id === lesson.id) + 1 : 0;
-  const key = `${session.lessonId}-${session.startedAt}-${session.index}`;
+  const key = stepKey;
+  const progress = lessonProgress(session.steps, session.index, sub.key === key ? sub.f : 0);
+  // Sans théorie en tête, on rappelle discrètement le titre au premier écran (la barre n'en a pas)
+  const showTitle = session.index === 0 && step.type !== 'theory' && step.type !== 'recap';
+  const askQuit = () => (step.type === 'recap' ? quit() : setQuitAsk(true));
 
   return (
-    <FullScreen title={session.training ? session.title : `${lessonNo ? `Leçon ${lessonNo}` : 'Leçon'} · ${STEP_LABEL[step.type]}`} onBack={() => (step.type === 'recap' ? quit() : setQuitAsk(true))}
-      right={<button className="tb" aria-label="Quitter" onClick={() => (step.type === 'recap' ? quit() : setQuitAsk(true))}><Icon name="close" /></button>} fit={step.type === 'questions' || step.type === 'flashcards'}>
-      <div className="sess"><div className="steps" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}>{session.steps.map((_, k) => <i key={k} className={k < session.index ? 'done' : k === session.index ? 'cur' : ''} />)}</div><span className="n">{t.lesson.step} {session.index + 1} / {total}{step.type !== 'recap' ? ` · ≈ ${minutesLeft} min` : ''}</span></div>
+    <FullScreen title={session.title} onBack={askQuit} progress={progress} fit={step.type === 'questions' || step.type === 'flashcards'}>
+      <StepProgressCtx.Provider value={reportSub}>
+      {showTitle && <p className="eyebrow ctr mb-2">{session.title}</p>}
       {step.type === 'theory' && <TheoryStep key={key} step={step} onDone={() => finish()} title={lesson ? L(lesson.title) : session.title} subtitle={lesson ? L(lesson.subtitle) : ''} />}
       {step.type === 'flashcards' && <FlashcardsStep key={key} step={step} onDone={finish} />}
       {step.type === 'questions' && <QuestionsStep key={key} step={step} onDone={finish} timed={session.mode === 'timed'} />}
@@ -135,6 +138,7 @@ export function LessonRunner() {
       {step.type === 'reading' && <div key={key}><ReadingView id={step.id} onDone={() => finish({ xp: 5 })} doneLabel={t.common.continue} /></div>}
       {step.type === 'repeat' && <RepeatStep key={key} step={step} onDone={finish} />}
       {step.type === 'recap' && <RecapStep key={key} session={session} lesson={lesson} next={next} onClose={quit} onNext={(nid) => { endSession(); nav(`/lesson/${nid}`, { replace: true }); }} onRetry={() => { endSession(); nav(`/lesson/${session.lessonId}`, { replace: true }); }} startedAt={startedAt.current} />}
+      </StepProgressCtx.Provider>
       <Sheet open={quitAsk} onClose={() => setQuitAsk(false)} title={t.common.quit} footer={null}>
         <p className="lead">{session.training ? 'Quitter l’entraînement ?' : t.lesson.quitConfirm}</p>
         <div className="stack">

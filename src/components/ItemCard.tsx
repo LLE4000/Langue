@@ -2,7 +2,7 @@
  * Fiche d'un élément d'apprentissage : recto (scène) et verso (détails), réutilisés par les flashcards,
  * la feuille de détail et l'exploration.
  */
-import { useState, type ReactNode } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '@/app/store';
 import { useMastery, useKnown } from '@/app/hooks';
@@ -94,10 +94,10 @@ export function ItemBack({ it }: { it: LearnItem }) {
     <>
       {head}
       {it.kind !== 'vow' && it.kind !== 'tone' && it.rom && <ToneChips rom={it.rom} />}
-      {wbw && <><div className="xs mut b" style={{ marginTop: 12 }}>Mot à mot</div><WordByWord thai={it.thai} rom={it.rom} /></>}
-      {main.length > 0 && <dl className="kv">{main.map(([k, v], i) => <div key={i} style={{ display: 'contents' }}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>}
+      {wbw && <><div className="xs mut b mt-3">Mot à mot</div><WordByWord thai={it.thai} rom={it.rom} /></>}
+      {main.length > 0 && <dl className="kv">{main.map(([k, v], i) => <Fragment key={i}><dt>{k}</dt><dd>{v}</dd></Fragment>)}</dl>}
       {ex && <div className="ex"><span className="mid"><Thai text={ex.thai} /><Rom text={ex.rom} /><br /><span className="sm mut">{resolveTokens(L(ex.meaning), tok)}</span></span><AudioButton text={ex.thai} className="sm" /></div>}
-      {tech.length > 0 && <details className="fold sm" style={{ marginTop: 10 }}><summary>Notations API et RTGS</summary><dl className="kv">{tech.map(([k, v], i) => <div key={i} style={{ display: 'contents' }}><dt>{k}</dt><dd>{v}</dd></div>)}</dl></details>}
+      {tech.length > 0 && <details className="fold sm mt-3"><summary>Notations API et RTGS</summary><dl className="kv">{tech.map(([k, v], i) => <Fragment key={i}><dt>{k}</dt><dd>{v}</dd></Fragment>)}</dl></details>}
     </>
   );
 }
@@ -128,7 +128,7 @@ export function ItemDetailSheet({ ids, index, onClose, onNav }: { ids: string[];
   const act = (label: string, node: ReactNode) => <span className="act">{node}<small>{label}</small></span>;
   return (
     <Sheet open onClose={onClose} title={<div className="row-flex">{n > 1 && <button className="ib sm" onClick={() => { setRated(null); onNav((index - 1 + n) % n); }} aria-label="Précédent"><Icon name="back" size={18} /></button>}<b>{n > 1 ? `${index + 1} / ${n}` : L({ fr: 'Détail' })}</b>{n > 1 && <button className="ib sm" onClick={() => { setRated(null); onNav((index + 1) % n); }} aria-label="Suivant"><Icon name="next" size={18} /></button>}</div>}
-      footer={n > 1 && index + 1 < n ? <div className="btns" style={{ marginTop: 16 }}><button className="btn soft" onClick={onClose}>Fermer</button><button className="btn" onClick={() => { setRated(null); onNav(index + 1); }}>Suivant <Icon name="next" size={18} /></button></div> : undefined}>
+      footer={n > 1 && index + 1 < n ? <div className="btns sheet-foot"><button className="btn soft" onClick={onClose}>Fermer</button><button className="btn" onClick={() => { setRated(null); onNav(index + 1); }}>Suivant <Icon name="next" size={18} /></button></div> : undefined}>
       <div className="stage" style={{ minHeight: 150 }}><span className="corner"><button className={`ib sm fav ${fav ? 'on' : ''}`} onClick={() => toggleFav(it.id)} aria-label="Favori" aria-pressed={!!fav}><Icon name="star" size={18} /></button></span><ItemFront it={it} /></div>
       <div className="audio acts">
         {it.say && act('Écouter', <AudioButton text={it.say} big />)}
@@ -136,13 +136,13 @@ export function ItemDetailSheet({ ids, index, onClose, onNav }: { ids: string[];
         {it.say && act('Prononcer', <button className="ib big" onClick={() => setMic(true)} aria-label="Vérifier ma prononciation"><Icon name="mic" /></button>)}
         {writeChar && act('Écrire', <Link to={`/explore/writing?c=${encodeURIComponent(writeChar)}`} className="ib big" aria-label="S'entraîner à l'écrire" onClick={onClose}><Icon name="pen" /></Link>)}
       </div>
-      <div className="ans" style={{ marginTop: 0 }}><ItemBack it={it} /></div>
-      {!readable && missing.length > 0 && <div className="note sm" style={{ marginTop: 10 }}>📖 Pas encore lisible avec ce que vous avez appris : il manque <span lang="th" className="th" style={{ fontSize: 17 }}>{missing.slice(0, 4).map(missingLabel).join(' · ')}</span>{missing.length > 4 ? '…' : ''}. Le parcours y viendra.</div>}
+      <div className="ans mt-0"><ItemBack it={it} /></div>
+      {!readable && missing.length > 0 && <div className="note sm mt-3"><Icon name="bookOpen" size={14} /> Pas encore lisible avec ce que vous avez appris : il manque <span lang="th" className="th th-s">{missing.slice(0, 4).map(missingLabel).join(' · ')}</span>{missing.length > 4 ? '…' : ''}. Le parcours y viendra.</div>}
       <div className="h2">Mon niveau sur cet élément <span className="sp" /><span className="sm mut">{Math.round(m * 100)} %</span></div>
-      <div className="rate" style={{ marginTop: 0 }} role="radiogroup" aria-label="Mon niveau">
-        {[[0, '❌', 'Inconnu'], [1, '🟠', 'Difficile'], [2, '🟡', 'Presque'], [3, '🟢', 'Connu']].map(([q, e, lab]) => <button key={q} data-q={q} className={rated === q ? 'cur' : ''} role="radio" aria-checked={rated === q} onClick={() => rate(q as 0 | 1 | 2 | 3)}><span>{e}</span>{lab}</button>)}
+      <div className="rate mt-0" role="radiogroup" aria-label="Mon niveau">
+        {([[0, 'Inconnu'], [1, 'Difficile'], [2, 'Presque'], [3, 'Connu']] as const).map(([q, lab]) => <button key={q} data-q={q} className={rated === q ? 'cur' : ''} role="radio" aria-checked={rated === q} onClick={() => rate(q)}><i aria-hidden="true" />{lab}</button>)}
       </div>
-      {rated !== null && <p className="xs mut ctr" style={{ margin: '8px 0 0' }}>Noté · la révision en tiendra compte.</p>}
+      {rated !== null && <p className="xs mut ctr mt-2">Noté · la révision en tiendra compte.</p>}
       {mic && <MicPanel item={it} onClose={() => setMic(false)} />}
     </Sheet>
   );

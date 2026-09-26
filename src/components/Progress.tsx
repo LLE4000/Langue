@@ -80,7 +80,7 @@ export function ProgressSpark({ log, days = 30 }: { log: Record<string, number[]
         <path d={`${d} L${W},${H} L0,${H} Z`} fill="var(--acc-soft)" />
         <path d={d} fill="none" stroke="var(--acc)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
       </svg>
-      <div className="kv"><span>Il y a {vals.length} jour{vals.length > 1 ? 's' : ''} : <b>{first} %</b></span><span>Aujourd’hui : <b>{last} %</b></span>{last > first && <span className="ok-t">+{last - first} points</span>}</div>
+      <div className="statline"><span>Il y a {vals.length} jour{vals.length > 1 ? 's' : ''} : <b>{first} %</b></span><span>Aujourd’hui : <b>{last} %</b></span>{last > first && <span className="ok-t">+{last - first} points</span>}</div>
     </div>
   );
 }

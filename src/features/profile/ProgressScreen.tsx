@@ -22,9 +22,9 @@ export function ProgressScreen() {
       <div className="tierhead">
         <TierRing p={p} size={86} />
         <div className="mid">
-          <div className="b" style={{ fontSize: 18 }}>{story.title}</div>
-          <div className="sm mut" style={{ marginTop: 2 }}>{story.text}</div>
-          <div className="sm" style={{ marginTop: 8, fontWeight: 650 }}>{tierLine(p)}</div>
+          <div className="t">{story.title}</div>
+          <div className="s">{story.text}</div>
+          <div className="l">{tierLine(p)}</div>
         </div>
       </div>
       <TierLadder p={p} />
@@ -32,7 +32,7 @@ export function ProgressScreen() {
       {nextStory && p.next !== 'B2' && (
         <>
           <div className="h2">Pour atteindre {p.next} <span className="sp" /><span className="sm mut">{remainingLine(p)}</span></div>
-          <p className="sm mut" style={{ margin: '-4px 2px 10px' }}>{nextStory.text}</p>
+          <p className="note-under">{nextStory.text}</p>
           {todo.length ? (
             <div className="list">
               {todo.map((s) => {
@@ -43,14 +43,14 @@ export function ProgressScreen() {
           ) : <div className="note info sm">Toutes les compétences sont au niveau : le palier {p.next} est à vous dès la prochaine mise à jour.</div>}
         </>
       )}
-      {p.next === 'B2' && <div className="note plain sm" style={{ marginTop: 14 }}>{TIER_STORY.B2.text}</div>}
+      {p.next === 'B2' && <div className="note plain sm mt-4">{TIER_STORY.B2.text}</div>}
 
       <div className="h2">Mes compétences <span className="sp" /><span className="sm mut">{p.overall} % en moyenne</span></div>
       <SkillBars p={p} />
-      <div className="kv" style={{ marginTop: 10 }}>
+      <div className="statline mt-3">
         <span><b>{p.counts.wordsAcquired}</b> mots acquis</span>
         <span><b>{p.counts.lessonsDone}</b> / {p.counts.lessonsTotal} leçons</span>
-        {p.counts.toReview > 0 && <Link to="/review" style={{ color: 'var(--acc-deep)', fontWeight: 650 }}><b style={{ color: 'inherit' }}>{p.counts.toReview}</b> à réviser ›</Link>}
+        {p.counts.toReview > 0 && <Link to="/review"><b>{p.counts.toReview}</b> à réviser ›</Link>}
       </div>
 
       <div className="h2">Mon évolution</div>
@@ -61,10 +61,10 @@ export function ProgressScreen() {
         {TIERS.map((t) => {
           const st = TIER_STORY[t];
           const idx = TIERS.indexOf(t), cur = TIERS.indexOf(p.tier);
-          return <div key={t} className={`row ${idx < cur ? 'done' : ''}`}><span className="ico" style={idx === cur ? { background: 'var(--ink)', color: 'var(--bg)', fontWeight: 700 } : undefined}>{idx < cur ? '✓' : t}</span><span className="mid"><span className="t">{st.title}</span><span className="s">{st.text}</span></span></div>;
+          return <div key={t} className={`row ${idx < cur ? 'done' : ''}`}><span className={`ico ${idx === cur ? 'cur' : ''}`}>{idx < cur ? '✓' : t}</span><span className="mid"><span className="t">{st.title}</span><span className="s">{st.text}</span></span></div>;
         })}
       </div>
-      <p className="xs mut" style={{ margin: '14px 2px 0' }}>Les paliers suivent l’esprit du CECRL (A1 à B2), adaptés au thaï : lettres, tons et compréhension de l’oral comptent autant que le vocabulaire. Votre niveau déclaré à l’inscription sert de point de départ ; ce que vous faites dans l’application le fait évoluer.</p>
+      <p className="foot-note mt-4">Les paliers suivent l’esprit du CECRL (A1 à B2), adaptés au thaï : lettres, tons et compréhension de l’oral comptent autant que le vocabulaire. Votre niveau déclaré à l’inscription sert de point de départ ; ce que vous faites dans l’application le fait évoluer.</p>
     </>
   );
 }

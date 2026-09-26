@@ -30,7 +30,7 @@ export function LevelPicker({ levels, onChange, skills = SKILLS }: { levels: Ski
               <button key={n} role="radio" aria-checked={levels[sk] === n} className={levels[sk] === n ? 'on' : ''} onClick={() => onChange({ ...levels, [sk]: n as Level })}>{['0', 'A1', 'A2', 'B1', 'B2+'][n]}</button>
             ))}
           </div>
-          {sk === 'reading' && <button className="btn ghost sm" style={{ marginTop: 10 }} onClick={() => setPlacement(true)}>🔎 {t.onboarding.placement}</button>}
+          {sk === 'reading' && <button className="btn ghost sm mt-3" onClick={() => setPlacement(true)}><Icon name="search" size={16} /> {t.onboarding.placement}</button>}
         </div>
       ))}
       {placement && <PlacementTest onClose={() => setPlacement(false)} onResult={(lvl) => { onChange({ ...levels, reading: lvl, writing: Math.min(levels.writing, lvl) as Level }); setPlacement(false); }} />}
@@ -38,10 +38,11 @@ export function LevelPicker({ levels, onChange, skills = SKILLS }: { levels: Ski
   );
 }
 
+/** `icon` : nom d'une icône du jeu d'icônes (voir `Icon`). */
 export const GOAL_OPTIONS: { key: 'speak' | 'read' | 'both'; icon: string; title: string; desc: string; goals: Goals }[] = [
-  { key: 'both', icon: '🎯', title: 'Parler, lire et écrire', desc: 'Le parcours complet : conversation et écriture s’entrelacent. Recommandé.', goals: { speak: true, read: true } },
-  { key: 'speak', icon: '💬', title: 'Parler et comprendre', desc: 'Uniquement l’oral : mots, phrases, conversations, avec la phonétique. Pas de leçon d’écriture (elle reste consultable dans Explorer).', goals: { speak: true, read: false } },
-  { key: 'read', icon: '📖', title: 'Lire et écrire', desc: 'Pour qui parle déjà : l’alphabet, les tons, la lecture de mots et de textes.', goals: { speak: false, read: true } },
+  { key: 'both', icon: 'target', title: 'Parler, lire et écrire', desc: 'Le parcours complet : conversation et écriture s’entrelacent. Recommandé.', goals: { speak: true, read: true } },
+  { key: 'speak', icon: 'chat', title: 'Parler et comprendre', desc: 'Uniquement l’oral : mots, phrases, conversations, avec la phonétique. Pas de leçon d’écriture (elle reste consultable dans Explorer).', goals: { speak: true, read: false } },
+  { key: 'read', icon: 'bookOpen', title: 'Lire et écrire', desc: 'Pour qui parle déjà : l’alphabet, les tons, la lecture de mots et de textes.', goals: { speak: false, read: true } },
 ];
 export const goalKey = (g: Goals) => (g.speak && g.read ? 'both' : g.speak ? 'speak' : 'read');
 
@@ -50,9 +51,9 @@ export function GoalPicker({ value, onChange }: { value: Goals; onChange: (g: Go
   return (
     <div className="stack" role="radiogroup" aria-label="Objectif">
       {GOAL_OPTIONS.map((o) => (
-        <button key={o.key} role="radio" aria-checked={cur === o.key} className={`opt ${cur === o.key ? 'on' : ''}`} style={{ marginTop: 0, alignItems: 'flex-start', padding: '14px' }} onClick={() => onChange(o.goals)}>
-          <span className="e">{o.icon}</span>
-          <span><span style={{ display: 'block', fontSize: 16 }}>{o.title}</span><small>{o.desc}</small></span>
+        <button key={o.key} role="radio" aria-checked={cur === o.key} className={`opt goal ${cur === o.key ? 'on' : ''}`} onClick={() => onChange(o.goals)}>
+          <span className="ico"><Icon name={o.icon} /></span>
+          <span><span className="ot">{o.title}</span><small>{o.desc}</small></span>
         </button>
       ))}
     </div>
@@ -86,7 +87,7 @@ export function Onboarding() {
     nav('/', { replace: true });
   };
   const steps = 3;
-  const Dots = () => <div className="steps" style={{ margin: '0 0 18px', maxWidth: 160 }} aria-hidden="true">{Array.from({ length: steps }, (_, k) => <i key={k} className={k < step ? 'done' : k === step ? 'cur' : ''} />)}</div>;
+  const Dots = () => <div className="steps dots" aria-hidden="true">{Array.from({ length: steps }, (_, k) => <i key={k} className={k < step ? 'done' : k === step ? 'cur' : ''} />)}</div>;
 
   return (
     <div className="app">
@@ -97,9 +98,9 @@ export function Onboarding() {
             <h2>{t.app.tagline}</h2>
             <p className="lead">{t.onboarding.intro}</p>
             {others.length > 0 && (
-              <div className="note plain sm" style={{ marginTop: 0 }}>
+              <div className="note plain sm mt-0">
                 <b>Déjà un profil sur cet appareil ?</b>
-                <div className="chips" style={{ paddingBottom: 0, marginTop: 6 }}>{others.map((p) => <button key={p.id} className="chip" onClick={() => { switchProfile(p.id); reloadToHome(); }}>{p.name}</button>)}</div>
+                <div className="chips">{others.map((p) => <button key={p.id} className="chip" onClick={() => { switchProfile(p.id); reloadToHome(); }}>{p.name}</button>)}</div>
               </div>
             )}
             {PACKS.length > 1 && (
@@ -124,20 +125,20 @@ export function Onboarding() {
         {step === 1 && (
           <>
             <Dots />
-            <h2 style={{ fontSize: 30 }}>Votre objectif</h2>
+            <h2 className="sm-title">Votre objectif</h2>
             <p className="lead">Le thaï se parle et s’écrit très différemment. On peut très bien apprendre à parler sans lire une seule lettre, ou apprendre à lire quand on parle déjà. Vous pourrez changer d’avis plus tard.</p>
             <GoalPicker value={goals} onChange={setGoals} />
             {!showLevels ? (
-              <button className="btn ghost sm" style={{ marginTop: 14 }} onClick={() => setShowLevels(true)}>J’ai déjà des bases : régler mes niveaux</button>
+              <button className="btn ghost sm mt-4" onClick={() => setShowLevels(true)}>J’ai déjà des bases : régler mes niveaux</button>
             ) : (
               <>
-                <div className="h2" style={{ marginTop: 22 }}>{t.onboarding.levelsTitle}</div>
-                <p className="sm mut" style={{ margin: '0 2px 6px' }}>{goals.read && goals.speak ? 'Soyez précis : le parcours saute ce que vous savez déjà.' : goals.speak ? 'Où en êtes-vous à l’oral ? Le parcours saute ce que vous savez déjà.' : 'Où en êtes-vous en lecture ? Le petit test peut vous aider à vous situer.'}</p>
+                <div className="h2 mt-6">{t.onboarding.levelsTitle}</div>
+                <p className="note-under">{goals.read && goals.speak ? 'Soyez précis : le parcours saute ce que vous savez déjà.' : goals.speak ? 'Où en êtes-vous à l’oral ? Le parcours saute ce que vous savez déjà.' : 'Où en êtes-vous en lecture ? Le petit test peut vous aider à vous situer.'}</p>
                 <LevelPicker levels={levels} onChange={setLevels} skills={goalSkills(goals)} />
               </>
             )}
             <div className="sp gap" />
-            <div className="btns" style={{ marginTop: 12 }}>
+            <div className="btns mt-3">
               <button className="btn ghost" onClick={() => setStep(0)}>{t.common.back}</button>
               <button className="btn" onClick={() => setStep(2)}>{t.common.continue}</button>
             </div>
@@ -146,12 +147,12 @@ export function Onboarding() {
         {step === 2 && (
           <>
             <Dots />
-            <h2 style={{ fontSize: 30 }}>{t.onboarding.dailyGoal}</h2>
+            <h2 className="sm-title">{t.onboarding.dailyGoal}</h2>
             <p className="lead">Une leçon dure 5 à 15 minutes. Vous pourrez toujours en faire plus : rien ne bloque la suivante.</p>
             <div className="seg">
               {[5, 10, 15, 30].map((g) => <button key={g} className={goal === g ? 'on' : ''} onClick={() => setGoal(g)}>{g} min</button>)}
             </div>
-            <div className="note info" style={{ marginTop: 18 }}>
+            <div className="note info mt-5">
               <b>Ce que l’application fait de vos réponses.</b> Elle construit un parcours à partir de votre objectif{hasBases ? ' et de vos niveaux' : ''} : {hasBases ? 'ce que vous savez déjà est considéré acquis, ' : ''}ce qui manque vient dans l’ordre logique (on ne vous demandera jamais de lire une lettre qui n’a pas été enseignée). Tout est modifiable dans Profil.
             </div>
             <div className="sp gap" />

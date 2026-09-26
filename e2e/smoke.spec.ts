@@ -145,10 +145,14 @@ test('reprise d’une leçon après rechargement', async ({ page }) => {
   // parle déjà : la première leçon est une leçon d'écriture
   await expect(page.locator('a.cta .t')).toContainText(/consonnes/i);
   await page.locator('a.cta').click();
+  // une seule barre de progression : elle avance après la première étape et reste au même endroit après rechargement
+  const bar = page.getByRole('progressbar');
+  await expect(bar).toHaveAttribute('aria-valuenow', '0');
   await page.getByRole('button', { name: /^Continuer$/ }).click();
-  await expect(page.locator('.sess .n')).toContainText('2 /');
+  await expect(bar).not.toHaveAttribute('aria-valuenow', '0');
+  const at = await bar.getAttribute('aria-valuenow');
   await page.reload();
-  await expect(page.locator('.sess .n')).toContainText('2 /');
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', at ?? '');
   await page.goto('/#/');
   await expect(page.getByText('Reprendre la leçon')).toBeVisible();
 });
@@ -347,4 +351,24 @@ test('progression : pastille permanente, palier avec critères chiffrés, chaque
   await expect(page.getByText('Copier le diagnostic')).toBeHidden();
   await page.getByText('La voix pose problème ?').click();
   await expect(page.getByText('Copier le diagnostic')).toBeVisible();
+});
+
+test('navigation : quatre onglets, le profil s’ouvre sur le prénom, le mot thaï des titres se prononce', async ({ page }) => {
+  await onboard(page);
+  const tabs = page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link');
+  await expect(tabs).toHaveText(['Apprendre', 'Réviser', 'Jouer', 'Explorer']);
+  // le prénom, en haut à gauche de l'accueil, mène au profil (qui n'est plus un onglet)
+  await page.getByRole('link', { name: /Mon profil : Lucien/ }).click();
+  await expect(page).toHaveURL(/#\/profile$/);
+  await page.getByRole('button', { name: 'Retour' }).click();
+  await expect(page).toHaveURL(/#\/$/);
+  // l'onglet Jouer ouvre les jeux à plusieurs ; le titre porte son mot thaï
+  await tabs.filter({ hasText: 'Jouer' }).click();
+  await expect(page).toHaveURL(/#\/play$/);
+  await expect(page.getByRole('link', { name: /Duel sur un écran/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Écouter เล่น/ })).toBeVisible();
+  // l'accueil n'affiche plus « Jouer à plusieurs », mais la suite du parcours
+  await tabs.filter({ hasText: 'Apprendre' }).click();
+  await expect(page.getByText('Jouer à plusieurs')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /Mon parcours complet/ })).toBeVisible();
 });

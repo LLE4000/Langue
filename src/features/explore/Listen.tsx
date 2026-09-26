@@ -110,11 +110,11 @@ export function Listen() {
             <div className={`big ${isLetter ? 's1' : cur.item.thai.length > 8 ? 's4' : 's2'}`} style={{ color: cur.item.kind === 'cons' ? `var(--c-${cur.item.ref.cls})` : undefined }}>
               {revealed ? <Thai text={cur.item.kind === 'vow' ? vowelDisplay(cur.item.ref.form, 'อ') : cur.item.thai} /> : <span className="mut">?</span>}
             </div>
-            {revealed && <div className="listen-sub"><Thai text={label} className="sm" style={{ fontSize: 22 }} /> <Rom text={cur.item.rom} /> <span className="mut">· {L(cur.item.meaning)}</span></div>}
+            {revealed && <div className="listen-sub"><Thai text={label} className="th-m" /> <Rom text={cur.item.rom} /> <span className="mut">· {L(cur.item.meaning)}</span></div>}
             <div className="takes" aria-label="Lectures">{cur.takes.map((t, k) => <span key={k} className={`take ${k === take ? 'on' : k < take ? 'done' : ''}`}>{t.label}</span>)}</div>
           </>
         ) : (
-          <div className="mut" style={{ padding: 20 }}>{prefs.set === 'words' ? 'Aucun mot appris pour l’instant : faites une leçon, ou écoutez les consonnes.' : 'Choisissez des lettres ci-dessous.'}</div>
+          <div className="empty">{prefs.set === 'words' ? 'Aucun mot appris pour l’instant : faites une leçon, ou écoutez les consonnes.' : 'Choisissez des lettres ci-dessous.'}</div>
         )}
       </div>
       <div className="audio">
@@ -122,7 +122,7 @@ export function Listen() {
         <button className="ib big pri listen-play" onClick={on ? stop : play} aria-label={on ? 'Pause' : 'Lire en boucle'} disabled={!queue.length} data-testid="listen-play"><Icon name={on ? 'pause' : 'play'} /></button>
         <button className="ib big" onClick={() => jump(1)} aria-label="Suivant" disabled={!queue.length}><Icon name="next" /></button>
       </div>
-      <p className="xs mut ctr" style={{ margin: '-2px 0 8px' }}>{on ? 'Lecture en boucle. L’écran reste allumé ; laissez l’application au premier plan.' : 'Lecture continue, en boucle, sans toucher l’écran : idéal en voiture ou en marchant.'}</p>
+      <p className="xs mut ctr mt-n1 mb-2">{on ? 'Lecture en boucle. L’écran reste allumé ; laissez l’application au premier plan.' : 'Lecture continue, en boucle, sans toucher l’écran : idéal en voiture ou en marchant.'}</p>
 
       <div className="h2">Quoi écouter</div>
       <div className="chips">
@@ -134,12 +134,12 @@ export function Listen() {
       </div>
       {prefs.set === 'custom' && (
         <>
-          <p className="sm mut" style={{ margin: '0 2px 6px' }}>Sons voisins à distinguer, ou cochez librement.</p>
-          <div className="chips">{th.NEAR_SOUNDS.map(([lab, chars]) => { const ids = [...chars].map((c) => 'c:' + c); const active = ids.length === prefs.custom.length && ids.every((x) => prefs.custom.includes(x)); return <button key={lab} className={`chip ${active ? 'on' : ''}`} aria-pressed={active} onClick={() => setPrefs({ set: 'custom', custom: ids })}><b className="rom">{lab}</b> <Thai text={[...chars].join(' ')} style={{ fontSize: 17, color: active ? 'var(--bg)' : 'var(--ink)' }} /></button>; })}</div>
-          {prefs.custom.length > 0 && <p className="xs mut" style={{ margin: '0 2px 6px', textAlign: 'right' }}><button className="link" onClick={() => setPrefs({ custom: [] })}>Tout décocher</button></p>}
-          <div className="lgrid" style={{ marginTop: 6 }}>{CONS_ITEMS.map((c) => <button key={c.id} className={`cell ${c.ref.cls} ${prefs.custom.includes(c.id) ? 'sel' : ''} ${c.ref.obsolete ? 'locked' : ''}`} lang="th" aria-pressed={prefs.custom.includes(c.id)} onClick={() => toggleCustom(c.id)}>{c.thai}<small>{c.ref.initial === '(muet)' ? '–' : c.ref.initial}</small></button>)}</div>
+          <p className="sm mut mb-2">Sons voisins à distinguer, ou cochez librement.</p>
+          <div className="chips">{th.NEAR_SOUNDS.map(([lab, chars]) => { const ids = [...chars].map((c) => 'c:' + c); const active = ids.length === prefs.custom.length && ids.every((x) => prefs.custom.includes(x)); return <button key={lab} className={`chip ${active ? 'on' : ''}`} aria-pressed={active} onClick={() => setPrefs({ set: 'custom', custom: ids })}><b className="rom">{lab}</b> <Thai text={[...chars].join(' ')} className={active ? 'th-s' : 'th-s ink'} /></button>; })}</div>
+          {prefs.custom.length > 0 && <p className="xs mut mb-2" style={{ textAlign: 'right' }}><button className="link" onClick={() => setPrefs({ custom: [] })}>Tout décocher</button></p>}
+          <div className="lgrid mt-2">{CONS_ITEMS.map((c) => <button key={c.id} className={`cell ${c.ref.cls} ${prefs.custom.includes(c.id) ? 'sel' : ''} ${c.ref.obsolete ? 'locked' : ''}`} lang="th" aria-pressed={prefs.custom.includes(c.id)} onClick={() => toggleCustom(c.id)}>{c.thai}<small>{c.ref.initial === '(muet)' ? '–' : c.ref.initial}</small></button>)}</div>
           <label className="f">Voyelles</label>
-          <div className="lgrid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(78px, 1fr))' }}>{TAUGHT_VOWELS.map((v) => <button key={v.id} className={`cell wide ${prefs.custom.includes(v.id) ? 'sel' : ''}`} lang="th" aria-pressed={prefs.custom.includes(v.id)} onClick={() => toggleCustom(v.id)}>{vowelDisplay(v.form, 'อ')}<small>{v.rom}</small></button>)}</div>
+          <div className="lgrid wide">{TAUGHT_VOWELS.map((v) => <button key={v.id} className={`cell wide ${prefs.custom.includes(v.id) ? 'sel' : ''}`} lang="th" aria-pressed={prefs.custom.includes(v.id)} onClick={() => toggleCustom(v.id)}>{vowelDisplay(v.form, 'อ')}<small>{v.rom}</small></button>)}</div>
         </>
       )}
 
@@ -158,7 +158,7 @@ export function Listen() {
         <label className="f">Deviner d’abord <span className="xs">(le caractère n’apparaît qu’après la première lecture)</span></label>
         <Segmented value={prefs.guess} options={[{ v: false, label: 'Non' }, { v: true, label: 'Oui' }]} onChange={(v) => setPrefs({ guess: v })} />
       </details>
-      {prefs.set === 'custom' && <div className="note info sm" style={{ marginTop: 16 }}>Dans un groupe « même son » (ข ฃ ค…), les lettres se prononcent <b>exactement pareil</b> en début de syllabe : seule la classe change. Pour ป / พ ou ต / ท, la différence est réelle : la deuxième est <b>aspirée</b> (un souffle après la consonne, comme en anglais <i>pin</i>).</div>}
+      {prefs.set === 'custom' && <div className="note info sm mt-4">Dans un groupe « même son » (ข ฃ ค…), les lettres se prononcent <b>exactement pareil</b> en début de syllabe : seule la classe change. Pour ป / พ ou ต / ท, la différence est réelle : la deuxième est <b>aspirée</b> (un souffle après la consonne, comme en anglais <i>pin</i>).</div>}
     </>
   );
 }

@@ -15,23 +15,24 @@ export function RecapStep({ session, lesson, next, onClose, onNext, onRetry }: {
   const news = lesson ? lesson.newConcepts.map((id) => ITEMS[id]).filter((x) => x && x.kind !== 'rule' && x.kind !== 'grammar').slice(0, 12) : [];
   const nextIsDifferent = next && next.lesson.id !== session.lessonId;
   const minPct = Math.round((lesson?.minScore ?? 0.6) * 100);
+  const medal = session.training ? 'target' : passed ? (pct >= 90 ? 'star' : 'check') : 'rotate';
   return (
     <>
       <div className={`recap ${passed ? 'ok' : 'ko'}`}>
-        <div style={{ fontSize: 44 }}>{session.training ? '🎯' : passed ? (pct >= 90 ? '🌟' : '✅') : '🔁'}</div>
-        <div className="score" style={{ fontSize: 52 }}>{session.total ? <>{session.ok}<small> / {session.total}</small></> : '✓'}</div>
-        {session.total > 0 && <div className="xs mut">bonnes réponses du premier coup · {pct} %</div>}
-        <div className="b" style={{ fontSize: 18, marginTop: 6 }}>{session.training ? 'Entraînement terminé' : passed ? (pct >= 90 ? 'Excellent · ' + t.lesson.passed : t.lesson.passed) : `${t.lesson.failed} : il faut ${minPct} %`}</div>
+        <div className="medal"><Icon name={medal} /></div>
+        <div className="score">{session.total ? <>{session.ok}<small> / {session.total}</small></> : '✓'}</div>
+        {session.total > 0 && <div className="xs mut mt-1">bonnes réponses du premier coup · {pct} %</div>}
+        <div className="verdict-t">{session.training ? 'Entraînement terminé' : passed ? (pct >= 90 ? 'Excellent · ' + t.lesson.passed : t.lesson.passed) : `${t.lesson.failed} : il faut ${minPct} %`}</div>
         <div className="mut sm">{session.title} · +{session.xp} XP</div>
       </div>
       {news.length > 0 && passed && (
-        <><div className="h2">{t.lesson.newItems}</div><div className="chips" style={{ paddingBottom: 4 }}>{news.map((it) => <span key={it.id} className="chip"><Thai text={it.kind === 'num' ? it.digits : it.thai} style={{ fontSize: 17, color: 'var(--ink)' }} /><span className="xs"><Fr text={it.kind === 'cons' ? it.ref.nameMeaning : it.meaning} /></span></span>)}</div></>
+        <><div className="h2">{t.lesson.newItems}</div><div className="chips">{news.map((it) => <span key={it.id} className="chip"><Thai text={it.kind === 'num' ? it.digits : it.thai} className="th-s ink" /><span className="xs"><Fr text={it.kind === 'cons' ? it.ref.nameMeaning : it.meaning} /></span></span>)}</div></>
       )}
       {wrong.length > 0 && (
-        <><div className="h2">{t.lesson.toReview}</div><div className="list">{wrong.map((it) => <div className="row" key={it.id}><span className="mid"><Thai text={it.thai} /><span className="s"><Rom text={it.rom} /> · <Fr text={it.meaning} /></span></span></div>)}</div><p className="xs mut" style={{ margin: '6px 2px 0' }}>Ces éléments reviendront dans vos révisions.</p></>
+        <><div className="h2">{t.lesson.toReview}</div><div className="list">{wrong.map((it) => <div className="row" key={it.id}><span className="mid"><Thai text={it.thai} /><span className="s"><Rom text={it.rom} /> · <Fr text={it.meaning} /></span></span></div>)}</div><p className="foot-note">Ces éléments reviendront dans vos révisions.</p></>
       )}
       <div className="gap" />
-      <div className="stack" style={{ marginTop: 14 }}>
+      <div className="stack mt-3">
         {!session.training && passed && nextIsDifferent && <button className="btn" onClick={() => onNext(next!.lesson.id)}>{t.lesson.nextLesson} : {L(next!.lesson.title)} <Icon name="next" size={18} /></button>}
         {!session.training && !passed && <button className="btn" onClick={onRetry}>Refaire la leçon</button>}
         {session.training && <Link className="btn" to="/review" onClick={onClose}>Autre entraînement</Link>}

@@ -61,8 +61,8 @@ export function ShareScreen() {
     <>
       <p className="lead">Une carte générée sur votre appareil, à envoyer à qui vous voulez. Rien n’est publié automatiquement.</p>
       <div className="sharecard"><canvas ref={canvas} aria-label="Carte de progression" /></div>
-      <div className="btns" style={{ marginTop: 12 }}><button className="btn" onClick={share}><Icon name="share" size={18} /> Partager</button><button className="btn soft" onClick={download}><Icon name="download" size={18} /> Image</button></div>
-      <pre className="note plain sm" style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', marginTop: 12 }}>{text}</pre>
+      <div className="btns mt-3"><button className="btn" onClick={share}><Icon name="share" size={18} /> Partager</button><button className="btn soft" onClick={download}><Icon name="download" size={18} /> Image</button></div>
+      <pre className="note plain sm">{text}</pre>
       <div className="note info sm">Envie de vous mesurer à quelqu’un ? Comparez vos cartes chaque dimanche, ou lancez le même « Défi chrono » et comparez les scores. Un mode duel synchronisé pourra s’appuyer sur le format d’export.</div>
     </>
   );

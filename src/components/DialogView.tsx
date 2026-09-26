@@ -50,7 +50,7 @@ export function DialogView({ id, onDone, doneLabel }: { id: string; onDone?: () 
       <div className="dlgbar">
         <button className={`btn sm ${playingLine !== null ? '' : 'soft'}`} onClick={playAll}><Icon name={playingLine !== null ? 'pause' : 'play'} size={16} /> {playingLine !== null ? 'Arrêter' : 'Tout écouter'}</button>
         <button className={`btn sm ${rom ? '' : 'ghost'}`} onClick={() => toggleAll('rom')} aria-pressed={rom}><Icon name="eye" size={16} /> Phonétique</button>
-        <button className={`btn sm ${tr ? '' : 'ghost'}`} onClick={() => toggleAll('tr')} aria-pressed={tr}>🇫🇷 Traduction</button>
+        <button className={`btn sm ${tr ? '' : 'ghost'}`} onClick={() => toggleAll('tr')} aria-pressed={tr}><Icon name="globe" size={16} /> Traduction</button>
       </div>
       {d.lines.map((l, i) => {
         const wid = 'w:' + l.thai;
@@ -59,13 +59,13 @@ export function DialogView({ id, onDone, doneLabel }: { id: string; onDone?: () 
         return (
           <div key={i} id={`bub-${id}-${i}`} className={`bub ${l.who === 'me' ? 'me' : ''} ${playingLine === i ? 'playing' : ''}`}>
             <div className="who">{l.who === 'me' ? 'Vous' : L(d.other)} <span aria-label={voice === 'f' ? 'voix de femme' : 'voix d’homme'} title="Voix">{voice === 'f' ? '♀' : '♂'}</span></div>
-            {on(i, 'w') ? <WordByWord thai={l.thai} rom={l.rom} /> : <><Thai text={l.thai} />{on(i, 'rom') && <Rom text={l.rom} style={{ display: 'block' }} />}</>}
+            {on(i, 'w') ? <WordByWord thai={l.thai} rom={l.rom} /> : <><Thai text={l.thai} />{on(i, 'rom') && <Rom text={l.rom} className="block" />}</>}
             {on(i, 'tr') && <span className="tr"><Fr text={l.tr} /></span>}
             <div className="acts">
               <button className="mini" onClick={() => say(l)} aria-label="Écouter"><Icon name="speaker" /></button>
               <button className="mini" onClick={() => say(l, { slow: true })} aria-label="Lentement"><Icon name="turtle" /></button>
               <button className={`mini ${on(i, 'rom') ? 'on' : ''}`} onClick={() => setOne({ ...one, [i + 'rom']: !on(i, 'rom') })} aria-label="Phonétique" aria-pressed={on(i, 'rom')}><Icon name="eye" /></button>
-              <button className={`mini ${on(i, 'tr') ? 'on' : ''}`} onClick={() => setOne({ ...one, [i + 'tr']: !on(i, 'tr') })} aria-label="Traduction" aria-pressed={on(i, 'tr')}>🇫🇷</button>
+              <button className={`mini ${on(i, 'tr') ? 'on' : ''}`} onClick={() => setOne({ ...one, [i + 'tr']: !on(i, 'tr') })} aria-label="Traduction" aria-pressed={on(i, 'tr')}><Icon name="globe" /></button>
               <button className={`mini txt ${on(i, 'w') ? 'on' : ''}`} onClick={() => setOne({ ...one, [i + 'w']: !on(i, 'w') })} aria-pressed={on(i, 'w')}>Mot à mot</button>
               {l.who === 'me' && it && <button className="mini" onClick={() => setMic(wid)} aria-label="Vérifier ma prononciation" title="Vérifier ma prononciation"><Icon name="mic" /></button>}
               {it && <button className={`mini ${favs[wid] ? 'on' : ''}`} onClick={() => toggleFav(wid)} aria-label="Favori" aria-pressed={!!favs[wid]}><Icon name="star" /></button>}

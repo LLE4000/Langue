@@ -22,7 +22,7 @@ function Half({ who, name, score, q, locked, picked, resolved, onPick }: { who: 
     <section className={`half p${who} ${done ? (resolved === who ? 'won' : 'lost') : ''}`} aria-label={`Côté de ${name}`}>
       <header><b>{name}</b><span className="score-pill">{score}</span>{done && <span className="verdict-mini">{resolved === who ? '+1' : resolved === 'none' ? '—' : ''}</span>}</header>
       <div className="stem">
-        {q.kind === 'meaning' ? <><Thai text={it.thai} className="big-h" /><span className="rom" style={{ fontSize: 13 }}>{it.rom}</span></> : <span className="frbig">{meaningOf(it)}</span>}
+        {q.kind === 'meaning' ? <><Thai text={it.thai} className="big-h" /><span className="rom xs">{it.rom}</span></> : <span className="frbig">{meaningOf(it)}</span>}
       </div>
       <div className="choices c2 duel-choices">
         {q.choiceIds.map((id, k) => {
@@ -31,7 +31,7 @@ function Half({ who, name, score, q, locked, picked, resolved, onPick }: { who: 
           const cls = done ? (isOk ? 'ok' : picked === k ? 'ko' : 'dim') : picked === k ? 'ko' : '';
           return (
             <button key={id} className={`choice ${cls}`} disabled={done || locked} onPointerDown={(e) => { e.preventDefault(); onPick(k); }} onClick={(e) => { if (e.detail === 0) onPick(k); }} data-side={who} data-ok={isOk ? '1' : '0'}>
-              {q.kind === 'meaning' ? <span>{meaningOf(c)}</span> : <><Thai text={c.thai} /><span className="rom" style={{ fontSize: 13 }}>{c.rom}</span></>}
+              {q.kind === 'meaning' ? <span>{meaningOf(c)}</span> : <><Thai text={c.thai} /><span className="rom">{c.rom}</span></>}
             </button>
           );
         })}
@@ -109,12 +109,12 @@ export function Duel() {
     return (
       <FullScreen title="Résultat du duel" onBack={() => nav('/play')}>
         <div className="recap ok">
-          <div style={{ fontSize: 40 }}>{winner ? '🏆' : '🤝'}</div>
+          <div className="result-ic"><Icon name={winner ? 'trophy' : 'equal'} /></div>
           <div className="score">{a}<small> – </small>{b}</div>
-          <div className="b" style={{ fontSize: 18, marginTop: 6 }}>{winner ? `${winner} gagne` : 'Égalité parfaite'}</div>
+          <div className="verdict-t">{winner ? `${winner} gagne` : 'Égalité parfaite'}</div>
           <div className="mut sm">{cfg.players[0]} · {cfg.players[1]} · {qs.length} questions</div>
         </div>
-        <div className="stack" style={{ marginTop: 14 }}>
+        <div className="stack mt-4">
           <button className="btn" onClick={() => start(cfg)}>Revanche, mêmes réglages</button>
           <button className="btn ghost" onClick={() => setPhase('setup')}>Changer les joueurs ou les mots</button>
           <button className="btn soft" onClick={() => nav('/play')}>Terminer</button>

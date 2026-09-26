@@ -12,7 +12,7 @@ import { ITEMS, type LearnItem } from '@/content/th';
 import { RECOGNITION_ERRORS } from '@/engine/audio/mic';
 import { scorePronunciation, type PronResult } from '@/engine/audio/pronunciation';
 import { resolveTokens } from '@/engine/tokens';
-import { AudioPair, Icon, Rom, Segmented, Thai, useTokens, useToast } from '@/components/ui';
+import { AudioPair, Empty, Icon, Rom, Segmented, Thai, useTokens, useToast } from '@/components/ui';
 import { SourcePicker, usePlayerDefaults } from './PlaySetup';
 import { defaultSource, poolFor, type PlaySource } from './quiz';
 
@@ -36,9 +36,9 @@ function Setup({ onStart }: { onStart: (c: Cfg) => void }) {
       <div className="stack">
         {players.map((p, i) => (
           <div key={i} className="row-flex">
-            <span className="tag" style={{ minWidth: 34, justifyContent: 'center' }}>{i + 1}</span>
+            <span className="tag pnum">{i + 1}</span>
             <input className="field" value={p} onChange={(e) => setPlayers(players.map((x, k) => (k === i ? e.target.value : x)))} placeholder={`Joueur ${i + 1}`} aria-label={`Nom du joueur ${i + 1}`} />
-            {players.length > 2 && <button className="ib sm" aria-label="Retirer" onClick={() => setPlayers(players.filter((_, k) => k !== i))}>✕</button>}
+            {players.length > 2 && <button className="ib sm" aria-label="Retirer" onClick={() => setPlayers(players.filter((_, k) => k !== i))}><Icon name="close" size={16} /></button>}
           </div>
         ))}
         {players.length < 6 && <button className="btn ghost sm" onClick={() => setPlayers([...players, `Joueur ${players.length + 1}`])}>+ Ajouter un joueur</button>}
@@ -46,7 +46,7 @@ function Setup({ onStart }: { onStart: (c: Cfg) => void }) {
       <label className="f">Nombre de mots</label>
       <Segmented value={count} options={[3, 5, 8].map((n) => ({ v: n, label: String(n) }))} onChange={setCount} />
       <SourcePicker value={source} onChange={setSource} />
-      <button className="btn" style={{ marginTop: 18 }} disabled={!ok} onClick={() => onStart({ players: players.map((p) => p.trim()), count: Math.min(count, pool.length), source })}>À vos micros</button>
+      <button className="btn mt-5" disabled={!ok} onClick={() => onStart({ players: players.map((p) => p.trim()), count: Math.min(count, pool.length), source })}>À vos micros</button>
     </>
   );
 }
@@ -81,20 +81,20 @@ function Turn({ item, player, onScored }: { item: LearnItem; player: string; onS
       {!res ? (
         <>
           <button className={`btn ${listening ? 'listening' : ''}`} onClick={listen} data-testid="voice-say"><Icon name="mic" size={20} /> {listening ? `${player}, parlez maintenant…` : `${player}, je le dis`}</button>
-          <p className="xs mut ctr" style={{ marginTop: 6 }}>{listening ? 'Touchez à nouveau pour arrêter.' : 'Écoutez le modèle si besoin, puis touchez le micro et dites le mot.'}</p>
-          {msg && <div className="note warn sm">{msg} <button className="btn ghost sm" style={{ marginTop: 8 }} onClick={listen}>Réessayer</button></div>}
+          <p className="xs mut ctr mt-2">{listening ? 'Touchez à nouveau pour arrêter.' : 'Écoutez le modèle si besoin, puis touchez le micro et dites le mot.'}</p>
+          {msg && <div className="note warn sm">{msg} <button className="btn ghost sm mt-2" onClick={listen}>Réessayer</button></div>}
         </>
       ) : (
         <>
           <div className="pron">
             <div className="cring" data-tone={res.verdict} style={{ ['--p' as string]: res.score * 10 }}><b>{res.score}</b><small>/ 10</small></div>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="grow">
               <div className="b">{player} · {res.verdict === 'ok' ? 'Compris du premier coup' : res.verdict === 'near' ? 'Presque compris' : 'Pas compris'}</div>
-              {res.heard && <div className="sm mut" style={{ marginTop: 4 }}>Entendu : <Thai text={res.heard} style={{ color: 'var(--ink)' }} /></div>}
-              {res.hints[0] && <div className="xs mut" style={{ marginTop: 4 }}>{res.hints[0]}</div>}
+              {res.heard && <div className="sm mut mt-1">Entendu : <Thai text={res.heard} className="ink" /></div>}
+              {res.hints[0] && <div className="xs mut mt-1">{res.hints[0]}</div>}
             </div>
           </div>
-          <button className="btn" style={{ marginTop: 12 }} onClick={() => onScored(res.score)} data-testid="voice-next">Continuer</button>
+          <button className="btn mt-3" onClick={() => onScored(res.score)} data-testid="voice-next">Continuer</button>
         </>
       )}
     </>
@@ -132,7 +132,7 @@ export function VoiceDuel() {
   if (!recognizer.supported) {
     return (
       <FullScreen title="Duel de prononciation" onBack={() => nav('/play')}>
-        <div className="empty"><span className="e">🎙️</span>La reconnaissance vocale n’est pas disponible sur ce navigateur. Sur Android ou PC, utilisez Chrome ; sur iPhone, Safari.</div>
+        <Empty icon="mic">La reconnaissance vocale n’est pas disponible sur ce navigateur. Sur Android ou PC, utilisez Chrome ; sur iPhone, Safari.</Empty>
         <button className="btn soft" onClick={() => nav('/play')}>Retour</button>
       </FullScreen>
     );
@@ -151,13 +151,13 @@ export function VoiceDuel() {
   if (phase === 'handoff') {
     return (
       <FullScreen title={`Mot ${w + 1} / ${items.length}`} onBack={() => { if ((w === 0 && p === 0) || window.confirm('Abandonner la partie en cours ?')) setPhase('setup'); }}>
-        <div className="recap" style={{ marginTop: 24 }}>
-          <div style={{ fontSize: 40 }}>🎙️</div>
-          <div className="serif" style={{ fontSize: 30, marginTop: 6 }}>À {name}</div>
-          <p className="mut" style={{ marginTop: 8 }}>{w === 0 && p === 0 ? 'Prenez l’appareil, écoutez le modèle, puis dites le mot dans le micro.' : 'Passez l’appareil.'}</p>
+        <div className="recap mt-6">
+          <div className="result-ic"><Icon name="mic" /></div>
+          <div className="title-xl">À {name}</div>
+          <p className="mut mt-2">{w === 0 && p === 0 ? 'Prenez l’appareil, écoutez le modèle, puis dites le mot dans le micro.' : 'Passez l’appareil.'}</p>
         </div>
-        {p > 0 && <div className="pchips" style={{ marginTop: 14 }}>{cfg.players.slice(0, p).map((n, k) => <span key={k} className={`pw ${scores[w][k] >= 9 ? 'ok' : scores[w][k] >= 6 ? 'near' : 'ko'}`}><em>{n}</em><b style={{ fontFamily: 'var(--f-display)' }}>{scores[w][k]}</b></span>)}</div>}
-        <button className="btn" style={{ marginTop: 18 }} onClick={() => setPhase('say')} data-testid="voice-go">Je suis {name}, à moi</button>
+        {p > 0 && <div className="pchips scores mt-4">{cfg.players.slice(0, p).map((n, k) => <span key={k} className={`pw ${scores[w][k] >= 9 ? 'ok' : scores[w][k] >= 6 ? 'near' : 'ko'}`}><em>{n}</em><b>{scores[w][k]}</b></span>)}</div>}
+        <button className="btn mt-5" onClick={() => setPhase('say')} data-testid="voice-go">Je suis {name}, à moi</button>
       </FullScreen>
     );
   }
@@ -181,14 +181,14 @@ export function VoiceDuel() {
   return (
     <FullScreen title="Résultats" onBack={() => nav('/play')}>
       <div className="recap ok">
-        <div style={{ fontSize: 40 }}>{winners.length > 1 ? '🤝' : '🏆'}</div>
-        <div className="serif" style={{ fontSize: 30 }}>{winners.map((o) => o.n).join(' & ')}</div>
+        <div className="result-ic"><Icon name={winners.length > 1 ? 'equal' : 'trophy'} /></div>
+        <div className="title-xl">{winners.map((o) => o.n).join(' & ')}</div>
         <div className="mut sm">{best} / {max} · {winners.length > 1 ? 'à égalité' : 'la prononciation la plus claire'}</div>
       </div>
-      <div className="list" style={{ marginTop: 12 }}>
+      <div className="list mt-3">
         {order.map((o, r) => (
           <div className="row" key={o.k}>
-            <span className="ico" style={r === 0 ? { background: 'var(--acc-soft)' } : undefined}>{r + 1}</span>
+            <span className={`ico ${r === 0 ? 'acc' : ''}`}>{r + 1}</span>
             <span className="mid"><span className="t">{o.n}</span><span className="s">moyenne {(o.t / items.length).toFixed(1)} / 10</span></span>
             <span className="end"><b>{o.t}</b></span>
           </div>
@@ -199,8 +199,8 @@ export function VoiceDuel() {
         <span />{cfg.players.map((n, k) => <b key={k} className="xs ctr">{n}</b>)}
         {items.map((it, i) => <FragmentRow key={it.id} it={it} row={scores[i]} />)}
       </div>
-      <p className="xs mut" style={{ margin: '8px 2px 0' }}>Vert : compris du premier coup · orange : presque · rouge : le moteur a compris autre chose. Réécoutez les mots rouges et rejouez.</p>
-      <div className="stack" style={{ marginTop: 14 }}>
+      <p className="foot-note">Vert : compris du premier coup · orange : presque · rouge : le moteur a compris autre chose. Réécoutez les mots rouges et rejouez.</p>
+      <div className="stack mt-4">
         <button className="btn" onClick={() => start(cfg)}>Rejouer, autres mots</button>
         <button className="btn ghost" onClick={() => setPhase('setup')}>Changer les joueurs ou les mots</button>
         <button className="btn soft" onClick={() => nav('/play')}>Terminer</button>

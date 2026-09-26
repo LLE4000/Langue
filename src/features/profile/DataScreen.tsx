@@ -35,20 +35,20 @@ export function DataScreen() {
   const pendingWords = pending ? Object.keys(pending.srs ?? {}).length : 0;
   return (
     <>
-      <div className="note info" style={{ marginTop: 0 }}>Votre progression est enregistrée automatiquement sur cet appareil. Exportez une sauvegarde de temps en temps, ou pour passer sur un autre téléphone.</div>
+      <div className="note info mt-0">Votre progression est enregistrée automatiquement sur cet appareil. Exportez une sauvegarde de temps en temps, ou pour passer sur un autre téléphone.</div>
       <div className="h2">Sauvegarder</div>
       <button className="btn" onClick={doExport}><Icon name="download" size={18} /> Exporter une sauvegarde</button>
       <div className="h2">Restaurer</div>
       <button className="btn ghost" onClick={() => file.current?.click()}><Icon name="upload" size={18} /> Importer une sauvegarde</button>
       <input ref={file} type="file" accept=".json,application/json,text/plain" hidden onChange={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => prepareImport(String(r.result)); r.readAsText(f); e.target.value = ''; }} />
-      <details className="note plain sm" style={{ marginTop: 12 }}>
+      <details className="note plain sm">
         <summary>Plus d’options : copier, coller</summary>
-        <div className="stack" style={{ marginTop: 10 }}>
+        <div className="stack mt-3">
           <button className="btn soft sm" onClick={() => navigator.clipboard?.writeText(JSON.stringify(exportState())).then(() => toast('Sauvegarde copiée.'), () => toast('Copie impossible.'))}>Copier la sauvegarde (texte)</button>
           <textarea className="field" placeholder="…ou collez ici le texte d’une sauvegarde" value={txt} onChange={(e) => setTxt(e.target.value)} />
           <button className="btn ghost sm" disabled={!txt.trim()} onClick={() => prepareImport(txt)}>Restaurer le texte collé</button>
         </div>
-        <p className="xs mut" style={{ margin: '10px 0 0' }}>Format de sauvegarde : texte lisible, version {exportState().version}.</p>
+        <p className="foot-note">Format de sauvegarde : texte lisible, version {exportState().version}.</p>
       </details>
       <div className="h2">Réinitialiser</div>
       <button className="btn danger" onClick={() => setAsk(true)}><Icon name="trash" size={18} /> Effacer toute ma progression</button>

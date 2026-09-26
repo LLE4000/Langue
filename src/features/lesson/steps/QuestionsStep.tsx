@@ -11,8 +11,9 @@ import type { StepResult } from '../LessonRunner';
 import { useStore } from '@/app/store';
 import { useSpeaker } from '@/app/services/speech';
 import { L, T } from '@/i18n';
-import { AudioPair, Thai, Rom, Fr, sizeClass, useShowRom, useTokens, useOral } from '@/components/ui';
+import { AudioPair, Icon, Thai, Rom, Fr, sizeClass, useShowRom, useTokens, useOral } from '@/components/ui';
 import { StepFooter, ContinueButton, useDigitKeys } from '@/components/StepFooter';
+import { useStepProgress } from '../progress';
 import { ToneCurve } from '@/components/ToneCurve';
 import { WordByWord } from '@/components/WordByWord';
 import { resolveTokens } from '@/engine/tokens';
@@ -27,7 +28,7 @@ function ChoiceLabel({ c, lg }: { c: Question['choices'][number]; lg?: boolean }
     <>
       {c.tone && <ToneCurve tone={c.tone as ToneId} />}
       {c.thai && <Thai text={c.thai} className={lg ? 'lg' : ''} />}
-      {c.rom && <span className="rom" style={{ fontSize: c.thai ? 15 : 20 }}>{c.rom}</span>}
+      {c.rom && <span className={`rom ${c.thai ? '' : 'solo'}`}>{c.rom}</span>}
       {c.text && <span>{c.text}</span>}
     </>
   );
@@ -46,10 +47,10 @@ function Stage({ q, done }: { q: Question; done: boolean }) {
       </div>
     );
   }
-  if (q.stage.ear && !done) return <div className="stage ear"><div style={{ fontSize: 52 }}>👂</div><div className="mut sm">Écoutez, puis choisissez</div></div>;
+  if (q.stage.ear && !done) return <div className="stage ear"><span className="ear-ic"><Icon name="ear" /></span><div className="mut sm">Écoutez, puis choisissez</div></div>;
   if (q.stage.ear && done && q.reveal?.thai) {
     const long = /[\s]|.{8,}/.test(q.reveal.thai);
-    return <div className="stage compact">{long ? <WordByWord thai={q.reveal.thai} rom={q.reveal.rom ?? ''} big chips={false} /> : <><div className={`big ${sizeClass(q.reveal.thai)}`}><Thai text={q.reveal.thai} /></div>{q.reveal.rom && <span className="rom" style={{ fontSize: 22, fontWeight: 600 }}>{resolveTokens(q.reveal.rom, tok)}</span>}</>}{q.reveal.text && <span className="mut">{resolveTokens(q.reveal.text, tok)}</span>}</div>;
+    return <div className="stage compact">{long ? <WordByWord thai={q.reveal.thai} rom={q.reveal.rom ?? ''} big chips={false} /> : <><div className={`big ${sizeClass(q.reveal.thai)}`}><Thai text={q.reveal.thai} /></div>{q.reveal.rom && <span className="rom reveal">{resolveTokens(q.reveal.rom, tok)}</span>}</>}{q.reveal.text && <span className="mut">{resolveTokens(q.reveal.text, tok)}</span>}</div>;
   }
   return (
     <div className={`stage ${q.stage.big ? '' : 'compact'}`}>
@@ -70,9 +71,9 @@ function SpellInput({ q, onAnswer, done }: { q: Question; onAnswer: (ok: boolean
   }, [typed]);
   return (
     <>
-      <div className="spellzone" onClick={() => !done && setPicked(picked.slice(0, -1))} role="button" aria-label="Retirer le dernier signe">{typed || <span className="mut" style={{ fontSize: 15, fontFamily: 'var(--f-ui)' }}>touchez les signes dans l’ordre</span>}</div>
+      <div className="spellzone" onClick={() => !done && setPicked(picked.slice(0, -1))} role="button" aria-label="Retirer le dernier signe">{typed || <span className="ph">touchez les signes dans l’ordre</span>}</div>
       <div className="tiles-spell">{tiles.map((c, k) => <button key={k} lang="th" className={picked.includes(k) ? 'used' : ''} disabled={done} onClick={() => setPicked([...picked, k])}>{c}</button>)}</div>
-      {!done && picked.length > 0 && <div className="btns" style={{ marginTop: 10 }}><button className="btn ghost sm" onClick={() => setPicked(picked.slice(0, -1))} aria-label="Retirer le dernier signe">⌫ Dernier signe</button><button className="btn ghost sm" onClick={() => setPicked([])}>Tout effacer</button></div>}
+      {!done && picked.length > 0 && <div className="btns mt-3"><button className="btn ghost sm" onClick={() => setPicked(picked.slice(0, -1))} aria-label="Retirer le dernier signe">⌫ Dernier signe</button><button className="btn ghost sm" onClick={() => setPicked([])}>Tout effacer</button></div>}
     </>
   );
 }
@@ -94,6 +95,8 @@ export function QuestionsStep({ step, onDone, timed, noRetry, record = true }: {
   const q = queue[i];
   const done = ok !== null;
   const first = useMemo(() => !/-r\d+$/.test(q?.id ?? ''), [q?.id]);
+  // Dans une leçon, la barre du haut avance à chaque réponse ; dans un jeu, l'étape garde son compteur
+  const inLesson = useStepProgress((i + (done ? 1 : 0)) / Math.max(1, queue.length));
 
   useEffect(() => {
     t0.current = performance.now();
@@ -143,9 +146,11 @@ export function QuestionsStep({ step, onDone, timed, noRetry, record = true }: {
 
   return (
     <>
-      <div className="sess" style={{ marginBottom: 6 }}><span className="tag jade">{L(step.label)}</span><span className="sp" /><span className="n">Question {i + 1} / {step.questions.length}{extra > 0 ? ` · +${extra} à revoir` : ''}</span>{timed && <span className="timer">{elapsed.toFixed(1).replace('.', ',')} s</span>}</div>
+      {!inLesson ? (
+        <div className="sess mb-2"><span className="tag jade">{L(step.label)}</span><span className="sp" /><span className="n">Question {i + 1} / {step.questions.length}{extra > 0 ? ` · +${extra} à revoir` : ''}</span>{timed && <span className="timer">{elapsed.toFixed(1).replace('.', ',')} s</span>}</div>
+      ) : timed ? <div className="qtimer"><span className="timer">{elapsed.toFixed(1).replace('.', ',')} s</span></div> : null}
       <p className="qprompt">{L(q.prompt)}</p>
-      {q.meaningHint && !done && <div className="note info sm" style={{ marginTop: -4 }}>{L(q.meaningHint)}</div>}
+      {q.meaningHint && !done && <div className="note info sm mt-n1">{L(q.meaningHint)}</div>}
       <Stage q={q} done={done} />
       {sayText ? <div className="audio"><AudioPair text={sayText} /></div> : <div className="gap" />}
       {q.kind === 'spell' ? <SpellInput key={q.id} q={q} done={done} onAnswer={(isOk) => grade(isOk, null)} /> : (
@@ -162,12 +167,12 @@ export function QuestionsStep({ step, onDone, timed, noRetry, record = true }: {
       {done && (
         <StepFooter tone={ok ? 'ok' : 'ko'}>
           <div className="qfin">
-            <span className={`verdict ${ok ? 'ok' : 'ko'}`}>{ok ? '✓ ' + t.common.correct : '✗ ' + t.common.wrong}</span>
+            <span className={`verdict ${ok ? 'ok' : 'ko'}`}><Icon name={ok ? 'check' : 'close'} />{ok ? t.common.correct : t.common.wrong}</span>
             {!ok && good && q.kind !== 'spell' && <span className="good"> · {t.common.goodAnswer} : {good.tone && <ToneCurve tone={good.tone as ToneId} />}{good.thai && <Thai text={good.thai} />} {good.rom && <span className="rom">{good.rom}</span>} {good.text}</span>}
             {!ok && q.kind === 'spell' && q.reveal?.thai && <span className="good"> · <Thai text={q.reveal.thai} /></span>}
-            {q.reveal && !q.stage.ear && (q.reveal.thai || q.reveal.rom || q.reveal.text) && <div style={{ marginTop: 4 }}>{q.reveal.thai && !q.stage.thai?.includes(q.reveal.thai) && <><Thai text={q.reveal.thai} /> </>}{q.reveal.rom && <><Rom text={q.reveal.rom} /> </>}{q.reveal.text && <span className="mut">· <Fr text={q.reveal.text} /></span>}</div>}
+            {q.reveal && !q.stage.ear && (q.reveal.thai || q.reveal.rom || q.reveal.text) && <div className="mt-1">{q.reveal.thai && !q.stage.thai?.includes(q.reveal.thai) && <><Thai text={q.reveal.thai} /> </>}{q.reveal.rom && <><Rom text={q.reveal.rom} /> </>}{q.reveal.text && <span className="mut">· <Fr text={q.reveal.text} /></span>}</div>}
             {q.reveal?.explain && <ol>{q.reveal.explain.map((e, k) => <li key={k}>{L(e)}</li>)}</ol>}
-            {q.itemId && ITEMS[q.itemId]?.kind === 'cons' && q.kind === 'listen' && <div className="xs mut" style={{ marginTop: 4 }}>Astuce : le nom de la lettre commence par son propre son.</div>}
+            {q.itemId && ITEMS[q.itemId]?.kind === 'cons' && q.kind === 'listen' && <div className="xs mut mt-1">Astuce : le nom de la lettre commence par son propre son.</div>}
           </div>
           <ContinueButton onClick={next} label={t.common.continue} auto={!!ok} autoMs={timed ? 700 : q.sayAfter ? 1700 : 1200} autoFocus />
         </StepFooter>

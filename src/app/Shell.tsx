@@ -1,18 +1,43 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { Icon } from '@/components/ui';
 import { ProgressPill } from '@/components/Progress';
 import { useProgressLog } from './hooks';
+import { useStore } from './store';
+import { useSpeaker } from './services/speech';
 import { T } from '@/i18n';
 
-interface TopBarState { title: string; back?: boolean | string; right?: ReactNode; hidden?: boolean }
+/** Un titre d'écran peut porter son équivalent thaï (petit, à côté) : un toucher le fait entendre. */
+export interface ThaiLabel { th: string; rom: string }
+interface TopBarState { title: string; back?: boolean | string; right?: ReactNode; hidden?: boolean; avatar?: boolean; thai?: ThaiLabel }
 const TopBarCtx = createContext<{ set(s: TopBarState): void }>({ set: () => {} });
 
-/** Déclare le titre et la barre supérieure de l'écran courant. */
-export function usePage(title: string, opts: { back?: boolean | string; right?: ReactNode; hidden?: boolean } = {}) {
+/**
+ * Déclare le titre et la barre supérieure de l'écran courant. `avatar` : écran racine d'un onglet (le prénom, en haut
+ * à gauche, mène au profil) ; `thai` : le mot thaï du titre, affiché à côté (exposition discrète, jamais à la place).
+ */
+export function usePage(title: string, opts: { back?: boolean | string; right?: ReactNode; hidden?: boolean; avatar?: boolean; thai?: ThaiLabel } = {}) {
   const { set } = useContext(TopBarCtx);
-  const { back, right, hidden } = opts;
-  useEffect(() => { set({ title, back, right, hidden }); document.title = title ? `${title} · Langue` : 'Langue'; }, [title, back, right, hidden, set]);
+  const { back, right, hidden, avatar, thai } = opts;
+  const th = thai?.th, rom = thai?.rom;
+  useEffect(() => { set({ title, back, right, hidden, avatar, thai: th && rom ? { th, rom } : undefined }); document.title = title ? `${title} · Langue` : 'Langue'; }, [title, back, right, hidden, avatar, th, rom, set]);
+}
+
+/** Le mot thaï d'un titre : petit, à côté du français ; un toucher le prononce. */
+export function ThaiKicker({ label }: { label: ThaiLabel }) {
+  const sp = useSpeaker();
+  return <button className="thk" lang="th" onClick={() => sp.speak(label.th)} aria-label={`Écouter ${label.th} (${label.rom})`} title={label.rom}>{label.th}</button>;
+}
+
+/** Pastille du profil : l'initiale du prénom, en haut à gauche des écrans principaux. */
+export function ProfileChip({ withName, greeting }: { withName?: boolean; greeting?: string }) {
+  const name = useStore((s) => s.profile?.name ?? '');
+  return (
+    <Link to="/profile" className={`mechip ${withName ? 'named' : ''}`} aria-label={`Mon profil${name ? ` : ${name}` : ''}`}>
+      <span className="av" aria-hidden="true">{(name.trim()[0] ?? '?').toUpperCase()}</span>
+      {withName && <span className="who">{greeting && <span className="th hi" lang="th">{greeting}</span>}<b>{name}</b></span>}
+    </Link>
+  );
 }
 
 export function TopBar({ state }: { state: TopBarState }) {
@@ -20,19 +45,22 @@ export function TopBar({ state }: { state: TopBarState }) {
   if (state.hidden) return null;
   return (
     <header className="topbar">
-      {state.back ? <button className="tb" aria-label="Retour" onClick={() => (typeof state.back === 'string' ? nav(state.back) : nav(-1))}><Icon name="back" /></button> : <span style={{ width: 8 }} />}
-      <h1>{state.title}</h1>
+      {state.back ? <button className="tb" aria-label="Retour" onClick={() => (typeof state.back === 'string' ? nav(state.back) : nav(-1))}><Icon name="back" /></button> : state.avatar ? <ProfileChip /> : <span className="tb-pad" />}
+      <h1>{state.title}{state.thai && <ThaiKicker label={state.thai} />}</h1>
       {state.right ?? <ProgressPill />}
     </header>
   );
 }
 
-/** Onglet de rattachement d'une route (le parcours dépend d'Apprendre, les jeux de Réviser). */
+/**
+ * Les quatre onglets : apprendre du nouveau, réviser ce qu'on sait, jouer à plusieurs, explorer la bibliothèque.
+ * Le profil n'est pas un onglet (on y va rarement) : on l'ouvre en touchant son prénom, en haut à gauche.
+ */
 const TABS = [
   { to: '/', icon: 'home', key: 'learn' as const, end: true, also: ['/path'] },
-  { to: '/review', icon: 'repeat', key: 'review' as const, also: ['/play'] },
+  { to: '/review', icon: 'repeat', key: 'review' as const, also: ['/train'] },
+  { to: '/play', icon: 'dice', key: 'play' as const, also: [] },
   { to: '/explore', icon: 'compass', key: 'explore' as const, also: [] },
-  { to: '/profile', icon: 'user', key: 'profile' as const, also: [] },
 ];
 
 export function Shell() {
@@ -62,16 +90,28 @@ export function Shell() {
   );
 }
 
-/** Coque sans onglets (leçon en cours, onboarding). */
-export function FullScreen({ title, onBack, right, children, fit }: { title: string; onBack?: () => void; right?: ReactNode; children: ReactNode; fit?: boolean }) {
+/**
+ * Coque sans onglets (leçon en cours, onboarding). Avec `progress` (0–1), l'en-tête devient celui d'une leçon :
+ * une croix pour quitter et une seule barre de progression, sans titre.
+ */
+export function FullScreen({ title, onBack, right, children, fit, progress }: { title: string; onBack?: () => void; right?: ReactNode; children: ReactNode; fit?: boolean; progress?: number }) {
   useEffect(() => { document.title = `${title} · Langue`; }, [title]);
+  const pct = progress == null ? 0 : Math.round(Math.max(0, Math.min(1, progress)) * 100);
   return (
     <div className="app">
-      <header className="topbar">
-        {onBack ? <button className="tb" aria-label="Retour" onClick={onBack}><Icon name="back" /></button> : <span style={{ width: 8 }} />}
-        <h1>{title}</h1>
-        {right}
-      </header>
+      {progress != null ? (
+        <header className="ltop">
+          <button className="tb" aria-label="Quitter" onClick={onBack}><Icon name="close" /></button>
+          <div className="lbar" role="progressbar" aria-label={`Progression : ${title}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}><i style={{ width: `${pct}%` }} /></div>
+          {right}
+        </header>
+      ) : (
+        <header className="topbar">
+          {onBack ? <button className="tb" aria-label="Retour" onClick={onBack}><Icon name="back" /></button> : <span className="tb-pad" />}
+          <h1>{title}</h1>
+          {right}
+        </header>
+      )}
       <main className={`view no-tabs ${fit ? 'fit' : ''}`}>{children}</main>
     </div>
   );

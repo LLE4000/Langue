@@ -134,7 +134,7 @@ export function MicPanel({ item, onClose, inline, onScore }: { item: LearnItem; 
           <button className={`btn ${listening ? 'listening' : ''}`} onClick={listen} disabled={busy} data-testid="mic-say">
             <Icon name="mic" size={20} /> {busy ? 'Analyse…' : listening ? 'Je vous écoute… parlez maintenant' : res || toneRes ? 'Je le redis' : 'Je le dis'}
           </button>
-          <p className="xs mut ctr" style={{ marginTop: 6 }}>
+          <p className="xs mut ctr mt-2">
             {listening ? (recognizer.supported ? 'Touchez à nouveau pour arrêter.' : 'Dites la syllabe, un peu longuement.') : recognizer.supported ? `Dites « ${resolveTokens(thai, tok)} ». Le moteur thaï écrit ce qu’il comprend${canTone ? ' et la courbe de votre voix est comparée au ton attendu' : ''}${modeNote}.` : 'Sans reconnaissance vocale sur ce navigateur, l’application juge au moins le ton.'}
           </p>
           {msg && <div className="note warn sm">{msg}</div>}
@@ -146,34 +146,34 @@ export function MicPanel({ item, onClose, inline, onScore }: { item: LearnItem; 
       {(res || toneRes) && (
         <div className={`pron ${res?.verdict ?? (toneRes?.ok ? 'ok' : 'ko')}`} aria-live="polite">
           {res && <div className="cring" data-tone={res.verdict} style={{ ['--p' as string]: res.score * 10 }}><b>{res.score}</b><small>/ 10</small></div>}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="grow">
             {res && <div className={`verdict ${res.verdict}`}>{VERDICT_TEXT[res.verdict]}</div>}
             {res && res.words.length > 1 && <div className="pwords">{res.words.map((w, k) => <span key={k} className={`pw ${w.ok ? 'ok' : w.near ? 'near' : 'ko'}`} lang="th"><b>{w.t}</b>{w.r && <em>{w.r}</em>}</span>)}</div>}
             {toneRes && expectedTone && (
-              <div className={`sm toneline ${toneRes.ok ? 'ok' : toneRes.similarity >= 0.6 ? 'near' : 'ko'}`} style={{ marginTop: 6 }}>
-                🎵 {toneRes.ok ? <>Ton <b>{toneLabel(expectedTone)}</b> reconnu ✓</> : <>Ton entendu : <b>{toneLabel(toneRes.predicted)}</b> · attendu : <b>{toneLabel(expectedTone)}</b></>} <span className="mut">· ressemblance {Math.round(toneRes.similarity * 100)} %</span>
+              <div className={`sm toneline mt-2 ${toneRes.ok ? 'ok' : toneRes.similarity >= 0.6 ? 'near' : 'ko'}`}>
+                <Icon name="music" size={14} /> {toneRes.ok ? <>Ton <b>{toneLabel(expectedTone)}</b> reconnu <Icon name="check" size={14} /></> : <>Ton entendu : <b>{toneLabel(toneRes.predicted)}</b> · attendu : <b>{toneLabel(expectedTone)}</b></>} <span className="mut">· ressemblance {Math.round(toneRes.similarity * 100)} %</span>
               </div>
             )}
-            {res && res.verdict !== 'ok' && res.heard && <div className="sm" style={{ marginTop: 6 }}>Le moteur a compris : <b className="th" style={{ fontSize: 18 }}>{res.heard}</b></div>}
-            {res && typeof res.confidence === 'number' && <div className="xs mut" style={{ marginTop: 4 }}>Certitude du moteur : {Math.round(res.confidence * 100)} %</div>}
-            {res && res.verdict !== 'ok' && res.alts.length > 1 && <div className="xs mut" style={{ marginTop: 2 }}>Il hésitait aussi avec : <span className="th">{res.alts.slice(1, 3).join(' · ')}</span></div>}
-            {(res?.hints ?? []).map((h, k) => <div key={k} className="sm mut" style={{ marginTop: 4 }}>{h}</div>)}
-            {!res && toneRes && !toneRes.ok && <div className="sm mut" style={{ marginTop: 4 }}>{L(TONES.find((t) => t.id === expectedTone)!.desc)} Réécoutez le modèle et exagérez le mouvement.</div>}
-            {stat && stat.n > 1 && <div className="xs mut" style={{ marginTop: 6 }}>Meilleur : {stat.best}/10 · {stat.n} essais</div>}
+            {res && res.verdict !== 'ok' && res.heard && <div className="sm mt-2">Le moteur a compris : <b className="th th-s">{res.heard}</b></div>}
+            {res && typeof res.confidence === 'number' && <div className="xs mut mt-1">Certitude du moteur : {Math.round(res.confidence * 100)} %</div>}
+            {res && res.verdict !== 'ok' && res.alts.length > 1 && <div className="xs mut mt-1">Il hésitait aussi avec : <span className="th">{res.alts.slice(1, 3).join(' · ')}</span></div>}
+            {(res?.hints ?? []).map((h, k) => <div key={k} className="sm mut mt-1">{h}</div>)}
+            {!res && toneRes && !toneRes.ok && <div className="sm mut mt-1">{L(TONES.find((t) => t.id === expectedTone)!.desc)} Réécoutez le modèle et exagérez le mouvement.</div>}
+            {stat && stat.n > 1 && <div className="xs mut mt-2">Meilleur : {stat.best}/10 · {stat.n} essais</div>}
           </div>
         </div>
       )}
-      {toneRes && expectedTone && <details className="fold sm"><summary>Voir la courbe de mon ton</summary><div className="tonecheck" style={{ marginTop: 0 }}><ToneOverlay points={toneRes.points} expected={expectedTone} /></div></details>}
+      {toneRes && expectedTone && <details className="fold sm"><summary>Voir la courbe de mon ton</summary><div className="tonecheck mt-0"><ToneOverlay points={toneRes.points} expected={expectedTone} /></div></details>}
       {!res && !toneRes && stat && <p className="xs mut ctr">Meilleur : {stat.best}/10 · dernier : {stat.last}/10 · {stat.n} essai{stat.n > 1 ? 's' : ''}</p>}
 
       <details className="fold sm">
         <summary>Me réécouter face au modèle</summary>
-        <div className="btns" style={{ marginTop: 10 }}>
+        <div className="btns mt-3">
           <button className="btn soft sm" onClick={() => sp.speak(item.say)}><Icon name="speaker" size={16} /> Modèle</button>
           <button className="btn soft sm" disabled={!url} onClick={() => { if (audio.current) { audio.current.src = url; audio.current.play().catch(() => setMsg('Lecture impossible sur ce navigateur.')); } }}><Icon name="play" size={16} /> Ma voix</button>
           {recorder.supported && <button className={`btn sm ${rec ? 'danger' : 'ghost'}`} onClick={toggleRec}><Icon name={rec ? 'pause' : 'mic'} size={16} /> {rec ? 'Arrêter' : 'Enregistrer'}</button>}
         </div>
-        <p className="xs mut" style={{ marginTop: 8 }}>{url ? 'Votre dernier essai est gardé : comparez-le au modèle à l’oreille.' : 'Après « Je le dis », votre voix est gardée ici pour la comparer au modèle.'}</p>
+        <p className="foot-note">{url ? 'Votre dernier essai est gardé : comparez-le au modèle à l’oreille.' : 'Après « Je le dis », votre voix est gardée ici pour la comparer au modèle.'}</p>
         <audio ref={audio} preload="none" />
       </details>
     </>

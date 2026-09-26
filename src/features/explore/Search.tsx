@@ -9,12 +9,12 @@ import { isThaiText } from '@/engine/thai/script';
 import { useTokens } from '@/components/ui';
 import { resolveTokens } from '@/engine/tokens';
 import { L, T } from '@/i18n';
-import { Empty } from '@/components/ui';
+import { Empty, Ico } from '@/components/ui';
 import { ItemRow } from './Vocabulary';
 import { ItemDetailSheet } from '@/components/ItemCard';
 
 // Élément stable (hors composant) : un nouvel élément à chaque rendu relancerait usePage en boucle
-const NO_SEARCH_BUTTON = <span style={{ width: 44 }} />;
+const NO_SEARCH_BUTTON = <span className="tb-pad" />;
 
 export function Search() {
   const t = T();
@@ -51,12 +51,12 @@ export function Search() {
     <>
       <input className="field" type="search" placeholder="Français, thaï ou transcription" value={q} onChange={(e) => setQ(e.target.value)} autoFocus autoComplete="off" />
       {!q.trim() && <div className="chips" style={{ paddingTop: 10 }}>{['bonjour', 'combien', 'poulet', 'khopkhun', 'ไป'].map((x) => <button key={x} className="chip" onClick={() => setQ(x)}>{x}</button>)}</div>}
-      {nothing && <Empty e="🔍">Aucun résultat pour « {q} ».</Empty>}
+      {nothing && <Empty icon="search">Aucun résultat pour « {q} ».</Empty>}
       {res && res.themes.length > 0 && <><div className="h2">Thèmes</div><div className="list">{res.themes.map((c) => <Link key={c.id} className="row" to={`/explore/vocab/${c.id}`}><span className="ico">{c.icon}</span><span className="mid"><span className="t">{L(c.name)}</span><span className="s">{c.items.length} éléments</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></>}
       {res && res.items.length > 0 && <><div className="h2">Mots et phrases <span className="sp" /><span className="sm mut">{res.items.length >= 40 ? '40 premiers résultats' : res.items.length}</span></div><div className="list">{res.items.map((it, i) => <ItemRow key={it.id} it={it} onClick={() => setDetail(i)} />)}</div></>}
       {res && res.grammar.length > 0 && <><div className="h2">Grammaire</div><div className="list">{res.grammar.map((g) => <Link key={g.id} className="row" to={`/explore/grammar/${encodeURIComponent(g.id)}`}><span className="ico">{g.icon}</span><span className="mid"><span className="t">{L(g.title)}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></>}
       {res && res.dialogs.length > 0 && <><div className="h2">Conversations</div><div className="list">{res.dialogs.map((d) => <Link key={d.id} className="row" to={`/explore/dialogs/${encodeURIComponent(d.id)}`}><span className="ico">{d.icon}</span><span className="mid"><span className="t">{L(d.title)}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></>}
-      {res && res.readings.length > 0 && <><div className="h2">Lectures</div><div className="list">{res.readings.map((r) => <Link key={r.id} className="row" to={`/explore/readings/${encodeURIComponent(r.id)}`}><span className="ico">📖</span><span className="mid"><span className="t">{L(r.title)}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></>}
+      {res && res.readings.length > 0 && <><div className="h2">Lectures</div><div className="list">{res.readings.map((r) => <Link key={r.id} className="row" to={`/explore/readings/${encodeURIComponent(r.id)}`}><Ico name="bookOpen" /><span className="mid"><span className="t">{L(r.title)}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></>}
       {detail != null && <ItemDetailSheet ids={ids} index={detail} onClose={() => setDetail(null)} onNav={setDetail} />}
     </>
   );

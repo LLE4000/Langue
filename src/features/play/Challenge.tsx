@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { FullScreen, usePage } from '@/app/Shell';
 import { useStore, type ChallengeRecord } from '@/app/store';
-import { Icon, Segmented, useToast } from '@/components/ui';
+import { Empty, Icon, Ico, Segmented, useToast } from '@/components/ui';
 import { SourcePicker } from './PlaySetup';
 import { QuizRunner } from './QuizRunner';
 import { buildPlayQuestions, challengeUrl, decodeChallenge, defaultSource, encodeChallenge, fmtSecs, poolFor, shareText, type PlayQuestion, type PlayResult, type PlaySource } from './quiz';
@@ -60,7 +60,7 @@ export function ChallengeCreate({ onBack }: { onBack: () => void }) {
         <label className="f">Nombre de questions</label>
         <Segmented value={count} options={[10, 15, 20].map((n) => ({ v: n, label: String(n) }))} onChange={setCount} />
         <SourcePicker value={source} onChange={setSource} />
-        <button className="btn" style={{ marginTop: 18 }} disabled={pool.length < 4} onClick={() => setQs(buildPlayQuestions(pool, count))}>Je joue ma série</button>
+        <button className="btn mt-5" disabled={pool.length < 4} onClick={() => setQs(buildPlayQuestions(pool, count))}>Je joue ma série</button>
       </FullScreen>
     );
   }
@@ -72,11 +72,11 @@ export function ChallengeCreate({ onBack }: { onBack: () => void }) {
   const text = `${me} vous défie en thaï sur Langue : ${mine.score}/${mine.total} en ${fmtSecs(mine.secs)}. À vous !`;
   return (
     <FullScreen title="Défi prêt" onBack={onBack}>
-      <div className="recap ok"><div style={{ fontSize: 40 }}>🎯</div><div className="score">{mine.score}<small> / {mine.total}</small></div><div className="mut sm">en {fmtSecs(mine.secs)}</div></div>
-      <p className="lead" style={{ marginTop: 14 }}>Envoyez ce lien. Quand la personne aura joué, elle vous renverra un lien-résultat : ouvrez-le dans Langue pour voir la comparaison.</p>
+      <div className="recap ok"><div className="result-ic"><Icon name="target" /></div><div className="score">{mine.score}<small> / {mine.total}</small></div><div className="mut sm">en {fmtSecs(mine.secs)}</div></div>
+      <p className="lead mt-4">Envoyez ce lien. Quand la personne aura joué, elle vous renverra un lien-résultat : ouvrez-le dans Langue pour voir la comparaison.</p>
       <ShareButtons text={text} url={url} label="Envoyer le défi" />
-      <details className="note plain sm" style={{ marginTop: 12 }}><summary>Code du défi (si le lien ne passe pas)</summary><code style={{ wordBreak: 'break-all', fontSize: 11 }}>{code}</code></details>
-      <Link className="btn soft" style={{ marginTop: 12 }} to="/play/defi">Retour à mes défis</Link>
+      <details className="note plain sm"><summary>Code du défi (si le lien ne passe pas)</summary><code className="xs break-all">{code}</code></details>
+      <Link className="btn soft mt-3" to="/play/defi">Retour à mes défis</Link>
     </FullScreen>
   );
 }
@@ -112,7 +112,7 @@ export function ChallengePlay() {
     return (
       <FullScreen title="Résultat du défi" onBack={() => nav('/play/defi')}>
         <Compare a={a} b={b} />
-        <p className="lead ctr" style={{ marginTop: 12 }}>{(() => { const w = winnerOf(a, b); return w ? `${w.name} l’emporte${a.score === b.score ? ' au temps' : ''}.` : 'Égalité parfaite !'; })()} Revanche ?</p>
+        <p className="lead ctr mt-3">{(() => { const w = winnerOf(a, b); return w ? `${w.name} l’emporte${a.score === b.score ? ' au temps' : ''}.` : 'Égalité parfaite !'; })()} Revanche ?</p>
         <div className="stack"><Link className="btn" to="/play/defi/new">Lancer un nouveau défi</Link><Link className="btn ghost" to="/play/defi">Mes défis</Link></div>
       </FullScreen>
     );
@@ -123,10 +123,10 @@ export function ChallengePlay() {
   if (!playing && !mine) {
     return (
       <FullScreen title="Défi reçu" onBack={() => nav('/play/defi')}>
-        <div className="recap"><div style={{ fontSize: 40 }}>⚔️</div><div className="serif" style={{ fontSize: 28 }}>{from ? `${from.name} vous défie` : 'Un défi'}</div><div className="mut sm">{ch.questions.length} questions{from ? ` · son score : ${from.score}/${from.total} en ${fmtSecs(from.secs)}` : ''}</div></div>
+        <div className="recap"><div className="result-ic"><Icon name="swords" /></div><div className="title-xl">{from ? `${from.name} vous défie` : 'Un défi'}</div><div className="mut sm">{ch.questions.length} questions{from ? ` · son score : ${from.score}/${from.total} en ${fmtSecs(from.secs)}` : ''}</div></div>
         {existing?.dir === 'sent' && <div className="note info sm">C’est votre propre défi. Renvoyez plutôt le lien à quelqu’un d’autre.</div>}
         {alreadyMine && existing?.dir === 'received' && <div className="note info sm">Vous l’avez déjà joué : {alreadyMine.score}/{alreadyMine.total}. Vous pouvez rejouer pour vous entraîner ; c’est ce premier résultat qui sera renvoyé.</div>}
-        <button className="btn" style={{ marginTop: 16 }} onClick={() => setPlaying(true)}>Relever le défi</button>
+        <button className="btn mt-4" onClick={() => setPlaying(true)}>Relever le défi</button>
       </FullScreen>
     );
   }
@@ -145,9 +145,9 @@ export function ChallengePlay() {
   return (
     <FullScreen title="Votre résultat" onBack={() => nav('/play/defi')}>
       <Compare a={mine!} b={from} />
-      {from && <p className="lead ctr" style={{ marginTop: 12 }}>Renvoyez votre résultat à {from.name} : en ouvrant le lien, {from.name} verra la comparaison.</p>}
+      {from && <p className="lead ctr mt-3">Renvoyez votre résultat à {from.name} : en ouvrant le lien, {from.name} verra la comparaison.</p>}
       <ShareButtons text={text} url={url} label={from ? `Renvoyer à ${from.name}` : 'Partager'} />
-      <div className="stack" style={{ marginTop: 12 }}><Link className="btn soft" to="/play/defi/new">Lancer mon propre défi</Link><Link className="btn ghost" to="/play/defi">Mes défis</Link></div>
+      <div className="stack mt-3"><Link className="btn soft" to="/play/defi/new">Lancer mon propre défi</Link><Link className="btn ghost" to="/play/defi">Mes défis</Link></div>
     </FullScreen>
   );
 }
@@ -167,15 +167,16 @@ export function ChallengeHub() {
       <label className="f">J’ai reçu un lien ou un code</label>
       <div className="row-flex"><input className="field" value={code} onChange={(e) => setCode(e.target.value)} placeholder="Collez le lien ou le code ici" aria-label="Code du défi" /><button className="btn auto sm" onClick={open} disabled={!code.trim()}>Ouvrir</button></div>
       <div className="h2">Mes défis <span className="sp" /><span className="sm mut">{records.length}</span></div>
-      {records.length === 0 ? <div className="empty"><span className="e">⚔️</span>Aucun défi pour l’instant.</div> : (
+      {records.length === 0 ? <Empty icon="swords">Aucun défi pour l’instant.</Empty> : (
         <div className="list">
           {records.map((r) => {
             const status = r.dir === 'sent' ? (r.theirs ? `${r.theirs.name} : ${r.theirs.score}/${r.theirs.total} · vous : ${r.mine?.score ?? '?'}/${r.mine?.total ?? '?'}` : `Envoyé · vous : ${r.mine?.score ?? '?'}/${r.mine?.total ?? '?'} · en attente de réponse`) : `De ${r.from} : ${r.theirs?.score ?? '?'}/${r.theirs?.total ?? '?'} · vous : ${r.mine?.score ?? '?'}/${r.mine?.total ?? '?'}`;
             const w = r.mine && r.theirs ? winnerOf({ name: 'me', ...r.mine }, { ...r.theirs }) : null;
-            const won = r.mine && r.theirs ? (w === null ? '🤝' : w.name === 'me' ? '🏆' : '🎯') : r.dir === 'sent' ? '📤' : '📥';
+            // égalité, gagné, perdu ; sinon envoyé (en attente) ou reçu
+            const mark = r.mine && r.theirs ? (w === null ? 'equal' : w.name === 'me' ? 'trophy' : 'target') : r.dir === 'sent' ? 'upload' : 'download';
             return (
               <div className="row" key={r.id}>
-                <span className="ico">{won}</span>
+                <Ico name={mark} tone={mark === 'trophy' ? 'ok' : ''} />
                 <span className="mid"><span className="t">{r.dir === 'sent' ? 'Mon défi' : `Défi de ${r.from}`}</span><span className="s">{status}</span></span>
                 <span className="end">
                   <button className="ib sm" aria-label="Ouvrir" onClick={() => nav(`/play/defi/${encodeURIComponent(r.code)}`)}><Icon name="next" size={16} /></button>

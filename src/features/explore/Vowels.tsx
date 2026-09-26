@@ -38,13 +38,13 @@ export function Vowels() {
     <>
       <p className="lead">Une voyelle thaïe s’écrit autour de la consonne : avant, après, au-dessus, en dessous, ou plusieurs à la fois. Le son, lui, vient toujours après la consonne.</p>
       <div className="chips">{GROUPS.map(([k, lab]) => <button key={k} className={`chip ${g === k ? 'on' : ''}`} onClick={() => setG(k)}>{lab}</button>)}</div>
-      <div className="btns" style={{ marginBottom: 12 }}><button className="btn soft sm" onClick={() => nav('/explore/listen?set=vow')}><Icon name="repeat" size={18} /> Écouter les voyelles en boucle</button></div>
-      <p className="xs mut" style={{ margin: '-4px 2px 10px' }}>Touchez une voyelle pour l’entendre ; touchez-la encore pour ouvrir sa fiche.</p>
-      <div className="row-flex" style={{ margin: '0 0 10px', gap: 10 }}><span className="sm mut" style={{ flex: 'none' }}>Autour de</span><div style={{ flex: 1 }}><Segmented value={ref} options={['ก', 'อ', 'น', 'บ'].map((c) => ({ v: c, label: <span lang="th" className="th">{c}</span> }))} onChange={setRef} /></div></div>
-      <div className="lgrid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(78px, 1fr))' }}>
+      <div className="btns mb-3"><button className="btn soft sm" onClick={() => nav('/explore/listen?set=vow')}><Icon name="repeat" size={18} /> Écouter les voyelles en boucle</button></div>
+      <p className="xs mut mt-n1 mb-3">Touchez une voyelle pour l’entendre ; touchez-la encore pour ouvrir sa fiche.</p>
+      <div className="row-flex mb-3"><span className="sm mut nowrap">Autour de</span><div className="grow"><Segmented value={ref} options={['ก', 'อ', 'น', 'บ'].map((c) => ({ v: c, label: <span lang="th" className="th">{c}</span> }))} onChange={setRef} /></div></div>
+      <div className="lgrid wide">
         {list.map((v) => <button key={v.id} className={`cell wide ${known.concepts.has(v.id) ? '' : 'locked'} ${peekItem?.id === v.id ? 'sel' : ''}`} lang="th" aria-pressed={peekItem?.id === v.id} style={{ color: v.ref.length === 'S' ? 'var(--gold)' : 'var(--ink)' }} onClick={() => tap(v.id)}>{vowelDisplay(v.ref.form, ref)}<MasteryDot m={mastery(srs[v.id])} /><small>{v.rom} · {v.ref.length === 'S' ? 'courte' : 'longue'}</small></button>)}
       </div>
-      <div className="note" style={{ marginTop: 14 }}>Couleur or = voyelle <b>courte</b>. La durée change le sens d’un mot et entre dans les règles de ton. Les formes grisées n’ont pas encore été enseignées dans votre parcours.</div>
+      <div className="note mt-4">Couleur or = voyelle <b>courte</b>. La durée change le sens d’un mot et entre dans les règles de ton. Les formes grisées n’ont pas encore été enseignées dans votre parcours.</div>
       {peekItem && !detail && <PeekBar it={peekItem} onDetail={() => setDetail(peek)} onClose={() => setPeek(null)} />}
       {detail && <ItemDetailSheet ids={detail.ids} index={detail.i} onClose={() => setDetail(null)} onNav={(i) => setDetail({ ...detail, i })} />}
     </>

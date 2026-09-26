@@ -20,11 +20,11 @@ export function useWbw(thai: string, rom: string) {
 export function WordByWord({ thai, rom, chips = true, big }: { thai: string; rom: string; chips?: boolean; big?: boolean }) {
   const seg = useWbw(thai, rom);
   const tok = useTokens();
-  if (!seg) return <><span className="th" lang="th">{resolveTokens(thai, tok)}</span><span className="rom" style={{ display: 'block' }}>{resolveTokens(rom, tok)}</span></>;
+  if (!seg) return <><span className="th" lang="th">{resolveTokens(thai, tok)}</span><span className="rom block">{resolveTokens(rom, tok)}</span></>;
   return (
     <>
       <span className={`th ${big ? 'big s4' : ''}`} lang="th">{seg.map((s, i) => <span key={i} className={s.cls}>{s.t}</span>)}</span>
-      <span className="rom" style={{ display: 'block', fontWeight: 650 }}>{seg.map((s, i) => <span key={i} className={s.cls}>{s.r}{i < seg.length - 1 ? ' ' : ''}</span>)}</span>
+      <span className="rom block b">{seg.map((s, i) => <span key={i} className={s.cls}>{s.r}{i < seg.length - 1 ? ' ' : ''}</span>)}</span>
       {chips && <div className="wchips">{seg.map((s, i) => <span key={i} className={`wchip ${s.cls}`}><b lang="th">{s.t}</b><em>{s.r}</em><i>{s.fr == null ? '·' : s.fr}</i></span>)}</div>}
     </>
   );

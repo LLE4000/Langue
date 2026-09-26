@@ -1,7 +1,7 @@
 /** Textes de l'interface — français. Pour ajouter une langue d'interface : copier ce fichier (en.ts) et l'enregistrer dans index.ts. */
 export const fr = {
   app: { name: 'Langue', tagline: 'Apprendre le thaï, un pas après l’autre' },
-  nav: { learn: 'Apprendre', review: 'Réviser', explore: 'Explorer', profile: 'Profil' },
+  nav: { learn: 'Apprendre', review: 'Réviser', play: 'Jouer', explore: 'Explorer', profile: 'Profil' },
   common: {
     continue: 'Continuer', start: 'Commencer', next: 'Suivant', check: 'Vérifier', back: 'Retour', close: 'Fermer', quit: 'Quitter', cancel: 'Annuler',
     listen: 'Écouter', slow: 'Lentement', reveal: 'Voir la réponse', correct: 'Correct', wrong: 'Pas tout à fait', goodAnswer: 'Bonne réponse',

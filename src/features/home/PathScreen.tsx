@@ -6,6 +6,7 @@ import { useNextLesson, usePath, useProgress } from '@/app/hooks';
 import { curriculum } from '@/content/packs';
 import { remainingLine, tierLine } from '@/engine/progress';
 import { L, T } from '@/i18n';
+import { Bar, Icon } from '@/components/ui';
 
 export function PathScreen() {
   const t = T();
@@ -31,14 +32,15 @@ export function PathScreen() {
     <>
       <div className="chead">
         <div className="cring" style={{ ['--p' as string]: Math.round((done / Math.max(1, visible.length)) * 100) }}><b>{done}</b><small>/ {visible.length}</small></div>
-        <div className="mid"><div style={{ fontSize: 18, fontWeight: 700 }}>{done} leçon{done > 1 ? 's' : ''} validée{done > 1 ? 's' : ''} sur {visible.length}</div><div className="sm" style={{ fontWeight: 650 }}>{tierLine(prog)} · {remainingLine(prog)}</div><div className="xs mut">{granted ? `${granted} leçon${granted > 1 ? 's' : ''} déjà acquise${granted > 1 ? 's' : ''} d’après votre niveau · ` : ''}Suivez l’ordre conseillé, ou piochez librement.</div></div>
+        <div className="mid"><div className="name">{done} leçon{done > 1 ? 's' : ''} validée{done > 1 ? 's' : ''} sur {visible.length}</div><div className="sm b">{tierLine(prog)} · {remainingLine(prog)}</div><div className="xs mut">{granted ? `${granted} leçon${granted > 1 ? 's' : ''} déjà acquise${granted > 1 ? 's' : ''} d’après votre niveau · ` : ''}Suivez l’ordre conseillé, ou piochez librement.</div></div>
       </div>
       {groups.map((g, gi) => {
         const unitDoneN = g.items.filter((p) => p.status === 'done').length;
         const unitDone = unitDoneN === g.items.length;
         return (
           <div key={g.unit.id + gi}>
-            <div className="unit-head"><div style={{ flex: 1 }}><h3>{L(g.unit.title)}{unitDone ? ' ✓' : ''}</h3><div className="s">{L(g.unit.description)}</div></div><span className={`tag ${unitDone ? 'ok' : ''}`}>{unitDoneN} / {g.items.length}</span></div>
+            <div className="unit-head"><div className="grow"><h3>{L(g.unit.title)}</h3><div className="s">{L(g.unit.description)}</div></div><span className={`tag ${unitDone ? 'ok' : ''}`}>{unitDone && <Icon name="check" />}{unitDoneN} / {g.items.length}</span></div>
+            <div className="unit-bar"><Bar p={unitDoneN / Math.max(1, g.items.length)} thin /></div>
             <div className="list">
               {g.items.map((p) => {
                 n++;
@@ -47,7 +49,7 @@ export function PathScreen() {
                 const sub = [L(p.lesson.subtitle), p.knownOrally ? 'déjà connu à l’oral' : '', p.lesson.minutes ? `${p.lesson.minutes} min` : ''].filter(Boolean).join(' · ');
                 return (
                   <Link key={p.lesson.id} ref={isNext ? curRef : undefined} to={`/lesson/${p.lesson.id}`} className={`row lrow ${st}`} aria-current={isNext ? 'step' : undefined}>
-                    <span className="ico">{st === 'ok' ? '✓' : st === 'cur' ? '▶' : n}</span>
+                    <span className="ico">{st === 'ok' ? <Icon name="check" /> : st === 'cur' ? <Icon name="play" /> : n}</span>
                     <span className="mid"><span className="t">{L(p.lesson.title)}</span><span className="s">{sub}</span></span>
                     <span className="end">{st === 'cur' ? <span className="tag gold">Conseillée</span> : st === 'todo' ? <span className="xs mut">Plus tard</span> : <span className="chev">›</span>}</span>
                   </Link>

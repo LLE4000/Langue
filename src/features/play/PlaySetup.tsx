@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { useStore } from '@/app/store';
 import { readRegistry } from '@/app/profiles';
 import { th } from '@/content/th';
-import { Segmented } from '@/components/ui';
+import { Icon, Segmented } from '@/components/ui';
 import { defaultSource, poolFor, type PlaySource } from './quiz';
 
 export interface PlayConfig { players: string[]; count: number; source: PlaySource; layout: 'face' | 'side' }
@@ -24,7 +24,7 @@ export function SourcePicker({ value, onChange }: { value: PlaySource; onChange:
   return (
     <>
       <label className="f">Les mots du jeu</label>
-      <div className="chips" style={{ paddingBottom: 6 }}>
+      <div className="chips">
         <button className={`chip ${value.kind === 'known' ? 'on' : ''}`} disabled={known < 4} onClick={() => onChange({ kind: 'known' })}>Ce que je connais · {known}</button>
         <button className={`chip ${value.kind === 'numbers' ? 'on' : ''}`} onClick={() => onChange({ kind: 'numbers' })}>Nombres</button>
         <button className={`chip ${value.kind === 'theme' ? 'on' : ''}`} onClick={() => onChange({ kind: 'theme', theme: value.theme ?? 'sal' })}>Un thème</button>
@@ -54,9 +54,9 @@ export function PlaySetup({ minPlayers, maxPlayers, withLayout, onStart, startLa
       <div className="stack">
         {players.map((p, i) => (
           <div key={i} className="row-flex">
-            <span className="tag" style={{ minWidth: 34, justifyContent: 'center' }}>{i + 1}</span>
+            <span className="tag pnum">{i + 1}</span>
             <input className="field" value={p} onChange={(e) => setPlayers(players.map((x, k) => (k === i ? e.target.value : x)))} placeholder={`Joueur ${i + 1}`} aria-label={`Nom du joueur ${i + 1}`} />
-            {players.length > minPlayers && <button className="ib sm" aria-label="Retirer" onClick={() => setPlayers(players.filter((_, k) => k !== i))}>✕</button>}
+            {players.length > minPlayers && <button className="ib sm" aria-label="Retirer" onClick={() => setPlayers(players.filter((_, k) => k !== i))}><Icon name="close" size={16} /></button>}
           </div>
         ))}
         {players.length < maxPlayers && <button className="btn ghost sm" onClick={() => setPlayers([...players, `Joueur ${players.length + 1}`])}>+ Ajouter un joueur</button>}
@@ -68,10 +68,10 @@ export function PlaySetup({ minPlayers, maxPlayers, withLayout, onStart, startLa
         <>
           <label className="f">Position</label>
           <Segmented value={layout} options={[{ v: 'face', label: 'Face à face' }, { v: 'side', label: 'Côte à côte' }]} onChange={setLayout} />
-          <p className="xs mut" style={{ margin: '6px 2px 0' }}>Face à face : la moitié du haut est retournée pour la personne assise en face. Côte à côte : chacun sa moitié gauche/droite.</p>
+          <p className="foot-note">Face à face : la moitié du haut est retournée pour la personne assise en face. Côte à côte : chacun sa moitié gauche/droite.</p>
         </>
       )}
-      <button className="btn" style={{ marginTop: 18 }} disabled={!ok} onClick={() => onStart({ players: players.map((p) => p.trim()), count, source, layout })}>{startLabel}</button>
+      <button className="btn mt-5" disabled={!ok} onClick={() => onStart({ players: players.map((p) => p.trim()), count, source, layout })}>{startLabel}</button>
     </>
   );
 }

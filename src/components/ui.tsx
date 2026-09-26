@@ -44,10 +44,47 @@ const PATHS: Record<string, ReactNode> = {
   rotate: <><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /></>,
   flame: <path d="M12 22c4 0 7-2.8 7-7 0-3-1.5-5-3-7-.3 2-1.2 3-2.5 3.5C13 8.5 12.5 5 9.5 2c.3 3-.8 5-2.3 7C5.8 10.8 5 12.5 5 15c0 4.2 3 7 7 7z" />,
   trend: <><path d="M3 17l6-6 4 4 8-8" /><path d="M14 7h7v7" /></>,
+  // Apprentissage et entraînement
+  cards: <><rect x="3" y="7" width="13" height="14" rx="2" /><path d="M8 3h11a2 2 0 0 1 2 2v12" /></>,
+  headphones: <><path d="M3 18v-6a9 9 0 0 1 18 0v6" /><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z" /></>,
+  clock: <><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 2.5M10 2h4M12 2v3" /></>,
+  link: <><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.5 1.5" /><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.5-1.5" /></>,
+  music: <><path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" /></>,
+  shuffle: <><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" /></>,
+  target: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.2" /></>,
+  ear: <><path d="M6 8.5a6 6 0 0 1 12 0c0 3.5-3 4.5-3.5 7.5A3.5 3.5 0 0 1 8 16.5" /><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-1.5 3" /></>,
+  chat: <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.4A8 8 0 1 1 21 12z" />,
+  bookOpen: <><path d="M2 5h6a4 4 0 0 1 4 4v11a3 3 0 0 0-3-3H2z" /><path d="M22 5h-6a4 4 0 0 0-4 4v11a3 3 0 0 1 3-3h7z" /></>,
+  layers: <><path d="M12 3l9 5-9 5-9-5z" /><path d="M3 13l9 5 9-5" /></>,
+  cube: <><path d="M12 2l9 5v10l-9 5-9-5V7z" /><path d="M3 7l9 5 9-5M12 12v10" /></>,
+  type: <path d="M4 7V5h16v2M12 5v14M9 19h6" />,
+  globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>,
+  grid: <><rect x="3" y="3" width="7.5" height="7.5" rx="1.5" /><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5" /><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" /><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5" /></>,
+  bulb: <><path d="M9 18h6M10 22h4" /><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z" /></>,
+  clipboard: <><rect x="5" y="4" width="14" height="18" rx="2" /><path d="M9 4V2h6v2M9 10h6M9 14h6M9 18h4" /></>,
+  stop: <rect x="6" y="6" width="12" height="12" rx="2" />,
+  sparkles: <><path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z" /><path d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" /></>,
+  checkCircle: <><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.5 2.5L16 9.5" /></>,
+  // Jouer, profil
+  swords: <><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2" /><path d="M14.5 6.5L18 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2" /></>,
+  users: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c1-3.5 3.8-5 6.5-5s5.5 1.5 6.5 5" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 15c1.8.6 3 2.2 3.5 5" /></>,
+  send: <><path d="M21 3L10 14" /><path d="M21 3l-7 18-4-7-7-4z" /></>,
+  phone: <><rect x="6" y="2" width="12" height="20" rx="2.5" /><path d="M11 18h2" /></>,
+  trophy: <><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z" /><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3" /></>,
+  equal: <path d="M5 9h14M5 15h14" />,
+  chart: <><path d="M3 21h18" /><rect x="5" y="11" width="3" height="7" rx="1" /><rect x="10.5" y="6" width="3" height="12" rx="1" /><rect x="16" y="13" width="3" height="5" rx="1" /></>,
+  sliders: <><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" /><circle cx="16" cy="6" r="2" /><circle cx="10" cy="12" r="2" /><circle cx="18" cy="18" r="2" /></>,
+  archive: <><rect x="3" y="4" width="18" height="5" rx="1.5" /><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4" /></>,
+  dice: <><rect x="3" y="3" width="18" height="18" rx="4.5" /><circle cx="8.5" cy="8.5" r=".9" /><circle cx="15.5" cy="8.5" r=".9" /><circle cx="12" cy="12" r=".9" /><circle cx="8.5" cy="15.5" r=".9" /><circle cx="15.5" cy="15.5" r=".9" /></>,
 };
 export function Icon({ name, size = 22, style }: { name: keyof typeof PATHS | string; size?: number; style?: CSSProperties }) {
   return <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" style={style} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">{PATHS[name] ?? null}</svg>;
 }
+/**
+ * Icône dans son conteneur de ligne ou de tuile (`.ico`). Teinte à sens : '' neutre, 'acc' action, 'ok' / 'ko' juste / faux,
+ * ou la couleur d'une rubrique : 'jade' Réviser, 'plum' Jouer, 'indigo' Explorer.
+ */
+export const Ico = ({ name, tone = '' }: { name: string; tone?: '' | 'acc' | 'ok' | 'jade' | 'ko' | 'plum' | 'indigo' }) => <span className={`ico ${tone}`}><Icon name={name} /></span>;
 
 /* ---------- Texte thaï ---------- */
 export function useTokens() {
@@ -163,7 +200,7 @@ export function Sheet({ open, onClose, title, children, footer, closeLabel = 'Fe
       <section className="sheet" role="dialog" aria-modal="true">
         <div className="shead">{typeof title === 'string' ? <b>{title}</b> : title}<span className="sp" /><button className="ib sm" onClick={onClose} aria-label="Fermer"><Icon name="close" size={18} /></button></div>
         {children}
-        {footer === null ? null : footer ?? <button className="btn soft" style={{ marginTop: 16 }} onClick={onClose}>{closeLabel}</button>}
+        {footer === null ? null : footer ?? <button className="btn soft sheet-foot" onClick={onClose}>{closeLabel}</button>}
       </section>
     </>
   );
@@ -172,7 +209,8 @@ export function Sheet({ open, onClose, title, children, footer, closeLabel = 'Fe
 /* ---------- Divers ---------- */
 export const Bar = ({ p, thin }: { p: number; thin?: boolean }) => <div className={`bar ${thin ? 'thin' : ''}`}><i style={{ width: `${Math.round(Math.max(0, Math.min(1, p)) * 100)}%` }} /></div>;
 export const MasteryDot = ({ m }: { m: number }) => <i className={`dot ${m >= 0.8 ? 'm3' : m >= 0.5 ? 'm2' : m > 0 ? 'm1' : ''}`} aria-label={`maîtrise ${Math.round(m * 100)} %`} />;
-export const Empty = ({ e, children }: { e: string; children: ReactNode }) => <div className="empty"><span className="e">{e}</span>{children}</div>;
+/** État vide : une icône (nom du jeu d'icônes) ou, à défaut, un caractère ; puis le message. */
+export const Empty = ({ e, icon, children }: { e?: string; icon?: string; children: ReactNode }) => <div className="empty"><span className="e" aria-hidden="true">{icon ? <Icon name={icon} /> : e}</span>{children}</div>;
 export function Segmented<T extends string | number | boolean>({ value, options, onChange }: { value: T; options: { v: T; label: ReactNode }[]; onChange: (v: T) => void }) {
   return <div className="seg">{options.map((o) => <button key={String(o.v)} className={o.v === value ? 'on' : ''} onClick={() => onChange(o.v)}>{o.label}</button>)}</div>;
 }

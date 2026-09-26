@@ -49,9 +49,9 @@ export function PlacementTest({ onClose, onResult }: { onClose: () => void; onRe
       <p className="qprompt">{q.prompt}</p>
       <div className="stage compact"><div className="big s2"><Thai text={q.thai} /></div></div>
       <div className="choices c2">
-        {q.choices.map((c, k) => <button key={k} className="choice" onClick={() => answer(c.ok)}><span className="rom" style={{ fontSize: 18 }}>{c.label}</span></button>)}
+        {q.choices.map((c, k) => <button key={k} className="choice" onClick={() => answer(c.ok)}><span className="rom solo">{c.label}</span></button>)}
       </div>
-      <button className="btn ghost sm" style={{ marginTop: 10 }} onClick={() => answer(false)}><Icon name="close" size={16} /> {t.onboarding.dontKnow}</button>
+      <button className="btn ghost sm mt-3" onClick={() => answer(false)}><Icon name="close" size={16} /> {t.onboarding.dontKnow}</button>
     </Sheet>
   );
 }

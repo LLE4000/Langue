@@ -23,13 +23,13 @@ export function LevelsScreen() {
   const apply = () => { updateProfile({ levels, goals }); if (!goals.read) updateSettings({ translit: 'always' }); toast('Parcours recalculé.'); nav('/'); };
   return (
     <>
-      <div className="h2" style={{ marginTop: 0 }}>Mon objectif</div>
+      <div className="h2 mt-0">Mon objectif</div>
       <GoalPicker value={goals} onChange={setGoals} />
       <div className="h2">Mes niveaux</div>
-      <p className="sm mut" style={{ margin: '-4px 2px 8px' }}>Soyez précis : le parcours saute ce que vous savez déjà.</p>
+      <p className="note-under">Soyez précis : le parcours saute ce que vous savez déjà.</p>
       <LevelPicker levels={levels} onChange={set} skills={goalSkills(goals)} />
-      <div className="note sm" style={{ marginTop: 14 }}>Monter un niveau marque comme acquises les leçons de ce niveau ; le baisser les remet dans le parcours. Retirer « lire et écrire » enlève les leçons d’écriture du parcours (Explorer reste complet). Votre maîtrise déjà enregistrée n’est jamais effacée.</div>
-      <div className="qfoot" style={{ marginTop: 18 }}>
+      <div className="note sm">Monter un niveau marque comme acquises les leçons de ce niveau ; le baisser les remet dans le parcours. Retirer « lire et écrire » enlève les leçons d’écriture du parcours (Explorer reste complet). Votre maîtrise déjà enregistrée n’est jamais effacée.</div>
+      <div className="qfoot">
         <div className="meta"><span>{changed ? 'Des changements sont en attente.' : 'Aucun changement pour l’instant.'}</span></div>
         <button className="btn" disabled={!changed} onClick={apply}>Recalculer mon parcours</button>
       </div>

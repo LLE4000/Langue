@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FullScreen } from '@/app/Shell';
 import { useStore } from '@/app/store';
-import { useToast } from '@/components/ui';
+import { Icon, useToast } from '@/components/ui';
 import { PlaySetup, type PlayConfig } from './PlaySetup';
 import { QuizRunner } from './QuizRunner';
 import { buildPlayQuestions, fmtSecs, poolFor, type PlayQuestion, type PlayResult } from './quiz';
@@ -46,12 +46,12 @@ export function Turns() {
     const name = cfg.players[turn];
     return (
       <FullScreen title={`Joueur ${turn + 1} / ${cfg.players.length}`} onBack={() => { if (turn === 0 || window.confirm('Abandonner la partie en cours ?')) setPhase('setup'); }}>
-        <div className="recap" style={{ marginTop: 24 }}>
-          <div style={{ fontSize: 40 }}>📱</div>
-          <div className="serif" style={{ fontSize: 30, marginTop: 6 }}>Au tour de {name}</div>
-          <p className="mut" style={{ marginTop: 8 }}>{turn === 0 ? `${qs.length} questions, chronométrées. Les autres ne regardent pas !` : 'Passez l’appareil. Même série, même chrono.'}</p>
+        <div className="recap mt-6">
+          <div className="result-ic"><Icon name="phone" /></div>
+          <div className="title-xl">Au tour de {name}</div>
+          <p className="mut mt-2">{turn === 0 ? `${qs.length} questions, chronométrées. Les autres ne regardent pas !` : 'Passez l’appareil. Même série, même chrono.'}</p>
         </div>
-        <button className="btn" style={{ marginTop: 18 }} onClick={() => setPhase('play')}>Je suis {name}, je commence</button>
+        <button className="btn mt-5" onClick={() => setPhase('play')}>Je suis {name}, je commence</button>
       </FullScreen>
     );
   }
@@ -71,21 +71,21 @@ export function Turns() {
   return (
     <FullScreen title="Résultats" onBack={() => nav('/play')}>
       <div className="recap ok">
-        <div style={{ fontSize: 40 }}>🏆</div>
-        <div className="serif" style={{ fontSize: 30 }}>{top.name}</div>
+        <div className="result-ic"><Icon name="trophy" /></div>
+        <div className="title-xl">{top.name}</div>
         <div className="mut sm">{top.score} / {top.total} en {fmtSecs(top.secs)}</div>
       </div>
-      <div className="list" style={{ marginTop: 12 }}>
+      <div className="list mt-3">
         {sorted.map((r, k) => (
           <div className="row" key={k}>
-            <span className="ico" style={k === 0 ? { background: 'var(--acc-soft)' } : undefined}>{k + 1}</span>
+            <span className={`ico ${k === 0 ? 'acc' : ''}`}>{k + 1}</span>
             <span className="mid"><span className="t">{r.name}</span><span className="s">{r.score} / {r.total} bonnes réponses · {fmtSecs(r.secs)}</span></span>
             <span className="end"><b>{r.score}</b></span>
           </div>
         ))}
       </div>
-      <p className="xs mut" style={{ margin: '8px 2px 0' }}>Égalité de score : le plus rapide passe devant. Chacun progresse à son rythme, l’important est de rejouer.</p>
-      <div className="stack" style={{ marginTop: 14 }}>
+      <p className="foot-note">Égalité de score : le plus rapide passe devant. Chacun progresse à son rythme, l’important est de rejouer.</p>
+      <div className="stack mt-4">
         <button className="btn" onClick={() => start(cfg)}>Rejouer, nouvelle série</button>
         <button className="btn ghost" onClick={() => setPhase('setup')}>Changer les joueurs ou les mots</button>
         <button className="btn soft" onClick={() => nav('/play')}>Terminer</button>
