@@ -406,3 +406,35 @@ test('lecture longue : un texte entier, phrase par phrase, puis le bilan', async
   await expect(page.getByText('Le texte', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /Relire le texte/ })).toBeVisible();
 });
+
+test('conversation parlée : jouer son rôle au micro, réplique comprise, bilan', async ({ page, context }) => {
+  // Reconnaissance simulée : elle « entend » la réplique affichée dans la carte « À vous ».
+  await context.addInitScript(() => {
+    class FakeSR {
+      lang = ''; maxAlternatives = 1; interimResults = false; continuous = false;
+      onresult: ((e: unknown) => void) | null = null; onerror: ((e: unknown) => void) | null = null; onend: (() => void) | null = null;
+      start() {
+        setTimeout(() => {
+          const heard = (document.querySelector('.talk-me .th.big')?.textContent ?? '').trim();
+          const alt = { transcript: heard, confidence: 0.9 };
+          const res = Object.assign([alt], { item: () => alt, isFinal: true });
+          this.onresult?.({ results: Object.assign([res], { item: () => res }) });
+          this.onend?.();
+        }, 150);
+      }
+      stop() { this.onend?.(); }
+      abort() { this.onend?.(); }
+    }
+    (window as unknown as { SpeechRecognition: unknown }).SpeechRecognition = FakeSR;
+    (window as unknown as { webkitSpeechRecognition: unknown }).webkitSpeechRecognition = FakeSR;
+  });
+  await onboard(page);
+  await page.goto('/#/review');
+  await page.getByRole('link', { name: /Conversation parlée/ }).click();
+  await page.getByRole('link', { name: /Commander un café/ }).click();
+  await page.locator('.seg button', { hasText: 'Réplique affichée' }).click();
+  await page.getByRole('button', { name: /Commencer la conversation/ }).click();
+  await expect(page.locator('.talk .bub.me.ok').first()).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText('Conversation réussie')).toBeVisible({ timeout: 60_000 });
+  await expect(page.locator('.ra-line.ok').first()).toBeVisible();
+});

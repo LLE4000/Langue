@@ -15,7 +15,7 @@ export function Dialogs() {
   return (
     <>
       <p className="lead">Des situations réelles. La traduction est masquée au départ&nbsp;: essayez d’abord de comprendre seul.</p>
-      <div className="btns mb-3"><Link className="btn soft sm" to="/explore/comprehension"><Icon name="headphones" size={16} /> Tester ma compréhension orale</Link></div>
+      <div className="btns mb-3"><Link className="btn soft sm" to="/explore/comprehension"><Icon name="headphones" size={16} /> Tester ma compréhension orale</Link><Link className="btn soft sm" to="/talk"><Icon name="mic" size={16} /> Jouer mon rôle au micro</Link></div>
       <div className="list">{th.DIALOGS.map((d) => <Link key={d.id} className={`row ${done.has(d.id) ? 'done' : ''}`} to={`/explore/dialogs/${encodeURIComponent(d.id)}`}><span className="ico">{done.has(d.id) ? <Icon name="check" /> : <GlyphIcon name={d.icon} />}</span><span className="mid"><span className="t">{L(d.title)}</span><span className="s">{d.lines.length} répliques · avec : {L(d.other).toLowerCase()}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div>
     </>
   );
@@ -30,5 +30,5 @@ export function DialogScreen() {
   const addXp = useStore((s) => s.addXp);
   usePage(d ? L(d.title) : 'Conversation', { back: '/explore/dialogs' });
   if (!d) return <Empty icon="search">Conversation introuvable.</Empty>;
-  return <><div className="btns mb-3"><Link className="btn ghost sm" to={`/explore/comprehension/${encodeURIComponent(d.id)}`}><Icon name="headphones" size={16} /> L’écouter sans le texte, puis répondre</Link></div><DialogView id={d.id} onDone={() => { log('dialog', d.id); recordActivity('dialog:' + d.id); addXp(5); nav('/explore/dialogs'); }} /></>;
+  return <><div className="btns mb-3"><Link className="btn ghost sm" to={`/explore/comprehension/${encodeURIComponent(d.id)}`}><Icon name="headphones" size={16} /> L’écouter sans le texte, puis répondre</Link><Link className="btn ghost sm" to={`/talk/${encodeURIComponent(d.id)}`}><Icon name="mic" size={16} /> Jouer mon rôle</Link></div><DialogView id={d.id} onDone={() => { log('dialog', d.id); recordActivity('dialog:' + d.id); addXp(5); nav('/explore/dialogs'); }} /></>;
 }

@@ -82,6 +82,7 @@ export function Review() {
           </Link>
         ))}
         {goals.read && <Link to="/read" className="mode feature"><span className="ico"><Icon name="mic" /></span><span className="grow"><span className="t">Lire à voix haute</span><span className="s">Le tapis de syllabes, micro ouvert</span></span></Link>}
+        <Link to="/talk" className="mode"><span className="ico"><Icon name="chat" /></span><span className="grow"><span className="t">Conversation parlée</span><span className="s">Jouer son rôle au micro, plusieurs réponses acceptées</span></span></Link>
         <Link to="/explore/comprehension" className="mode"><span className="ico"><Icon name="headphones" /></span><span className="grow"><span className="t">Compréhension orale</span><span className="s">Écouter une conversation, répondre</span></span></Link>
         <Link to="/explore/listen" className="mode"><span className="ico"><Icon name="repeat" /></span><span className="grow"><span className="t">Écoute en boucle</span><span className="s">Sans les mains, en voiture</span></span></Link>
       </div>

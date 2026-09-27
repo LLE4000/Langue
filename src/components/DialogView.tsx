@@ -23,7 +23,10 @@ export function DialogView({ id, onDone, doneLabel }: { id: string; onDone?: () 
   const favs = useStore((s) => s.favorites);
   const defaultRom = useShowRom(undefined, false);
   useEffect(() => { setRom(defaultRom && useStore.getState().settings.translit === 'always'); }, [defaultRom, id]);
-  useEffect(() => () => { token.current++; sp.cancel(); }, [sp]);
+  // à la sortie seulement : l'objet voix change quand l'appareil annonce ses voix, sans que la lecture doive s'arrêter
+  const spRef = useRef(sp);
+  spRef.current = sp;
+  useEffect(() => () => { token.current++; spRef.current.cancel(); }, []);
   if (!d) return null;
   const on = (i: number, k: string) => (one[i + k] != null ? one[i + k] : k === 'rom' ? rom : k === 'tr' ? tr : false);
   // Bascule globale : n'efface que les choix ligne par ligne de la même aide (les « mot à mot » ouverts restent)

@@ -82,7 +82,10 @@ export function ComprehensionRun() {
   const token = useRef(0);
   const other = d ? dialogOtherGender(d, sp.gender === 'm' ? 'f' : 'm') : 'f';
   const stop = () => { token.current++; setLine(null); sp.cancel(); };
-  useEffect(() => () => { token.current++; sp.cancel(); }, [sp]);
+  // à la sortie seulement : l'objet voix change quand l'appareil annonce ses voix, sans que la lecture doive s'arrêter
+  const spRef = useRef(sp);
+  spRef.current = sp;
+  useEffect(() => () => { token.current++; spRef.current.cancel(); }, []);
   const [slow, setSlow] = useState(false);
   const play = (from = 0) => {
     if (!d) return;
@@ -174,6 +177,7 @@ export function ComprehensionRun() {
       <DialogView id={d.id} />
       <div className="stack mt-4">
         <button className="btn" onClick={() => nav('/explore/comprehension')}>Une autre conversation</button>
+        <Link className="btn soft" to={`/talk/${encodeURIComponent(d.id)}`}><Icon name="mic" size={18} /> Jouer mon rôle au micro</Link>
         <button className="btn ghost" onClick={() => { setPhase('listen'); setQi(0); setPicked(null); setScore(0); setPlays(0); }}>Réécouter celle-ci</button>
       </div>
     </>

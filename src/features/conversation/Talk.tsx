@@ -80,7 +80,10 @@ export function TalkRun() {
   const endRef = useRef<HTMLDivElement>(null);
   const tok = useMemo(() => ({ gender: profile.gender, name: profile.thaiName ?? '' }), [profile.gender, profile.thaiName]);
   const other = d ? dialogOtherGender(d, sp.gender === 'm' ? 'f' : 'm') : 'f';
-  useEffect(() => () => { token.current++; sp.cancel(); recognizer.stop(); }, [sp]);
+  // à la sortie seulement (l'objet voix change quand l'appareil annonce ses voix : ne pas couper la conversation pour ça)
+  const spRef = useRef(sp);
+  spRef.current = sp;
+  useEffect(() => () => { token.current++; spRef.current.cancel(); recognizer.stop(); }, []);
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }); }, [pos, state, turns.length]);
 
   const turnOf = (i: number) => turns.find((t) => t.i === i);
@@ -111,7 +114,8 @@ export function TalkRun() {
     if (l.who === 'other') {
       setState('other');
       const ok = sp.speak(l.thai, { speaker: other, onend: () => setTimeout(() => { if (tk === token.current) advance(i + 1); }, 350) });
-      if (!ok) setTimeout(() => { if (tk === token.current) advance(i + 1); }, 1500);
+      // garde-fou : certaines synthèses vocales ne signalent jamais la fin ; on enchaîne après une durée raisonnable
+      setTimeout(() => { if (tk === token.current) advance(i + 1); }, ok ? 3000 + l.thai.length * 160 : 1500);
     } else {
       setState('idle');
       setTimeout(() => { if (tk === token.current) listen(i, 0); }, 450);

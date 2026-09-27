@@ -67,7 +67,10 @@ export function Listen() {
   useWakeLock(on);
 
   const stop = useCallback(() => { token.current++; setOn(false); setTake(-1); sp.cancel(); }, [sp]);
-  useEffect(() => () => { token.current++; sp.cancel(); }, [sp]);
+  // à la sortie seulement : l'objet voix change quand l'appareil annonce ses voix, sans que la lecture doive s'arrêter
+  const spRef = useRef(sp);
+  spRef.current = sp;
+  useEffect(() => () => { token.current++; spRef.current.cancel(); }, []);
   // Changement de réglages ou de file : on repart proprement au début
   useEffect(() => { stop(); setI(0); iRef.current = 0; setRevealed(!prefs.guess); }, [queue, prefs.guess, stop]);
 

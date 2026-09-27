@@ -61,7 +61,10 @@ function SetPlayer() {
   const token = useRef(0);
   usePage(`Série ${idx + 1} / ${th.TONE_SETS.length}`, { back: '/explore/tones/sets' });
   useEffect(() => { setK(0); setPlaying(false); token.current++; }, [idx]);
-  useEffect(() => () => { token.current++; sp.cancel(); }, [sp]);
+  // à la sortie seulement : l'objet voix change quand l'appareil annonce ses voix, sans que la lecture doive s'arrêter
+  const spRef = useRef(sp);
+  spRef.current = sp;
+  useEffect(() => () => { token.current++; spRef.current.cancel(); }, []);
   if (!set) return null;
   const ws = set.words.map((w) => TONE_BY_THAI[w]).filter(Boolean);
   const w = ws[k];
