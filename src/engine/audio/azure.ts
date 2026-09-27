@@ -10,9 +10,11 @@
  * mesure PAS en thaï : les tons (l'évaluation prosodique n'existe qu'en anglais). Les tons restent jugés par la
  * reconnaissance (un ton faux donne souvent un autre mot) et par la courbe de la voix, présentée comme indicative.
  *
- * Version commerciale : la clé ne doit jamais être dans l'application. Un petit service (fonction serverless) garde la
- * clé et délivre des jetons de 10 minutes aux utilisateurs autorisés ; l'application les demande à `tokenUrl`
- * (réponse JSON { token, region }) et n'a plus besoin de clé personnelle. Tout le reste du code est inchangé.
+ * Service de jetons : la clé ne doit jamais être dans l'application. Le serveur de Langue (server/, Worker Cloudflare)
+ * garde la clé et délivre des jetons de 10 minutes ; l'application les demande à `<VITE_SERVER_URL>/azure-token`
+ * (réponse JSON { token, region, expiresAt }), les garde jusqu'à leur échéance et n'a besoin d'aucune clé personnelle.
+ * Une clé personnelle enregistrée sur l'appareil reste prioritaire (c'est un choix explicite de l'apprenant) et sert
+ * aussi de secours si le service ne répond pas.
  *
  * Le SDK (lourd) n'est chargé qu'au premier usage.
  */
@@ -22,12 +24,31 @@ export interface AzureConfig { key: string; region: string; tokenUrl?: string }
 export interface AzureWord { word: string; accuracy: number; errorType: string }
 const KEY = 'langue.azure';
 
-/** Service de jetons configuré au déploiement (VITE_AZURE_TOKEN_URL) : prime sur une clé personnelle. */
-const TOKEN_URL = (import.meta.env.VITE_AZURE_TOKEN_URL as string | undefined) || '';
+/** Service de jetons configuré au déploiement : VITE_AZURE_TOKEN_URL, sinon le serveur de Langue (VITE_SERVER_URL). */
+const SERVER_URL = ((import.meta.env.VITE_SERVER_URL as string | undefined) || '').replace(/\/+$/, '');
+const TOKEN_URL = (import.meta.env.VITE_AZURE_TOKEN_URL as string | undefined) || (SERVER_URL ? `${SERVER_URL}/azure-token` : '');
+const REGION = (import.meta.env.VITE_AZURE_REGION as string | undefined) || 'northeurope';
+
+/** Clé personnelle enregistrée sur cet appareil (Réglages › Voix), sinon null. */
+export function personalAzure(): AzureConfig | null {
+  try { const c = JSON.parse(localStorage.getItem(KEY) ?? 'null'); return c?.key && c?.region ? { key: c.key, region: c.region } : null; } catch { return null; }
+}
+/** D'où vient l'évaluation Azure : clé personnelle, service de jetons de l'application, ou rien. */
+export const azureSource = (): 'personal' | 'service' | null => (personalAzure() ? 'personal' : TOKEN_URL ? 'service' : null);
 
 export function azureConfig(): AzureConfig | null {
-  if (TOKEN_URL) return { key: '', region: (import.meta.env.VITE_AZURE_REGION as string | undefined) || 'northeurope', tokenUrl: TOKEN_URL };
-  try { const c = JSON.parse(localStorage.getItem(KEY) ?? 'null'); return c?.key && c?.region ? c : null; } catch { return null; }
+  return personalAzure() ?? (TOKEN_URL ? { key: '', region: REGION, tokenUrl: TOKEN_URL } : null);
+}
+
+let tokenCache: { url: string; token: string; region: string; expiresAt: number } | null = null;
+/** Jeton du service, gardé jusqu'à 30 s avant son échéance (un appel réseau toutes les ~9 minutes au plus). */
+async function serviceToken(url: string): Promise<{ token: string; region: string }> {
+  if (tokenCache && tokenCache.url === url && Date.now() < tokenCache.expiresAt - 30_000) return tokenCache;
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) throw new Error(r.status === 429 ? 'service de jetons saturé, réessayez plus tard' : r.status === 503 ? 'service Azure non configuré' : `jeton refusé (${r.status})`);
+  const t = (await r.json()) as { token: string; region?: string; expiresAt?: number };
+  tokenCache = { url, token: t.token, region: t.region || REGION, expiresAt: t.expiresAt && t.expiresAt > Date.now() ? t.expiresAt : Date.now() + 8 * 60_000 };
+  return tokenCache;
 }
 export function saveAzureConfig(c: AzureConfig | null) {
   try { if (c) localStorage.setItem(KEY, JSON.stringify({ key: c.key.trim(), region: c.region.trim().toLowerCase() })); else localStorage.removeItem(KEY); } catch { /* stockage indisponible */ }
@@ -42,11 +63,15 @@ export async function assessPronunciation(cfg: AzureConfig, samples: Float32Arra
   const sdk = await import('microsoft-cognitiveservices-speech-sdk');
   let speech;
   if (cfg.tokenUrl) {
-    // service de jetons (version commerciale) : la clé reste sur le serveur
-    const r = await fetch(cfg.tokenUrl, { credentials: 'include' });
-    if (!r.ok) throw new Error(`jeton refusé (${r.status})`);
-    const { token, region } = (await r.json()) as { token: string; region?: string };
-    speech = sdk.SpeechConfig.fromAuthorizationToken(token, region ?? cfg.region);
+    // service de jetons : la clé reste sur le serveur ; secours sur une clé personnelle s'il ne répond pas
+    try {
+      const { token, region } = await serviceToken(cfg.tokenUrl);
+      speech = sdk.SpeechConfig.fromAuthorizationToken(token, region);
+    } catch (e) {
+      const own = personalAzure();
+      if (!own) throw e;
+      speech = sdk.SpeechConfig.fromSubscription(own.key, own.region);
+    }
   } else speech = sdk.SpeechConfig.fromSubscription(cfg.key, cfg.region);
   speech.speechRecognitionLanguage = 'th-TH';
   const push = sdk.AudioInputStream.createPushStream(sdk.AudioStreamFormat.getWaveFormatPCM(16000, 16, 1));

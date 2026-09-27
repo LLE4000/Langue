@@ -1,0 +1,33 @@
+/* En ligne, en direct : code de salle, joueurs, manche chronométrée */
+.code-in { text-transform: uppercase; letter-spacing: .3em; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; }
+.code-in::placeholder { letter-spacing: .3em; color: var(--ink3); font-weight: 600; }
+.on-code { display: flex; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-5) var(--s-4); border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--e1); text-align: center; }
+.on-code .k { font-size: var(--fs-1); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); }
+.on-code b { font-size: clamp(40px, 13vw, 56px); letter-spacing: .18em; padding-left: .18em; line-height: 1.1; color: var(--acc-deep); font-variant-numeric: tabular-nums; }
+.on-code .btn { width: auto; margin-top: var(--s-1); }
+.on-players .row { min-height: 52px; }
+.on-players .row.me { background: var(--acc-soft); }
+.on-players .row.off { opacity: .55; }
+.on-players .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line2); flex: none; margin: 0 var(--s-1); }
+.on-players .dot.on { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent); }
+.on-players .end { gap: var(--s-2); }
+.on-score { min-width: 2.5em; text-align: right; font-variant-numeric: tabular-nums; font-size: var(--fs-4); }
+.on-wait { display: flex; align-items: center; justify-content: center; gap: var(--s-3); min-height: 40vh; color: var(--ink2); }
+.on-wait .spin { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--line2); border-top-color: var(--acc); animation: onspin .8s linear infinite; }
+@keyframes onspin { to { transform: rotate(360deg); } }
+.on-count { min-height: 55vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-3); }
+.on-count span { font-family: var(--f-display); font-size: clamp(96px, 34vw, 160px); line-height: 1; color: var(--acc-deep); animation: onpop 1s ease-out infinite; }
+.on-count small { color: var(--ink2); font-size: var(--fs-2); }
+@keyframes onpop { 0% { transform: scale(1.25); opacity: .3; } 30% { transform: scale(1); opacity: 1; } }
+.on-round { display: flex; flex-direction: column; gap: var(--s-3); padding-bottom: var(--s-5); }
+.on-timer { height: 8px; border-radius: var(--r-pill); background: var(--surface2); overflow: hidden; }
+.on-timer i { display: block; height: 100%; border-radius: inherit; background: var(--jade); transition: width .1s linear, background var(--d-fast); }
+.on-timer i.low { background: var(--ko); }
+.on-round .stage { min-height: 170px; gap: var(--s-1); }
+.on-round .stage .ib { margin-top: var(--s-1); }
+.on-round .choice.sel { border-color: var(--acc); background: var(--acc-soft); box-shadow: none; }
+.on-status { text-align: center; font-weight: 650; color: var(--ink2); min-height: 1.5em; }
+.on-me { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--acc-deep); padding: 0 var(--s-2); }
+.on-link { position: sticky; top: 0; z-index: 2; }
+@media (prefers-reduced-motion: reduce) { .on-count span, .on-wait .spin { animation: none; } }
+.on-timer.rev i { background: var(--ink3); transition: width .1s linear; }

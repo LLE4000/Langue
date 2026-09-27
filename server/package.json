@@ -1,0 +1,17 @@
+{
+  "name": "langue-server",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Serveur de Langue : salles en ligne et jetons Azure Speech (Cloudflare Worker).",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260926.1",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.40.0"
+  }
+}
