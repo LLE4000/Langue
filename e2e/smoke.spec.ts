@@ -336,7 +336,7 @@ test('progression : pastille permanente, palier avec critères chiffrés, jauge 
   await expect(page).toHaveURL(/#\/profile\/progress$/);
   await expect(page.getByText('Premiers pas').first()).toBeVisible();
   await expect(page.getByText(/Pour atteindre A1/)).toBeVisible();
-  await expect(page.getByText(/il faut \d+ consonnes/)).toBeVisible();
+  await expect(page.getByText(/Objectif\s*:\s*\d+\s*consonnes/)).toBeVisible();
   // ni total de leçons ni estimation de durée : seulement le pourcentage de maîtrise
   await expect(page.getByText(/soit .* avant A1/)).toHaveCount(0);
   await page.goto('/#/path');
