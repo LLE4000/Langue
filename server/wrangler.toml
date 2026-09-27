@@ -9,7 +9,7 @@ workers_dev = true
 # Le site de l'application (GitHub Pages) et le développement local.
 ALLOWED_ORIGINS = "https://lle4000.github.io,http://localhost:5173,http://localhost:4173,http://localhost:4174"
 # Garde-fou de facturation Azure : jetons délivrés par jour, tous appareils confondus.
-AZURE_TOKENS_PER_DAY = "600"
+AZURE_TOKENS_PER_DAY = "300"
 
 [[durable_objects.bindings]]
 name = "ROOMS"

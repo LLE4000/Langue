@@ -18,7 +18,7 @@ Application web progressive (PWA) d’apprentissage des langues, **guidée par u
 6. [Le curriculum et le parcours](#le-curriculum-et-le-parcours)
 7. [Objectifs, profils, jouer à plusieurs](#objectifs-profils-jouer-à-plusieurs)
 8. [Parler et comprendre en situation](#parler-et-comprendre-en-situation)
-9. [En pause](#en-pause)
+9. [En pause](#en-pause) · [Jeu en ligne et jetons Azure](#jeu-en-ligne-et-jetons-azure-serveur)
 10. [Le moteur pédagogique](#le-moteur-pédagogique)
 11. [Système de transcription](#système-de-transcription)
 12. [Guides : ajouter une leçon, une langue, une traduction, un type d’exercice](#guides)
@@ -159,7 +159,10 @@ Changer ses niveaux (Profil › Mes niveaux) recalcule le parcours sans effacer 
 ## En pause
 
 - **Jeu (chantier 7)** : mis de côté, sa pertinence reste à décider.
-- **Serveur (chantier 10)** : `server/` contient un Worker Cloudflare écrit et testé en local (salles en ligne à code de 5 lettres, jetons Azure pour que personne n’ait besoin de sa propre clé), et `features/play/Online.tsx` l’écran correspondant — rien n’est déployé ni accessible dans l’application. Voir `server/README.md` pour le reprendre.
+
+## Jeu en ligne et jetons Azure (serveur)
+
+`server/` contient un Worker Cloudflare : salles en ligne (code de 5 lettres, 2 à 6 joueurs, manches cadencées par le serveur, reconnexion, revanche) et jetons Azure Speech pour que personne n’ait besoin de sa propre clé. Le workflow de déploiement le publie **seulement si** les secrets `CLOUDFLARE_API_TOKEN` et `CLOUDFLARE_ACCOUNT_ID` existent, puis construit l’application avec son adresse (`VITE_SERVER_URL`) ; sinon le site est publié sans jeu en ligne. Mise en service pas à pas : `server/README.md`.
 
 ## Le moteur pédagogique
 

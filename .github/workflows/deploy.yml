@@ -26,8 +26,36 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm test
+      # Serveur (salles en ligne + jetons Azure) : déployé seulement si le compte Cloudflare est branché
+      # (secrets CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID). Sans eux, ou en cas d'échec, le site est publié sans le jeu en ligne.
+      - name: Serveur · dépendances
+        id: srvdeps
+        if: env.CF_TOKEN != ''
+        env: { CF_TOKEN: '${{ secrets.CLOUDFLARE_API_TOKEN }}' }
+        working-directory: server
+        run: npm ci
+      - name: Serveur · déploiement Cloudflare
+        id: server
+        if: steps.srvdeps.outcome == 'success'
+        continue-on-error: true
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: server
+          command: deploy
+          secrets: |
+            AZURE_SPEECH_KEY
+            AZURE_SPEECH_REGION
+        env:
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
       - name: Build (base = /<dépôt>/)
-        run: BASE_PATH="/${GITHUB_REPOSITORY#*/}/" npm run build
+        env:
+          VITE_SERVER_URL: ${{ steps.server.outcome == 'success' && steps.server.outputs.deployment-url || '' }}
+        run: |
+          echo "Serveur : ${VITE_SERVER_URL:-aucun (jeu en ligne masqué)}"
+          BASE_PATH="/${GITHUB_REPOSITORY#*/}/" npm run build
       - uses: actions/configure-pages@v5
         with:
           enablement: true

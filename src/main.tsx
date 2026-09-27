@@ -17,6 +17,7 @@ import './styles/qa-screens.css';
 import './styles/qa-library.css';
 import './styles/qa-profile.css';
 import './styles/talk.css';
+import './styles/online.css';
 import { App } from './app/App';
 import { useStore } from './app/store';
 

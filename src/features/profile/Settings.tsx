@@ -8,7 +8,7 @@ import { usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { tts, clips, useSpeaker, useVoices, recognizer, recorder } from '@/app/services/speech';
 import { WebSpeechProvider, type VoiceGender } from '@/engine/audio/tts';
-import { azureConfig, saveAzureConfig, testAzure } from '@/engine/audio/azure';
+import { azureSource, personalAzure, saveAzureConfig, testAzure } from '@/engine/audio/azure';
 import { T, frTypo } from '@/i18n';
 import { useGoals } from '@/app/hooks';
 import { GOAL_OPTIONS, goalKey } from '@/features/onboarding/Onboarding';
@@ -111,7 +111,8 @@ function VoiceTroubleshooting() {
  */
 function AzureAssessment() {
   const toast = useToast((s) => s.show);
-  const cur = azureConfig();
+  const cur = personalAzure();
+  const service = azureSource() !== null && !cur; // jetons fournis par l'application (serveur), sans clé personnelle
   const [key, setKey] = useState(cur?.key ?? '');
   const [region, setRegion] = useState(cur?.region ?? 'northeurope');
   const [busy, setBusy] = useState(false);
@@ -126,7 +127,8 @@ function AzureAssessment() {
   };
   return (
     <details className="fold sm mt-5">
-      <summary>Évaluation Azure de la lecture {cur ? '· active' : '(facultatif)'}</summary>
+      <summary>Évaluation Azure de la lecture {cur ? '· clé personnelle' : service ? '· incluse' : '(facultatif)'}</summary>
+      {service && <p className="sm mt-1"><b>Incluse dans l’application</b> : rien à faire, la lecture à voix haute est évaluée par Azure (précision par syllabe, lectures omises ; pas les tons). Une clé personnelle ci-dessous reste possible et passe alors en priorité.</p>}
       <p className="sm mut mt-1">Avec votre propre clé <b>Azure Speech</b> (niveau gratuit F0), chaque bloc de six lectures du tapis de lecture est comparé au texte attendu : précision par syllabe, lectures omises. Azure ne note pas les tons en thaï. La clé reste sur cet appareil, hors des sauvegardes.</p>
       <label className="f" htmlFor="azkey">Clé</label>
       <input id="azkey" className="field" type="password" autoComplete="off" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Clé 1 de la ressource Speech" />

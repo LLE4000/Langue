@@ -43,6 +43,7 @@ import { PlayHub } from '@/features/play/PlayHub';
 import { Duel } from '@/features/play/Duel';
 import { Turns } from '@/features/play/Turns';
 import { ChallengeHub, ChallengeNew, ChallengePlay } from '@/features/play/Challenge';
+import { OnlineHub, OnlineRoom } from '@/features/play/Online';
 
 function useHydrated() {
   const [h, setH] = useState(useStore.persist.hasHydrated());
@@ -127,12 +128,14 @@ export function App() {
           <Route path="profile/people" element={<PeopleScreen />} />
           <Route path="play" element={<PlayHub />} />
           <Route path="play/defi" element={<ChallengeHub />} />
+          <Route path="play/online" element={<OnlineHub />} />
         </Route>
         <Route path="/play/duel" element={<RequireProfile><Duel /></RequireProfile>} />
         <Route path="/play/turns" element={<RequireProfile><Turns /></RequireProfile>} />
         <Route path="/play/voice" element={<RequireProfile><VoiceDuel /></RequireProfile>} />
         <Route path="/play/defi/new" element={<RequireProfile><ChallengeNew /></RequireProfile>} />
         <Route path="/play/defi/:code" element={<RequireProfile><ChallengePlay /></RequireProfile>} />
+        <Route path="/play/online/:code" element={<RequireProfile><OnlineRoom /></RequireProfile>} />
         <Route path="/lesson/:id" element={<RequireProfile><LessonRunner /></RequireProfile>} />
         <Route path="/train/:mode" element={<RequireProfile><TrainingStart /></RequireProfile>} />
         <Route path="/talk/:id" element={<RequireProfile><TalkRun /></RequireProfile>} />

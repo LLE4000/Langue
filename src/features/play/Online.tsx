@@ -1,7 +1,5 @@
 /**
- * EN PAUSE (chantier 10) : écran écrit et testé contre le serveur local (scripts/shots-online.mjs), mais non branché
- * (aucune route) tant que le jeu en ligne n'est pas décidé. Pour le réactiver : routes play/online et
- * /play/online/:code dans App.tsx, import de styles/online.css dans main.tsx, OnlineRow dans PlayHub, VITE_SERVER_URL.
+ * Visible seulement si l'application est construite avec VITE_SERVER_URL (le serveur de server/ déployé).
  *
  * En ligne, en direct : une salle, un code de 5 lettres, de 2 à 6 joueurs sur leurs propres téléphones.
  * Tout le monde voit la même question au même moment ; le serveur cadence les manches et compte les points

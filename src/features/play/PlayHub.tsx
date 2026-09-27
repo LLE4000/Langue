@@ -6,6 +6,7 @@ import { readRegistry } from '@/app/profiles';
 import { recognizer } from '@/app/services/speech';
 import { Icon, Ico } from '@/components/ui';
 import { T } from '@/i18n';
+import { OnlineRow } from './Online';
 
 export function PlayHub() {
   const t = T();
@@ -20,6 +21,7 @@ export function PlayHub() {
         <Link className="row" to="/play/duel"><Ico name="swords" tone="plum" /><span className="mid"><span className="t">Duel sur un écran</span><span className="s">Deux joueurs, un appareil posé entre vous, la même question des deux côtés. Le plus rapide marque.</span></span><span className="end"><span className="chev"><Icon name="next" size={18} /></span></span></Link>
         <Link className="row" to="/play/turns"><Ico name="users" tone="plum" /><span className="mid"><span className="t">Tour à tour</span><span className="s">De 2 à 6 joueurs, on se passe l’appareil : même série, chrono, résultats à la fin.</span></span><span className="end"><span className="chev"><Icon name="next" size={18} /></span></span></Link>
         {recognizer.supported && <Link className="row" to="/play/voice"><Ico name="mic" tone="plum" /><span className="mid"><span className="t">Duel de prononciation</span><span className="s">Les mêmes mots pour tous ; chacun les dit à son tour, le moteur thaï note sur 10. Le plus clair gagne, pas le plus rapide.</span></span><span className="end"><span className="chev"><Icon name="next" size={18} /></span></span></Link>}
+        <OnlineRow />
         <Link className="row" to="/play/defi"><Ico name="send" tone="plum" /><span className="mid"><span className="t">Défi à distance</span><span className="s">Jouez une série, envoyez le lien ; l’autre joue la même et vous renvoie son score.{pending ? ` · ${pending} en attente` : ''}</span></span><span className="end"><span className="chev"><Icon name="next" size={18} /></span></span></Link>
       </div>
       <div className="h2">Bon à savoir</div>
