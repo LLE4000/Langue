@@ -1,6 +1,7 @@
 // Généré depuis la maquette d'origine par scripts/gen-content.mjs, puis maintenu à la main.
 import type { VocabTheme } from '../types';
 import { EXTRA_THEMES, EXTRA_EXAMPLES } from './vocabularyExtra';
+import { A2_THEMES, A2_THEME_ORDER } from './vocabularyA2';
 
 /** Ordre d'utilité des thèmes dans le parcours. */
 export const THEME_ORDER: string[] = ["sal","pres","small","qw","num","price","food","drink","resto","market","fruit","taxi","dir","time","date","adv","hotel","hosp","health","sos","work","eng","trans","grab","tech","airport","travel","nature","weather","color","shop","money","fam","friends","out","hobby","feel","culture","verbs","adj","body","clothes","places","animals","home"];
@@ -970,4 +971,8 @@ export const VOCAB_THEMES: VocabTheme[] = [
 
 // Thèmes et phrases d'exemple ajoutés après la maquette (voir vocabularyExtra.ts).
 VOCAB_THEMES.push(...EXTRA_THEMES);
+// Niveau A2 (voir vocabularyA2.ts) : après tout le niveau A1, dans le parcours comme dans la bibliothèque.
+VOCAB_THEMES.push(...A2_THEMES);
+THEME_ORDER.push(...A2_THEME_ORDER);
+THEME_GROUPS.push({ title: { fr: 'Niveau A2' }, ids: [...A2_THEME_ORDER] });
 for (const theme of VOCAB_THEMES) for (const item of theme.items) if (!item.example && EXTRA_EXAMPLES[item.id]) item.example = EXTRA_EXAMPLES[item.id];

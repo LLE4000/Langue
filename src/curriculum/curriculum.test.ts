@@ -62,13 +62,14 @@ describe('curriculum', () => {
     const script = cur.lessons.filter((x) => x.track === 'script');
     expect(script.length).toBeGreaterThanOrEqual(20);
     for (const l of script.filter((x) => /^read-\d+$/.test(x.id))) expect(l.activities.filter((a) => a.type === 'read' && a.answer === 'meaning').length, l.id).toBeGreaterThanOrEqual(1);
-    // tous les textes de lecture sont placés
+    // les textes de lecture sont placés, sauf au plus deux (un signe que le parcours n'enseigne pas) qui restent en bibliothèque
     const placed = script.flatMap((l) => l.activities.filter((a) => a.type === 'reading'));
-    expect(placed.length).toBe(th.READINGS.length);
+    expect(placed.length).toBeGreaterThanOrEqual(th.READINGS.length - 2);
+    expect(placed.filter((a) => a.type === 'reading' && !th.READINGS.some((r) => r.id === a.id))).toEqual([]);
   });
   it('taille raisonnable du parcours', () => {
     expect(cur.lessons.length).toBeGreaterThan(80);
-    expect(cur.lessons.length).toBeLessThan(200);
+    expect(cur.lessons.length).toBeLessThan(260); // A1 complet + niveau A2 (16 thèmes, textes A2)
   });
 });
 

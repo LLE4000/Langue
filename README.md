@@ -17,12 +17,14 @@ Application web progressive (PWA) d’apprentissage des langues, **guidée par u
 5. [Le contenu](#le-contenu)
 6. [Le curriculum et le parcours](#le-curriculum-et-le-parcours)
 7. [Objectifs, profils, jouer à plusieurs](#objectifs-profils-jouer-à-plusieurs)
-8. [Le moteur pédagogique](#le-moteur-pédagogique)
-8. [Système de transcription](#système-de-transcription)
-9. [Guides : ajouter une leçon, une langue, une traduction, un type d’exercice](#guides)
-10. [Tests](#tests)
-11. [Identité visuelle](#identité-visuelle)
-12. [Données et vie privée](#données-et-vie-privée)
+8. [Parler et comprendre en situation](#parler-et-comprendre-en-situation)
+9. [En pause](#en-pause)
+10. [Le moteur pédagogique](#le-moteur-pédagogique)
+11. [Système de transcription](#système-de-transcription)
+12. [Guides : ajouter une leçon, une langue, une traduction, un type d’exercice](#guides)
+13. [Tests](#tests)
+14. [Identité visuelle](#identité-visuelle)
+15. [Données et vie privée](#données-et-vie-privée)
 
 ## Démarrer
 
@@ -104,16 +106,16 @@ Tout le contenu de la maquette d’origine a été conservé et structuré (fich
 | `vowels.ts` | 42 formes de voyelles : transcription, API, durée, groupe, positions, forme fermée, exemple |
 | `tones.ts` | 5 tons, 4 marques, 124 mots analysés (classe, vivante/morte, longueur, marque), 27 séries « même syllabe » |
 | `numbers.ts` | chiffres thaïs, unités, nombres clés, remarques |
-| `vocabulary.ts` + `vocabularyExtra.ts` | 45 thèmes, ~890 mots et phrases, ~150 phrases d’exemple ; ordre d’utilité des thèmes, groupes de la bibliothèque |
-| `grammar.ts` + `grammarExtra.ts` | 34 fiches : règle, schéma, exemples, astuce |
-| `dialogs.ts` + `dialogsExtra.ts` | 30 conversations ; dialogue associé à chaque thème |
-| `readings.ts` + `readingsExtra.ts` | 19 textes de lecture, 5 niveaux, mot à mot |
+| `vocabulary.ts` + `vocabularyExtra.ts` + `vocabularyA2.ts` | 61 thèmes (dont 16 de niveau A2), ~1 270 mots et phrases, ~530 phrases d’exemple ; ordre d’utilité des thèmes, groupes de la bibliothèque |
+| `grammar.ts` + `grammarExtra.ts` + `grammarA2.ts` | 46 fiches (dont 12 de niveau A2 : ตั้งแต่, จน, ระหว่าง, ถูก, ควร, ห้าม, ถึงแม้ว่า, จึง, ถ้า…ก็, ว่า, เคย, ยิ่ง…ยิ่ง) : règle, schéma, exemples, astuce |
+| `dialogs.ts` + `dialogsExtra.ts` + `longDialogs.ts` | 30 conversations courtes (dialogue associé à chaque thème) et 20 écoutes longues A1 / A2 / B1 |
+| `readings.ts` + `readingsExtra.ts` + `readingsA2.ts` | 40 textes de lecture, 5 niveaux + A2, mot à mot |
 | `classifiers.ts` | 21 classificateurs, schémas d’emploi, exercice |
 | `gloss.ts` | 240 mots-outils pour le découpage mot à mot |
 | `phrasebook.ts` | phrases de voyage à montrer en grand, numéros d’urgence |
 | `alphabetExtras.ts`, `phonGuide.ts` | lettres sosies, sons voisins, conseils, guide de transcription |
 
-Les fichiers `*Extra.ts` contiennent le contenu ajouté après la maquette (thèmes Poser des questions, Fruits, Quand ?, Téléphone et internet, Nature, Argent et banque, Loisirs et sport, Fêtes et culture ; exemples des mots essentiels ; dialogues au marché aux fruits, au temple, loisirs, week-end ; lectures À la plage, Au temple, Les fruits du marché ; fiches ยัง, อาจจะ/คง/น่าจะ, ตอน/ก่อน/หลังจาก). Le test `content.test.ts` vérifie l’intégrité de l’ensemble (identifiants, alphabet de transcription, jetons de genre appariés, thèmes couverts par le parcours, dialogues et lectures complets).
+Les fichiers `*A2.ts` (niveau A2) ont été rédigés puis relus par un second passage linguistique ; les mots déjà présents ailleurs en ont été écartés. Les fichiers `*Extra.ts` contiennent le contenu ajouté après la maquette (thèmes Poser des questions, Fruits, Quand ?, Téléphone et internet, Nature, Argent et banque, Loisirs et sport, Fêtes et culture ; exemples des mots essentiels ; dialogues au marché aux fruits, au temple, loisirs, week-end ; lectures À la plage, Au temple, Les fruits du marché ; fiches ยัง, อาจจะ/คง/น่าจะ, ตอน/ก่อน/หลังจาก). Le test `content.test.ts` vérifie l’intégrité de l’ensemble (identifiants, alphabet de transcription, jetons de genre appariés, thèmes couverts par le parcours, dialogues et lectures complets).
 
 Chaque élément apprenable reçoit un **identifiant stable** (`c:ก`, `v:–า`, `w:สวัสดี{P}`, `t:มา`, `n:20`, `k:คน`, `g:polite`, `rule:hnam`, `m:1`) : c’est sur ces identifiants que portent la maîtrise, les prérequis et les leçons.
 
@@ -124,7 +126,7 @@ Jetons résolus selon le profil : `{P}` / `{Q}` particules de politesse (คร�
 Trois **pistes** (`src/curriculum/th-fr/`) :
 
 - **Écriture** (`script.ts`) — 21 étapes + leçons de lecture : ก ด ต บ ป + –า → อ น ม + –ี –ู –อ → ร ล ง ย ว → finales vivantes → เ– แ– โ– → ไ– ใ– เ–า –ำ → les cinq tons → classes → marques ่ ้ (moyenne, puis basse) → จ ส ห ข (classe haute) → syllabes mortes → ค ท พ ช → ห นำ et « o » implicite → ึ ือ เ–อ → diphtongues → ถ ฝ ฉ ซ ฟ ฮ → finales irrégulières, groupes, « a » implicite → voyelles courtes → lettres rares, ◌์, อ นำ → ๊ ๋, chiffres thaïs. Les **mots** de chaque étape sont **choisis automatiquement** dans tout le contenu parmi ceux qui sont lisibles avec les signes déjà enseignés (`engine/thai/reading.ts`) ; les textes de lecture sont greffés dès qu’ils deviennent entièrement lisibles. Un test garantit qu’aucune activité de lecture n’utilise un signe non enseigné.
-- **Conversation** (`talk.ts`) — les thèmes de vocabulaire par ordre d’utilité, en leçons de ~7 mots, avec une fiche de grammaire une leçon sur deux et la conversation du thème en fin de thème. Chaque thème porte un **niveau oral** (0–4).
+- **Conversation** (`talk.ts`) — les thèmes de vocabulaire par ordre d’utilité, en leçons de ~7 mots, avec une fiche de grammaire une leçon sur deux et la conversation du thème en fin de thème. Chaque thème porte un **niveau oral** (0–4). Les 16 thèmes A2 forment l’unité « Niveau A2 », après tout le A1 ; les leçons A2 ne comptent pas dans les ratios qui mènent au palier A1 (leurs mots et leur grammaire, si).
 - **Nombres** (`talk.ts`) — 0–10 et chiffres thaïs, 11–99, grands nombres, classificateurs (3 leçons).
 
 Le **moteur de parcours** (`curriculum/path.ts`) :
@@ -147,6 +149,17 @@ Changer ses niveaux (Profil › Mes niveaux) recalcule le parcours sans effacer 
 - **Duel de prononciation** (`VoiceDuel.tsx`, affiché seulement si la reconnaissance vocale existe) : 2 à 6 joueurs, les mêmes 3 à 8 mots pour tous ; chacun prend l’appareil et **dit** le mot, le moteur thaï note sur 10 (même barème et même sévérité que « Je le dis ») ; résultats par joueur et grille mot par mot. Ici le plus clair gagne, pas le plus rapide.
 - **Défi à distance** : je joue une série, j’envoie un **lien** (partage natif ou copie) ; l’autre l’ouvre dans son application, joue exactement la même série, voit la comparaison et me renvoie un lien-résultat d’un geste. Le défi tient dans l’URL (`quiz.ts` : numéros stables des éléments + signature du contenu + résultats), l’historique est dans « Mes défis ».
 - Les mots du jeu : ce que le joueur a appris, un thème au choix, ou les nombres — un débutant peut donc défier quelqu’un d’avancé sur un thème qu’il vient de voir.
+
+## Parler et comprendre en situation
+
+- **Écoute longue** (`content/th/longDialogs.ts`, Bibliothèque › Compréhension orale) : 20 conversations de 2 à 9 minutes, par niveau — A1 (questions en français), A2 (réponses en thaï), B1 (tout en thaï). Vitesse réglable, chaque réplique peut être réécoutée d’un toucher, les questions thaïes se font entendre. Les dialogues et leurs questions ont été rédigés puis relus (thaï, phonétique, pédagogie) ; un test contrôle leur cohérence.
+- **Conversation parlée** (`features/conversation/`, route `/talk`, entrées dans Réviser, la liste des conversations, chaque conversation et le bilan de compréhension) : on joue son rôle au micro. L’interlocuteur parle avec la voix native ; à notre tour, la reconnaissance vocale compare ce qui est dit à **la réplique et à ses autres formulations acceptées** (801 variantes relues pour les 50 dialogues, `variants.ts`) ; la particule de politesse est facultative, un ton faux donne « presque » (`engine/conversation.ts`). Trois niveaux d’aide : réplique affichée, amorce (le sens + les premiers mots), sans aide (seulement l’intention en français). Bilan réplique par réplique avec ce qui a été entendu et ce qui était aussi accepté ; les scores alimentent la compétence Conversation.
+- **Lecture longue à voix haute** (Bibliothèque › Lectures › « Lire ce texte au micro ») : un texte entier, phrase par phrase, alignement mot à mot (lu / déformé / manqué), débit et pauses, Azure par phrase si une clé est branchée ; les mots difficiles rejoignent « Mes erreurs ».
+
+## En pause
+
+- **Jeu (chantier 7)** : mis de côté, sa pertinence reste à décider.
+- **Serveur (chantier 10)** : `server/` contient un Worker Cloudflare écrit et testé en local (salles en ligne à code de 5 lettres, jetons Azure pour que personne n’ait besoin de sa propre clé), et `features/play/Online.tsx` l’écran correspondant — rien n’est déployé ni accessible dans l’application. Voir `server/README.md` pour le reprendre.
 
 ## Le moteur pédagogique
 
@@ -231,8 +244,8 @@ Une leçon est un objet `LessonDef` (`src/curriculum/types.ts`) : identifiant, p
 
 ## Tests
 
-- **Unitaires** (`npm test`, 114 tests) : progression par compétences (paliers, planchers, acquis qui ne baissent pas, chemin restant), parcours selon l’objectif, registre des profils, questions et codage des défis, genre des voix et des interlocuteurs, file du mode Écoute, contrôle de prononciation (note, particule facultative, indices, sévérité), détection de hauteur et classement des cinq tons sur des voix de synthèse (`pitch.test.ts`), ainsi que transcription → API/RTGS, règle de ton (cohérence des 124 mots analysés), composition des nombres, SRS/maîtrise, jetons, reconnaissance vocale, **prérequis de lecture** (`reading.test.ts`), curriculum (identifiants, prérequis, cycles, éléments référencés, **jamais un signe non enseigné**, placement de toutes les lectures), parcours personnalisé (débutant, locuteur non lecteur, lecteur non locuteur, déblocage), moteur de leçon (planification, distracteurs de la première leçon), **intégrité du contenu** (`content.test.ts`).
-- **Bout en bout** (`npm run test:e2e`, Playwright sur Pixel 7, iPad Mini et PC) : onboarding → première leçon complète → validation → leçon suivante → rechargement → parcours → révision → exploration → export ; reprise d’une leçon après rechargement ; personnalisation du parcours ; objectif « parler » ; duel sur un écran ; défi à distance (création, code, réouverture) ; alphabet (un toucher = son + aperçu, un second = fiche) ; écoute en boucle (sélection depuis l’alphabet, réglages mémorisés, lecture/pause, navigation) ; duel de prononciation (moteur de reconnaissance simulé) ; compréhension orale (écoute sans texte, questions, texte révélé) ; progression (pastille, palier, critères chiffrés, réglages) ; navigation (quatre onglets, profil sur le prénom, mot thaï des titres) ; la reprise d’une leçon vérifie la barre de progression unique. L’onboarding des tests passe par les trois écrans et le repli « J’ai déjà des bases ».
+- **Unitaires** (`npm test`, 143 tests) : règles des salles en ligne (`server/src/game.test.ts`, chantier en pause), variantes de la conversation parlée, écoute longue, progression par compétences (paliers, planchers, acquis qui ne baissent pas, chemin restant), parcours selon l’objectif, registre des profils, questions et codage des défis, genre des voix et des interlocuteurs, file du mode Écoute, contrôle de prononciation (note, particule facultative, indices, sévérité), détection de hauteur et classement des cinq tons sur des voix de synthèse (`pitch.test.ts`), ainsi que transcription → API/RTGS, règle de ton (cohérence des 124 mots analysés), composition des nombres, SRS/maîtrise, jetons, reconnaissance vocale, **prérequis de lecture** (`reading.test.ts`), curriculum (identifiants, prérequis, cycles, éléments référencés, **jamais un signe non enseigné**, placement de toutes les lectures), parcours personnalisé (débutant, locuteur non lecteur, lecteur non locuteur, déblocage), moteur de leçon (planification, distracteurs de la première leçon), **intégrité du contenu** (`content.test.ts`).
+- **Bout en bout** (`npm run test:e2e`, Playwright sur Pixel 7, iPad Mini et PC) : onboarding → première leçon complète → validation → leçon suivante → rechargement → parcours → révision → exploration → export ; reprise d’une leçon après rechargement ; personnalisation du parcours ; objectif « parler » ; duel sur un écran ; défi à distance (création, code, réouverture) ; alphabet (un toucher = son + aperçu, un second = fiche) ; écoute en boucle (sélection depuis l’alphabet, réglages mémorisés, lecture/pause, navigation) ; duel de prononciation (moteur de reconnaissance simulé) ; compréhension orale (écoute sans texte, questions, texte révélé) ; progression (pastille, palier, critères chiffrés, réglages) ; navigation (quatre onglets, profil sur le prénom, mot thaï des titres) ; la reprise d’une leçon vérifie la barre de progression unique ; lire à voix haute et lecture longue ; conversation parlée (reconnaissance simulée, jusqu’au bilan). L’onboarding des tests passe par les trois écrans et le repli « J’ai déjà des bases ».
 - Dans l’environnement de développement distant, Chromium est fourni : `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium npm run test:e2e`.
 - **Contrôle visuel** : `node scripts/shots.mjs <dossier>` (après `npm run preview`) prend une vingtaine de captures ; `scripts/shots-lessons.mjs` joue les premières leçons d’un débutant et capture chaque étape (avant et après réponse, `N`, `SCHEMES`, `WIDTH`) ; `scripts/shots-routes.mjs` capture chaque écran en pleine page ; variables `DEVICE=phone|tablet|desktop`, `THEME=light|dark`, `LEVELS=0,0,0,0`. `BASE=http://localhost:4173 node scripts/shots-ui.mjs` capture les écrans principaux en clair et en sombre (accueil, leçon, Réviser, Bibliothèque, Profil, progression, défis) dans `scripts/out/ui/`.
 
@@ -244,7 +257,7 @@ Blanc chaud et encre douce, un accent safran (robes des moines, guirlandes de so
 - **Couleurs à sens fixe** : safran = action et progression (bouton principal, barres) · encre = sélection (puce active, niveau choisi) · vert / rouge = juste / faux (le pied de correction et son bouton prennent la couleur du verdict) · jade = phonétique · classes de consonnes M / H / L · couleurs des cinq tons. Plus aucune couleur attribuée « par position » dans une liste ou une grille.
 - **Texte** : six tailles (`--fs-1` … `--fs-6` = 12 · 14 · 16 · 20 · 28 · 40). Titres de section en sans-serif gras 20 px ; le serif est réservé aux grands titres (théorie, carte « prochaine leçon », prénom) et aux scores. Le thaï a ses propres tailles (`th-s`, `th-m`, `th-l`, `th-xl`) multipliées par le réglage de taille (`--ths`).
 - **Espacements** sur une grille de 4 px (`--s-1` … `--s-8`, utilitaires `mt-*`, `mb-*`), **trois rayons** (12 · 16 · 24), **deux ombres** (`--e1` cartes, `--e2` éléments flottants), **deux durées** (150 ms interface, 300 ms validation).
-- **Icônes** : un seul jeu vectoriel au trait (`Icon`, `Ico` dans `components/ui.tsx`) pour la navigation, les listes, les tuiles et les retours ; les émojis restent seulement dans le contenu (thèmes, conversations, badges).
+- **Icônes** : un seul jeu vectoriel au trait (`Icon`, `Ico` dans `components/ui.tsx`) pour la navigation, les listes, les tuiles et les retours ; conversations, fiches de grammaire, thèmes et badges ont aussi leur icône ; les émojis ne subsistent que dans les tuiles illustrées des phrases de voyage.
 - **Lire à voix haute** (`engine/readaloud/`, `features/readaloud/`, route `/read`, carte sur l'accueil Leçons, entrées dans Réviser) — l'entraînement intensif de lecture, pensé pour le téléphone et une seule main :
   - **Le tapis** : une syllabe (ou un mot, une phrase) en très grand au centre, les suivantes à droite, les lues à gauche avec un point vert / ambre / rouge. Le micro reste ouvert pendant toute la série ; la **détection de parole** (`engine/audio/vad.ts`, énergie par trames de 20 ms, plancher de bruit adaptatif) fait avancer dès que l'on se tait : le rythme ne dépend jamais de la latence de la reconnaissance. On lit « da, ma, na, ta… » sans toucher l'écran ; aucune fenêtre entre deux lectures, juste une indication discrète quand quelque chose cloche.
   - **Jugement en arrière-plan** : la reconnaissance continue de l'appareil (`ContinuousRecognizer`, relancée automatiquement) rend des morceaux de texte, répartis entre les lectures en attente par programmation dynamique (`align.ts`) ; si elle entend un **voisin exact** (même syllabe avec un autre ton, une autre longueur de voyelle, une consonne ou une finale proche — `variantsOf`), le bilan dit précisément quoi. Le **ton** d'une syllabe est aussi estimé d'après la courbe de hauteur de la voix, présentée comme indicative. **Azure** (facultatif) : avec sa propre clé Speech (niveau gratuit), saisie dans Réglages › Voix et gardée sur l'appareil hors sauvegardes, chaque bloc de six lectures est évalué par rapport au texte attendu (précision par syllabe, omissions) ; le SDK n'est chargé qu'à ce moment (hors pré-cache). Azure ne note pas les tons en thaï (l'évaluation prosodique n'existe qu'en anglais) : on ne l'affiche donc jamais comme tel. Sans micro, un toucher fait avancer ; si le micro direct est refusé mais la reconnaissance fonctionne, ce sont ses résultats qui font avancer.

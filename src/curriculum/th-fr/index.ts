@@ -30,8 +30,10 @@ function attachReadings(script: LessonDef[]) {
       }
     }
   }
-  // Les textes restants (mots longs, tournures complexes) : leçons de lecture après l'alphabet
-  const rest = th.READINGS.filter((r) => !placed.has(r.id)).sort((a, b) => a.level - b.level).map((r) => r.id);
+  // Les textes restants (mots longs, tournures complexes) : leçons de lecture après l'alphabet — seulement ceux que
+  // l'alphabet complet permet de lire ; les autres (un signe jamais enseigné) restent dans la bibliothèque
+  const readable = (r: (typeof th.READINGS)[number]) => r.sentences.flatMap((s) => s.tokens.map((t) => t.thai)).filter((w) => !/\{/.test(w)).every((w) => [...readingRequirements(w)].every((x) => known.has(x)));
+  const rest = th.READINGS.filter((r) => !placed.has(r.id) && readable(r)).sort((a, b) => a.level - b.level).map((r) => r.id);
   let prev = script[script.length - 1].id, n = 1;
   const total = Math.ceil(rest.length / 2);
   for (let i = 0; i < rest.length; i += 2) {

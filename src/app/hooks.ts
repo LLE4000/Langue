@@ -5,7 +5,7 @@ import { useEffect, useMemo } from 'react';
 import { useStore } from './store';
 import { curriculum } from '@/content/packs';
 import { computePath, grantedLessons, knownConcepts, nextLesson, type PathLesson, type SkillLevels } from '@/curriculum/path';
-import { ALL_GOALS, type Goals } from '@/curriculum/types';
+import { ALL_GOALS, type Goals, type LessonDef } from '@/curriculum/types';
 import { ITEMS, CONS_ITEMS, TAUGHT_VOWELS, MAIN_WORDS, TONE_ITEMS, NUM_ITEMS, CLF_ITEMS, GRAMMAR_ITEMS, th, type LearnItem } from '@/content/th';
 import { isDue, mastery, type SrsState } from '@/engine/srs';
 import { scriptUnits } from '@/engine/thai/script';
@@ -127,6 +127,9 @@ export function useMetrics(): Metrics {
 }
 
 let contentCache: ProgressContent | null = null;
+const A2_READING = new Set(th.READINGS.filter((r) => r.level >= 6).map((r) => r.id));
+const isA2Lesson = (l: LessonDef) => l.unit === 'u-talk-7' || (l.activities.some((a) => a.type === 'reading') && l.activities.every((a) => a.type !== 'reading' || A2_READING.has(a.id)));
+
 /** Le contenu vu par la progression (calculé une fois : les listes ne changent pas à l'exécution). */
 export function progressContent(): ProgressContent {
   if (contentCache) return contentCache;
@@ -138,8 +141,10 @@ export function progressContent(): ProgressContent {
     words: MAIN_WORDS.map((w) => w.id),
     grammar: GRAMMAR_ITEMS.map((g) => g.id),
     toneItems: TONE_ITEMS.map((t) => t.id),
-    scriptLessons: lessons.filter((l) => l.track === 'script' || l.track === 'tones').map((l) => l.id),
-    talkLessons: lessons.filter((l) => l.track === 'talk' || l.track === 'numbers').map((l) => l.id),
+    // les leçons du niveau A2 (unité u-talk-7, séries de textes A2) ne diluent pas les ratios qui mènent au A1 ;
+    // leurs mots et leur grammaire comptent, eux, dans les compétences correspondantes
+    scriptLessons: lessons.filter((l) => (l.track === 'script' || l.track === 'tones') && !isA2Lesson(l)).map((l) => l.id),
+    talkLessons: lessons.filter((l) => (l.track === 'talk' || l.track === 'numbers') && !isA2Lesson(l)).map((l) => l.id),
     allLessons: lessons.map((l) => l.id),
     lessonMinutes: lessons.length ? lessons.reduce((a, l) => a + l.minutes, 0) / lessons.length : 10,
     dialogs: th.DIALOGS.map((d) => d.id),

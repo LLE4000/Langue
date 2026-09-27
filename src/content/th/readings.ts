@@ -1,6 +1,7 @@
 // Généré depuis la maquette d'origine par scripts/gen-content.mjs, puis maintenu à la main.
 import type { Reading } from '../types';
 import { EXTRA_READINGS } from './readingsExtra';
+import { A2_READINGS } from './readingsA2';
 
 export const READINGS: Reading[] = [
   {
@@ -582,3 +583,4 @@ export const READINGS: Reading[] = [
 ];
 
 READINGS.push(...EXTRA_READINGS);
+READINGS.push(...A2_READINGS); // niveau 6 = A2

@@ -5,7 +5,7 @@ import { usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { GRAMMAR_BY_ID, th } from '@/content/th';
 import { L, T } from '@/i18n';
-import { AudioButton, Empty, Fr, Icon, Rom, Thai, useToast } from '@/components/ui';
+import { AudioButton, Empty, Fr, GlyphIcon, Icon, Rom, Thai, useToast } from '@/components/ui';
 
 /** Émoji de chaque fiche → icône vectorielle de l'app (une seule famille visuelle dans les listes). */
 const GLYPHS: Record<string, string> = {
@@ -15,8 +15,8 @@ const GLYPHS: Record<string, string> = {
   '🤝': 'users', '💥': 'bolt',
 };
 export function GrammarGlyph({ icon }: { icon: string }) {
-  const name = GLYPHS[icon.replace(/\uFE0F/g, '')];
-  return name ? <Icon name={name} /> : <>{icon}</>;
+  // un émoji du contenu, ou directement un nom d'icône (fiches A2)
+  return <GlyphIcon name={GLYPHS[icon.replace(/\uFE0F/g, '')] ?? icon} />;
 }
 
 const hasThai = (x: string) => /[฀-๿]/.test(x);

@@ -9,6 +9,9 @@ export const THEME_ICON: Record<string, string> = {
   sos: 'alert', friends: 'users', out: 'music', feel: 'heart', verbs: 'bolt', adj: 'sparkles', small: 'link', body: 'user', clothes: 'shirt',
   animals: 'paw', places: 'pin', qw: 'help', fruit: 'apple', adv: 'hourglass', tech: 'phone', nature: 'leaf', money: 'coin', hobby: 'ball',
   culture: 'star',
+  // niveau A2
+  admin: 'clipboard', housing: 'home', cooking: 'bowl', transit: 'train', office: 'briefcase', safety: 'alert', character: 'user', opinion: 'chat',
+  social: 'sparkles', study: 'book', digital: 'phone', environment: 'leaf', fitness: 'heart', service: 'bag', time2: 'clock', linkers: 'link',
 };
 
 export const themeIcon = (id: string): string => THEME_ICON[id] ?? 'word';
