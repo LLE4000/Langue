@@ -63,9 +63,9 @@ export function Review() {
       <div className="h2">{t.review.weak}</div>
       <div className="list">
         {weak >= 3 ? (
-          <Link className="row" to="/train/weak"><Ico name="target" tone="ko" /><span className="mid"><span className="t">{weak} élément{weak > 1 ? 's' : ''} souvent raté{weak > 1 ? 's' : ''}</span><span className="s">Une série courte, rien que sur eux</span></span><span className="end"><span className="chev">›</span></span></Link>
+          <Link className="row" to="/train/weak"><Ico name="target" tone="ko" /><span className="mid"><span className="t">{weak} élément{weak > 1 ? 's' : ''} souvent raté{weak > 1 ? 's' : ''}</span><span className="s">Une série courte, rien que sur eux</span></span><span className="end"><span className="chev"><Icon name="next" size={18} /></span></span></Link>
         ) : null}
-        {goals.read && raWeak > 0 && <Link className="row" to="/read/errors?mode=read"><Ico name="mic" tone="ko" /><span className="mid"><span className="t">{raWeak} lecture{raWeak > 1 ? 's' : ''} à reprendre à voix haute</span><span className="s">Les syllabes ratées au tapis de lecture</span></span><span className="end"><span className="chev">›</span></span></Link>}
+        {goals.read && raWeak > 0 && <Link className="row" to="/read/errors?mode=read"><Ico name="mic" tone="ko" /><span className="mid"><span className="t">{raWeak} lecture{raWeak > 1 ? 's' : ''} à reprendre à voix haute</span><span className="s">Les syllabes ratées au tapis de lecture</span></span><span className="end"><span className="chev"><Icon name="next" size={18} /></span></span></Link>}
         {weak < 3 && !(goals.read && raWeak > 0) && (
           <div className="row muted"><Ico name="checkCircle" tone="ok" /><span className="mid"><span className="t">Aucun point faible pour l’instant</span><span className="s">Ce que vous ratez plusieurs fois apparaîtra ici.</span></span></div>
         )}

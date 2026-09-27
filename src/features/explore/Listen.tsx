@@ -110,7 +110,7 @@ export function Listen() {
             <div className={`big ${isLetter ? 's1' : cur.item.thai.length > 8 ? 's4' : 's2'}`} style={{ color: cur.item.kind === 'cons' ? `var(--c-${cur.item.ref.cls})` : undefined }}>
               {revealed ? <Thai text={cur.item.kind === 'vow' ? vowelDisplay(cur.item.ref.form, 'อ') : cur.item.thai} /> : <span className="mut">?</span>}
             </div>
-            {revealed && <div className="listen-sub"><Thai text={label} className="th-m" /> <Rom text={cur.item.rom} /> <span className="mut">· {L(cur.item.meaning)}</span></div>}
+            {revealed && <div className="listen-sub"><Thai text={label} className="th-m" /><Rom text={cur.item.rom} /><span className="mut" aria-hidden="true">·</span><span className="mut">{L(cur.item.meaning)}</span></div>}
             <div className="takes" aria-label="Lectures">{cur.takes.map((t, k) => <span key={k} className={`take ${k === take ? 'on' : k < take ? 'done' : ''}`}>{t.label}</span>)}</div>
           </>
         ) : (
@@ -144,7 +144,7 @@ export function Listen() {
       )}
 
       <details className="fold" open={settingsOpen} onToggle={(e) => setSettingsOpen((e.target as HTMLDetailsElement).open)}>
-        <summary>Réglages <span className="sm mut">· {summary}</span></summary>
+        <summary><span className="grow">Réglages<span className="sub">{summary}</span></span></summary>
         {(prefs.set === 'cons' || prefs.set === 'vow' || prefs.set === 'custom') && (
           <>
             <label className="f">Ce qui est dit</label>

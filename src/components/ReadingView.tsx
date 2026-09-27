@@ -14,7 +14,7 @@ export function ReadingView({ id, onDone, doneLabel }: { id: string; onDone?: ()
   const tog = (k: string) => setOn({ ...on, [k]: !on[k] });
   return (
     <>
-      <p className="sm mut mb-3">Lisez d’abord sans aide ; l’audio, la phonétique et la traduction sont sous chaque phrase.</p>
+      <p className="sm mut mb-3">Lisez d’abord sans aide&#8239;; l’audio, la phonétique et la traduction sont sous chaque phrase.</p>
       {r.sentences.map((s, i) => {
         const thai = sentenceThai(s.tokens, r.level === 1), rom = sentenceRom(s.tokens);
         return (
@@ -26,9 +26,9 @@ export function ReadingView({ id, onDone, doneLabel }: { id: string; onDone?: ()
             <div className="acts row-flex tight mt-3">
               <button className="mini" onClick={() => sp.speak(thai)} aria-label="Écouter"><Icon name="speaker" /></button>
               <button className="mini" onClick={() => sp.speak(thai, { slow: true })} aria-label="Lentement"><Icon name="turtle" /></button>
-              <button className={`mini ${on[i + 'rom'] ? 'on' : ''}`} onClick={() => tog(i + 'rom')} aria-label="Phonétique"><Icon name="eye" /></button>
-              <button className={`mini ${on[i + 'tr'] ? 'on' : ''}`} onClick={() => tog(i + 'tr')} aria-label="Traduction"><Icon name="globe" /></button>
-              <button className={`mini txt ${on[i + 'w'] ? 'on' : ''}`} onClick={() => tog(i + 'w')} aria-pressed={!!on[i + 'w']}>Mot à mot</button>
+              <button className={`mini ${on[i + 'rom'] ? 'on' : ''}`} onClick={() => tog(i + 'rom')} aria-label="Phonétique" aria-pressed={!!on[i + 'rom']}><Icon name="eye" /></button>
+              <button className={`mini ${on[i + 'tr'] ? 'on' : ''}`} onClick={() => tog(i + 'tr')} aria-label="Traduction" aria-pressed={!!on[i + 'tr']}><Icon name="globe" /></button>
+              <button className={`mini ${on[i + 'w'] ? 'on' : ''}`} onClick={() => tog(i + 'w')} aria-pressed={!!on[i + 'w']} aria-label="Mot à mot" title="Mot à mot"><Icon name="type" /></button>
             </div>
           </div>
         );

@@ -5,7 +5,7 @@ export const EXTRA_DIALOG_FOR_THEME: Record<string, string> = { fruit: 'd:fruits
 
 export const EXTRA_DIALOGS: Dialog[] = [
   {
-    id: 'd:fruits', title: { fr: 'Au marché aux fruits' }, icon: '🍉', other: { fr: 'Vendeuse' },
+    id: 'd:fruits', title: { fr: 'Au marché aux fruits' }, icon: 'apple', other: { fr: 'Vendeuse' },
     lines: [
       { who: 'me', thai: 'มะม่วงสุกไหม{Q}', rom: 'má-mûang sùk mái {q}', tr: { fr: 'Les mangues sont-elles mûres ?' } },
       { who: 'other', thai: 'สุกแล้วค่ะ หวานมาก ชิมดูก่อนได้ค่ะ', rom: 'sùk lɛ́ɛo khâ wǎan mâak chim duu kɔ̀ɔn dâai khâ', tr: { fr: 'Oui, bien mûres et très sucrées. Vous pouvez goûter d’abord.' } },
@@ -18,7 +18,7 @@ export const EXTRA_DIALOGS: Dialog[] = [
     ],
   },
   {
-    id: 'd:temple', title: { fr: 'Visite au temple' }, icon: '🛕', other: { fr: 'Ami thaï' },
+    id: 'd:temple', title: { fr: 'Visite au temple' }, icon: 'star', other: { fr: 'Ami thaï' },
     lines: [
       { who: 'other', thai: 'ก่อนเข้าโบสถ์ต้องถอดรองเท้านะครับ', rom: 'kɔ̀ɔn khâo bòot tɔ̂ng thɔ̀ɔt rɔɔng-tháao ná khráp', tr: { fr: 'Avant d’entrer dans la chapelle, il faut enlever ses chaussures.' } },
       { who: 'me', thai: 'ได้{P} แล้วต้องแต่งตัวยังไง{Q}', rom: 'dâai {p} lɛ́ɛo tɔ̂ng tɛ̀ng-tua yang-ngai {q}', tr: { fr: 'D’accord. Et comment faut-il s’habiller ?' } },
@@ -31,7 +31,7 @@ export const EXTRA_DIALOGS: Dialog[] = [
     ],
   },
   {
-    id: 'd:hobby', title: { fr: 'Parler de ses loisirs' }, icon: '⚽', other: { fr: 'Collègue' },
+    id: 'd:hobby', title: { fr: 'Parler de ses loisirs' }, icon: 'ball', other: { fr: 'Collègue' },
     lines: [
       { who: 'other', thai: 'เวลาว่างคุณชอบทำอะไรครับ', rom: 'wee-laa wâang khun chɔ̂ɔp tham à-rai khráp', tr: { fr: 'Que faites-vous pendant votre temps libre ?' } },
       { who: 'me', thai: '{I}ชอบว่ายน้ำและอ่านหนังสือ{P}', rom: '{i} chɔ̂ɔp wâai-náam lɛ́ àan nǎng-sʉ̌ʉ {p}', tr: { fr: 'J’aime nager et lire.' } },
@@ -44,7 +44,7 @@ export const EXTRA_DIALOGS: Dialog[] = [
     ],
   },
   {
-    id: 'd:weekend', title: { fr: 'Projets pour le week-end' }, icon: '🏝️', other: { fr: 'Amie' },
+    id: 'd:weekend', title: { fr: 'Projets pour le week-end' }, icon: 'sun', other: { fr: 'Amie' },
     lines: [
       { who: 'other', thai: 'เสาร์อาทิตย์นี้จะไปไหนคะ', rom: 'sǎo-aa-thít níi jà pai nǎi khá', tr: { fr: 'Où vas-tu ce week-end ?' } },
       { who: 'me', thai: '{I}จะไปทะเลที่หัวหิน{P}', rom: '{i} jà pai thá-lee thîi hǔa-hǐn {p}', tr: { fr: 'Je vais à la mer, à Hua Hin.' } },

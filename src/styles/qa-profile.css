@@ -1,1 +1,49 @@
 /* Corrections de la revue visuelle (profile) — fusionnées ensuite dans app.css */
+
+/* ---------- Niveaux (A0 · A1 · A2 · B1 · B2+) : libellé centré (le reset button met padding 0 et text-align: inherit) ---------- */
+.lvl button { display: grid; place-items: center; text-align: center; padding: 0 var(--s-1); font-size: var(--fs-2); font-variant-numeric: tabular-nums; }
+
+/* ---------- Statistiques : calendrier sur deux semaines (7 colonnes), date toujours à la même place, minutes dessous ---------- */
+.cal { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--s-2); }
+.cd { aspect-ratio: 1 / 1.1; gap: 3px; }
+.cd small { font-size: 11px; }
+.cd b { font-size: var(--fs-2); color: var(--ink); font-variant-numeric: tabular-nums; }
+.cd em { font-style: normal; font-size: 10px; line-height: 1; min-height: 10px; color: var(--ink2); font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cd.ok em { color: var(--ok); }
+.cd.some em { color: var(--acc-deep); }
+.cal-leg { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-4); }
+.cal-leg span { display: inline-flex; align-items: center; gap: 6px; }
+.cal-leg .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.cal-leg .dot.ok { background: var(--ok); }
+.cal-leg .dot.some { background: var(--acc); }
+
+/* ---------- Statistiques : tuiles — la valeur en grand au-dessus du libellé ; le palier prend toute la ligne ---------- */
+.prog .k { flex-direction: column-reverse; align-items: flex-start; justify-content: flex-start; gap: 2px; margin-bottom: var(--s-1); }
+.prog .k b { font-family: var(--f-display); font-size: var(--fs-5); font-weight: 400; line-height: 1; letter-spacing: -.01em; }
+.prog > .wide { grid-column: 1 / -1; }
+@media (min-width: 700px) { .prog > .wide { grid-column: span 2; } }
+.prog .xs.mut { text-wrap: pretty; }
+
+/* ---------- Profil : en-tête (titre du palier puis avancement sur sa propre ligne ; jours et XP en ligne de stats) ---------- */
+.chead .mid { text-wrap: pretty; }
+.chead .mid .statline { margin-top: var(--s-2); }
+
+/* ---------- Ligne de stats sous les compétences : même retrait (2px) que les titres .h2 ---------- */
+.statline.inset { margin-left: 2px; margin-right: 2px; }
+
+/* ---------- Repère des barres de compétences : sa légende ---------- */
+.mk-note { display: flex; align-items: center; }
+.mk-leg { display: inline-block; flex: none; width: 2px; height: 12px; border-radius: 2px; background: var(--ink); opacity: .4; margin-right: var(--s-2); }
+
+/* ---------- Échelle des paliers : chaque libellé au bout de la barre qui l'atteint (même gap de 6px que .ladder) ---------- */
+.ladder-l { position: relative; gap: 6px; }
+.ladder-l span { flex: 1; text-align: right; }
+.ladder-l span:first-child { position: absolute; left: 0; top: 0; flex: none; text-align: left; }
+
+/* ---------- Courbe vide : un cadre en pointillés plutôt qu'une phrase seule ---------- */
+.spark-empty { min-height: 64px; display: flex; align-items: center; justify-content: center; gap: var(--s-2); padding: var(--s-3) var(--s-4); margin: 0 2px; border: 1.5px dashed var(--line2); border-radius: var(--r-md); color: var(--ink2); font-size: var(--fs-2); text-align: center; text-wrap: balance; }
+.spark-empty svg { flex: none; color: var(--ink3); }
+
+/* ---------- Réglages : boutons à long libellé centrés et équilibrés ; icône d'un libellé sur la ligne de base ---------- */
+.tabpane .btn { text-align: center; text-wrap: balance; }
+.tabpane label.f svg { vertical-align: -3px; margin-left: 2px; }

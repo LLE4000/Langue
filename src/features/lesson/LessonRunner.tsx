@@ -27,6 +27,9 @@ import { checkBadges } from './badges';
 
 export interface StepResult { ok?: number; total?: number; wrong?: string[]; xp?: number }
 
+/** Étapes dont la barre d'action se cale en bas de l'écran (colonne flexible + espaceur `.sp`). */
+const FIT_STEPS = new Set(['questions', 'flashcards', 'match', 'build', 'repeat']);
+
 export function LessonRunner() {
   const { id = '' } = useParams();
   const nav = useNavigate();
@@ -59,7 +62,8 @@ export function LessonRunner() {
   useEffect(() => {
     if (isTraining) { if (!session || !session.training) nav('/review', { replace: true }); return; }
     if (!lesson) return;
-    if (session && session.lessonId === lesson.id && !session.training) return;
+    // même leçon en cours : on reprend ; déjà terminée (bilan affiché puis quitté) : on recommence une tentative
+    if (session && session.lessonId === lesson.id && !session.training && session.steps[session.index]?.type !== 'recap') return;
     const paused = session && !session.training && session.steps[session.index]?.type !== 'recap' && session.index > 0 ? session : null;
     if (paused) { setConflict(paused); return; }
     start();
@@ -126,7 +130,7 @@ export function LessonRunner() {
   const askQuit = () => (step.type === 'recap' ? quit() : setQuitAsk(true));
 
   return (
-    <FullScreen title={session.title} onBack={askQuit} progress={progress} fit={step.type === 'questions' || step.type === 'flashcards'}>
+    <FullScreen title={session.title} onBack={askQuit} progress={progress} fit={FIT_STEPS.has(step.type)}>
       <StepProgressCtx.Provider value={reportSub}>
       {showTitle && <p className="eyebrow ctr mb-2">{session.title}</p>}
       {step.type === 'theory' && <TheoryStep key={key} step={step} onDone={() => finish()} title={lesson ? L(lesson.title) : session.title} subtitle={lesson ? L(lesson.subtitle) : ''} lesson={lesson ?? undefined} />}

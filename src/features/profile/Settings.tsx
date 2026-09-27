@@ -9,7 +9,9 @@ import { useStore } from '@/app/store';
 import { tts, clips, useSpeaker, useVoices, recognizer, recorder } from '@/app/services/speech';
 import { WebSpeechProvider, type VoiceGender } from '@/engine/audio/tts';
 import { azureConfig, saveAzureConfig, testAzure } from '@/engine/audio/azure';
-import { T } from '@/i18n';
+import { T, frTypo } from '@/i18n';
+import { useGoals } from '@/app/hooks';
+import { GOAL_OPTIONS, goalKey } from '@/features/onboarding/Onboarding';
 import { Icon, Segmented, Thai, useToast } from '@/components/ui';
 
 type Tab = 'profile' | 'voice' | 'exercises';
@@ -22,19 +24,21 @@ function ProfileTab() {
   const [name, setName] = useState(profile.name);
   const [thaiName, setThaiName] = useState(profile.thaiName ?? '');
   const sp = useSpeaker();
+  const goals = useGoals();
+  const goalLabel = GOAL_OPTIONS.find((o) => o.key === goalKey(goals))?.title ?? '';
   return (
     <>
-      <label className="f" htmlFor="pname">Prénom</label>
+      <label className="f mt-0" htmlFor="pname">Prénom</label>
       <input id="pname" className="field" value={name} onChange={(e) => setName(e.target.value)} onBlur={() => name.trim() && updateProfile({ name: name.trim() })} />
       <label className="f" htmlFor="pthai">Mon prénom en thaï <span className="xs">· facultatif</span></label>
       <div className="row-flex"><input id="pthai" className="field grow" lang="th" value={thaiName} placeholder="ex. ลูเซียง" onChange={(e) => setThaiName(e.target.value)} onBlur={() => updateProfile({ thaiName: thaiName.trim() || undefined })} />{thaiName.trim() && <button className="ib" aria-label="Écouter mon prénom" onClick={() => sp.speak(`{I}ชื่อ{N}{P}`)}><Icon name="speaker" /></button>}</div>
-      <p className="foot-note">C’est ce prénom que la voix dit dans les dialogues (« ผมชื่อ… ») ; sans lui, une courte pause le remplace.</p>
+      <p className="foot-note">{frTypo('C’est ce prénom que la voix dit dans les dialogues (« ผมชื่อ… ») ; sans lui, une courte pause le remplace.')}</p>
       <label className="f">Je suis</label>
       <Segmented value={profile.gender} options={[{ v: 'm', label: <>Un homme · <Thai text="ครับ" /></> }, { v: 'f', label: <>Une femme · <Thai text="ค่ะ" /></> }]} onChange={(g) => updateProfile({ gender: g })} />
       <label className="f">Objectif par jour</label>
       <Segmented value={profile.dailyGoalMinutes} options={[5, 10, 15, 30].map((g) => ({ v: g, label: `${g} min` }))} onChange={(g) => updateProfile({ dailyGoalMinutes: g })} />
       <div className="list mt-5">
-        <Link className="row" to="/profile/levels"><span className="mid"><span className="t">Objectif et niveaux</span><span className="s">Parler, lire et écrire · niveau de départ</span></span><span className="end"><span className="chev">›</span></span></Link>
+        <Link className="row" to="/profile/levels"><span className="mid"><span className="t">Objectif et niveaux</span><span className="s">{goalLabel} · niveaux</span></span><span className="end"><span className="chev">›</span></span></Link>
       </div>
     </>
   );
@@ -54,8 +58,9 @@ function NativeVoices() {
   };
   return (
     <>
-      <label className="f">Voix natives thaïes <span className="xs">· installées, {clips.count('m')} phrases par voix</span></label>
-      <div className="btns"><button className="btn soft sm" onClick={() => dl('m')} disabled={!!prog.m && prog.m !== 'prêt'}>Garder la voix d’homme hors ligne{prog.m ? ` · ${prog.m}` : ''}</button><button className="btn soft sm" onClick={() => dl('f')} disabled={!!prog.f && prog.f !== 'prêt'}>Garder la voix de femme hors ligne{prog.f ? ` · ${prog.f}` : ''}</button></div>
+      <label className="f">Garder les voix natives hors ligne</label>
+      <div className="btns"><button className="btn soft sm" onClick={() => dl('m')} disabled={!!prog.m && prog.m !== 'prêt'}><Icon name="download" size={16} /> Voix d’homme{prog.m ? ` · ${prog.m}` : ''}</button><button className="btn soft sm" onClick={() => dl('f')} disabled={!!prog.f && prog.f !== 'prêt'}><Icon name="download" size={16} /> Voix de femme{prog.f ? ` · ${prog.f}` : ''}</button></div>
+      <p className="foot-note">Voix thaïes enregistrées, déjà installées&nbsp;: {clips.count('m')} phrases par voix. Gardées hors ligne, elles s’écoutent sans connexion.</p>
     </>
   );
 }
@@ -87,7 +92,7 @@ function VoiceTroubleshooting() {
       {status === 'none' && <>
         <label className="f">Forcer la lecture en th-TH</label>
         <Segmented value={settings.forceTTS} options={[{ v: false, label: 'Non' }, { v: true, label: 'Oui' }]} onChange={(v) => update({ forceTTS: v })} />
-        <p className="foot-note">Android : Paramètres › Système › Langues et saisie › Synthèse vocale › moteur Google › Installer les données vocales › Thaï. iPhone : Réglages › Accessibilité › Contenu énoncé › Voix › Thaï.</p>
+        <p className="foot-note">{frTypo('Android : Paramètres › Système › Langues et saisie › Synthèse vocale › moteur Google › Installer les données vocales › Thaï. iPhone : Réglages › Accessibilité › Contenu énoncé › Voix › Thaï.')}</p>
       </>}
       {target.length > 1 && <><label className="f" htmlFor="voice">Imposer une voix de l’appareil</label><select id="voice" className="field" value={settings.voiceId} onChange={(e) => update({ voiceId: e.target.value })}><option value="">Automatique</option>{target.map((v) => <option key={v.id} value={v.id}>{v.name}{v.local ? '' : ' · en ligne'}</option>)}</select></>}
       {unknown.length > 0 && <>
@@ -145,7 +150,7 @@ function VoiceTab() {
     <>
       <label className="f mt-0">Je préfère entendre</label>
       <Segmented value={settings.voiceGender ?? 'auto'} options={[{ v: 'auto' as const, label: `Comme moi` }, { v: 'm' as const, label: 'Un homme' }, { v: 'f' as const, label: 'Une femme' }]} onChange={(v) => update({ voiceGender: v })} />
-      <div className="btns mt-3"><button className="btn soft sm" onClick={() => sp.speak(SAMPLE)}><Icon name="play" size={16} /> Écouter</button><button className="btn ghost sm" onClick={() => sp.speak(SAMPLE, { speaker: wanted === 'm' ? 'f' : 'm' })}><Icon name="play" size={16} /> L’interlocuteur</button></div>
+      <div className="btns mt-3"><button className="btn soft sm" onClick={() => sp.speak(SAMPLE)}><Icon name="play" size={16} /> Voix choisie</button><button className="btn ghost sm" onClick={() => sp.speak(SAMPLE, { speaker: wanted === 'm' ? 'f' : 'm' })}><Icon name="play" size={16} /> Voix de l’interlocuteur</button></div>
       <label className="f">Lecture lente <Icon name="turtle" size={16} /></label>
       <Segmented value={nearestSlow(settings.slowRate)} options={SLOW_OPTIONS} onChange={(v) => update({ slowRate: v })} />
       <label className="f">Lire à voix haute automatiquement</label>
@@ -167,7 +172,8 @@ function ExercisesTab() {
       <label className="f mt-0">Passer à la suite après une bonne réponse</label>
       <Segmented value={settings.autoAdvance !== false} options={[{ v: true, label: 'Automatiquement' }, { v: false, label: 'Quand je touche' }]} onChange={(v) => update({ autoAdvance: v })} />
       <label className="f">Phonétique sous le thaï</label>
-      <Segmented value={settings.translit} options={[{ v: 'always', label: 'Toujours' }, { v: 'learning', label: 'Tant que je ne lis pas' }, { v: 'hidden', label: 'Jamais' }]} onChange={(v) => update({ translit: v })} />
+      <Segmented value={settings.translit} options={[{ v: 'always', label: 'Toujours' }, { v: 'learning', label: 'Au début' }, { v: 'hidden', label: 'Jamais' }]} onChange={(v) => update({ translit: v })} />
+      <p className="foot-note">«&nbsp;Au début&nbsp;»&nbsp;: la phonétique disparaît quand vous lisez le thaï seul.</p>
       <label className="f">Contrôle de prononciation</label>
       <Segmented value={strict} options={[{ v: 'normal' as const, label: 'Normal' }, { v: 'strict' as const, label: 'Strict' }]} onChange={(v) => update({ pronStrictness: v })} />
       <label className="f">{t.profile.theme}</label>

@@ -1,1 +1,41 @@
 /* Corrections de la revue visuelle (library) — fusionnées ensuite dans app.css */
+
+/* ---------- Bibliothèque : la carte vedette a un bord et un chevron (elle se lit comme touchable) ---------- */
+.tile.feature { border-color: color-mix(in srgb, var(--jade) 18%, var(--line)); box-shadow: var(--e1); }
+.tile.wide .end { margin-left: auto; color: var(--ink3); display: grid; place-items: center; flex: none; }
+/* Tuiles : la ligne de détail se coupe en lignes équilibrées (« 44 consonnes · 3 classes ») */
+.tile.lib .s { text-wrap: balance; }
+
+/* ---------- Conversation : barre d'outils sur une ligne, libellés jamais coupés ---------- */
+.dlgbar .btn { flex: 1 1 auto; min-width: 0; white-space: nowrap; gap: 4px; padding: var(--s-2); font-size: var(--fs-2); }
+@media (max-width: 380px) { .dlgbar .btn { font-size: var(--fs-1); padding: var(--s-2) 6px; } }
+
+/* Bulles : le favori rejoint la ligne du locuteur, les 5 à 6 actions tiennent sur une rangée */
+.bub .who { display: flex; align-items: center; gap: 4px; min-height: 22px; }
+.bub .who .mini.fav { order: 2; margin: -6px -4px -6px auto; min-width: 32px; width: 32px; height: 32px; padding: 0; border-color: transparent; background: transparent; color: var(--ink3); }
+.bub .who .mini.fav.on { color: var(--acc-deep); background: var(--acc-soft); }
+.bub.playing .who::after { order: 1; }
+.bub .acts { gap: 4px; }
+.bub .acts .mini { min-width: 36px; width: 36px; height: 36px; padding: 0; }
+
+/* ---------- Vocabulaire : repère « pas encore lisible » discret, sur sa propre ligne ---------- */
+.row .s .unread { display: block; font-size: var(--fs-1); color: var(--ink2); margin-top: 2px; }
+
+/* ---------- Fiche de grammaire : schéma lisible en clair comme en sombre, latin en police d'interface ---------- */
+.pattern { font-family: var(--f-ui); background: var(--surface2); color: var(--ink); border: 1px solid var(--line2); font-weight: 650; letter-spacing: .01em; }
+.pattern .th { font-family: var(--f-th); color: var(--jade); font-weight: 600; line-height: 1.3; }
+
+/* ---------- Guide de conversation : « Mes favoris » au même gabarit que les situations ---------- */
+.tile.ctr .e.fav { display: grid; place-items: center; line-height: 1; }
+.tile.ctr .e.fav svg { stroke: var(--acc-deep); fill: var(--acc-soft); stroke-width: 1.6; }
+
+/* ---------- Replis : le résumé sous le titre, aligné sur lui (plus de « · » en tête ni d'alinéa pendant) ---------- */
+.fold > summary .sub { display: block; font-size: var(--fs-1); font-weight: 500; color: var(--ink2); margin-top: 2px; }
+.fold > summary .sub .th { font-size: var(--fs-2); line-height: 1.3; }
+
+/* ---------- Écriture : glyphes centrés dans le sélecteur ; outils en icônes légendées, état actif visible ---------- */
+.strip button { display: inline-grid; place-items: center; text-align: center; line-height: 1; }
+.wtools .ib[aria-pressed="true"] { background: var(--acc-soft); border-color: var(--acc); color: var(--acc-deep); }
+
+/* ---------- Voyelles : les consonnes de référence du sélecteur à taille lisible, sans agrandir le segment ---------- */
+.seg .th-m { line-height: 1; }

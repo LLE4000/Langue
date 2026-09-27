@@ -6,11 +6,12 @@ import { useStore, streakDays } from '@/app/store';
 import { useGoals, useProgress } from '@/app/hooks';
 import { readRegistry } from '@/app/profiles';
 import { T } from '@/i18n';
-import { Icon, Ico } from '@/components/ui';
+import { GlyphIcon, Icon, Ico } from '@/components/ui';
 import { SkillBars, TierRing } from '@/components/Progress';
-import { TIER_STORY, tierLine } from '@/engine/progress';
+import { TIER_STORY } from '@/engine/progress';
 import { BADGES } from '@/features/lesson/badges';
 import { GOAL_OPTIONS, goalKey } from '@/features/onboarding/Onboarding';
+import { SkillMarkLegend } from './ProgressScreen';
 
 const plural = (n: number, s: string, p = s + 's') => `${n} ${n > 1 ? p : s}`;
 
@@ -36,13 +37,20 @@ export function Profile() {
     <>
       <Link to="/profile/progress" className="chead">
         <TierRing p={p} />
-        <div className="mid"><div className="name">{profile.name}</div><div className="sm b">{TIER_STORY[p.tier].title} · {tierLine(p)}</div><div className="tagline mt-2"><span className="tag gold"><Icon name="flame" size={13} /> {plural(streak, 'jour')} de suite</span><span className="tag">{plural(nDays, 'jour')} d’étude</span><span className="tag">{xp} XP</span></div></div>
+        <div className="mid">
+          <div className="name">{profile.name}</div>
+          <div className="sm b">{TIER_STORY[p.tier].title}</div>
+          <div className="sm mut">{p.next && p.next !== 'B2' ? `${Math.round(p.toNext * 100)}\u00a0% du chemin vers ${p.next}` : 'palier atteint'}</div>
+          <div className="tagline mt-2"><span className="tag gold"><Icon name="flame" size={13} /> {plural(streak, 'jour')} de suite</span></div>
+          <div className="statline"><span><b>{nDays}</b> {nDays > 1 ? 'jours' : 'jour'} d’étude</span><span><b>{xp}</b>&nbsp;XP</span></div>
+        </div>
       </Link>
       <div className="h2">Mes compétences <span className="sp" /><Link to="/profile/progress">Tout voir ›</Link></div>
       <SkillBars p={p} compact limit={4} />
-      <div className="statline mt-2"><span><b>{p.counts.wordsAcquired}</b> mots acquis</span><span><b>{p.counts.lessonsDone}</b> leçon{p.counts.lessonsDone > 1 ? 's' : ''} faite{p.counts.lessonsDone > 1 ? 's' : ''}</span><span>{goalLabel}</span></div>
+      <SkillMarkLegend p={p} />
+      <div className="statline inset mt-2"><span><b>{p.counts.wordsAcquired}</b> mots acquis</span><span><b>{p.counts.lessonsDone}</b> leçon{p.counts.lessonsDone > 1 ? 's' : ''} faite{p.counts.lessonsDone > 1 ? 's' : ''}</span><span>Objectif&nbsp;: <b>{goalLabel}</b></span></div>
       <div className="h2">{t.profile.badges} <span className="sp" /><span className="sm mut">{earned.length} / {BADGES.length}</span></div>
-      <div className="badges">{shown.map((b) => <div key={b.id} className={`badge ${badges[b.id] ? 'on' : ''}`} title={b.desc}><span className="e">{b.icon}</span>{b.title}<span className="xs mut d">{b.desc}</span></div>)}</div>
+      <div className="badges">{shown.map((b) => <div key={b.id} className={`badge ${badges[b.id] ? 'on' : ''}`} title={b.desc}><span className="e" aria-hidden="true"><GlyphIcon name={b.icon} size={22} /></span>{b.title}<span className="xs mut d">{b.desc}</span></div>)}</div>
       {BADGES.length > shown.length || allBadges ? <button className="btn ghost sm mt-3" onClick={() => setAllBadges(!allBadges)}>{allBadges ? 'Voir moins' : `Voir tous les badges (${BADGES.length})`}</button> : null}
       <div className="h2">Activité</div>
       <div className="list">
@@ -52,8 +60,8 @@ export function Profile() {
       <div className="h2">Application</div>
       <div className="list">
         <Row to="/profile/settings" ico="settings" t={t.profile.settings} s="Profil, voix, exercices" />
-        <Row to="/profile/levels" ico="sliders" t="Objectif et niveaux" s={`${goalLabel} · niveau par compétence`} />
-        <Row to="/profile/people" ico="users" t="Personnes sur cet appareil" s={people > 1 ? `${people} profils · changer ou ajouter` : 'Ajouter un profil pour quelqu’un d’autre'} />
+        <Row to="/profile/levels" ico="sliders" t="Objectif et niveaux" s={`${goalLabel} · niveaux`} />
+        <Row to="/profile/people" ico="users" t="Personnes sur cet appareil" s={people > 1 ? `${people} profils · changer ou ajouter` : 'Ajouter un autre profil'} />
         <Row to="/profile/data" ico="archive" t={t.profile.data} s="Sauvegarder, restaurer, réinitialiser" />
       </div>
       <p className="xs mut ctr mt-4"><Icon name="lock" size={12} /> Tout reste sur cet appareil. Aucun compte, aucun serveur.</p>

@@ -13,7 +13,7 @@ import { th, ITEMS, NUM_ITEMS, CLF_ITEMS } from '@/content/th';
  * Au moins deux mots quand il y en a ; l'affichage coupe proprement ce qui dépasse.
  */
 export function wordsPreview(ids: string[], max = 38): string {
-  const words = ids.map((id) => (ITEMS[id]?.meaning.fr ?? '').split(';')[0].replace(/\s*\([^)]*\)/g, '').replace(/^[\s…,]+|[\s…,]+$/g, '').trim()).filter((w) => w.length > 1);
+  const words = ids.map((id) => (ITEMS[id]?.meaning.fr ?? '').split(';')[0].replace(/\s*\([^)]*\)/g, '').replace(/^[\s…,]+|[\s…,?!]+$/g, '').trim()).filter((w) => w.length > 1);
   const out: string[] = [];
   for (const w of words) { if (out.length >= 2 && [...out, w].join(' · ').length > max) break; if (!out.includes(w)) out.push(w); }
   const text = out.join(' · ');
@@ -131,7 +131,7 @@ export function buildNumbersTrack(): LessonDef[] {
   ];
   return [
     { id: 'num-01', track: T, unit: 'u-num', title: { fr: 'Compter de 0 à 10' }, subtitle: { fr: 'Les nombres, et les chiffres thaïs' }, badge: '๑', skills: S, prerequisites: [], oralLevel: 1, minScore: 0.6, minutes: 8,
-      newConcepts: [...digits, 'rule:digits'], activities: numActs(digits, 'Les nombres de zéro à dix. Chaque nombre a aussi un chiffre thaï, que l’on voit sur les documents officiels, les billets et les prix d’entrée : ๑ ๒ ๓… Ils se lisent exactement comme nos chiffres.', [4]) },
+      newConcepts: [...digits, 'rule:digits'], activities: numActs(digits, 'Les nombres de zéro à dix, chacun avec son mot et son chiffre thaï : ๑ ๒ ๓…', [4]) },
     { id: 'num-02', track: T, unit: 'u-num', title: { fr: 'De 11 à 99' }, subtitle: { fr: 'Les dizaines, et trois exceptions' }, badge: '๒๐', skills: S, prerequisites: ['num-01'], oralLevel: 1, minScore: 0.6, minutes: 8,
       newConcepts: tens, activities: numActs(tens, 'Les dizaines se forment avec สิบ (dix) : สามสิบ = 3 × 10 = 30. Trois exceptions à retenir : 11 se dit สิบเอ็ด (pas สิบหนึ่ง), 20 se dit ยี่สิบ, et le 1 final se dit toujours เอ็ด (21 = ยี่สิบเอ็ด).', [0, 1, 2]) },
     { id: 'num-03', track: T, unit: 'u-num', title: { fr: 'Grands nombres' }, subtitle: { fr: 'Centaines, milliers, millions, et les prix' }, badge: '๑๐๐', skills: S, prerequisites: ['num-02'], oralLevel: 2, minScore: 0.6, minutes: 8,

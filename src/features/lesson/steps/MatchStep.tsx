@@ -14,7 +14,7 @@ function LeftPair({ p, cls, showRom, byMeaning, onClick }: { p: { id: string; th
   const oral = useOral(p.thai);
   return (
     <button data-pair={p.id} className={`pr ${cls}`} onClick={onClick}>
-      {oral && byMeaning ? <><Rom text={p.rom} className="main" /><Thai text={p.thai} className="sub" /></> : <><Thai text={p.thai} />{showRom && byMeaning && <span className="rom xs">{p.rom}</span>}</>}
+      {oral && byMeaning ? <><Rom text={p.rom} className="main" /><Thai text={p.thai} className="sub" /></> : <><Thai text={p.thai} />{showRom && byMeaning && <Rom text={p.rom} className="xs" />}</>}
     </button>
   );
 }
@@ -51,19 +51,20 @@ export function MatchStep({ step, onDone }: { step: RuntimeStep & { type: 'match
   return (
     <>
       <p className="qprompt">{t.lesson.matchPairs}</p>
-      <p className="sm mut ctr mb-3 mt-n1">Touchez un élément dans chaque colonne pour les relier.</p>
-      <div className={`match ${bad ? 'lock' : ''}`}>
+      <p className="qsub">Touchez un élément dans chaque colonne pour les relier.</p>
+      {/* Deux colonnes sur une grille commune (subgrid) : la ligne i a la même hauteur à gauche et à droite */}
+      <div className={`match ${bad ? 'lock' : ''}`} style={{ ['--rows' as string]: left.length }}>
         <div className="match-col">
           {left.map((p) => <LeftPair key={p.id} p={p} cls={cls(p.id, 'l', selL)} showRom={showRom} byMeaning={step.by === 'meaning'} onClick={() => { if (bad) return; setSelL(p.id); tryMatch(p.id, selR); }} />)}
         </div>
         <div className="match-col">
-          {right.map((p) => <button key={p.id} data-pair={p.id} className={`pr ${cls(p.id, 'r', selR)}`} onClick={() => { if (bad) return; setSelR(p.id); tryMatch(selL, p.id); }}>{step.by === 'meaning' ? <Fr text={p.text} /> : <span className="rom">{p.rom}</span>}</button>)}
+          {right.map((p) => <button key={p.id} data-pair={p.id} className={`pr ${cls(p.id, 'r', selR)}`} onClick={() => { if (bad) return; setSelR(p.id); tryMatch(selL, p.id); }}>{step.by === 'meaning' ? <Fr text={p.text} /> : <Rom text={p.rom} />}</button>)}
         </div>
       </div>
       <div className="sp" />
       {complete && (
         <StepFooter tone="ok">
-          <div className="qfin"><span className="verdict ok"><Icon name="check" />Toutes les paires sont reliées</span>{errors > 0 && <span className="mut"> · {errors} paire{errors > 1 ? 's' : ''} à revoir</span>}</div>
+          <div className="qfin"><div className="verdict ok"><Icon name="check" />Toutes les paires sont reliées</div>{errors > 0 && <div className="mut mt-1">{errors} paire{errors > 1 ? 's' : ''} à revoir</div>}</div>
           <ContinueButton onClick={finish} label={t.common.continue} auto autoMs={900} autoFocus />
         </StepFooter>
       )}

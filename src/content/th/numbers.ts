@@ -13,5 +13,5 @@ export const NUM_NOTES: { fr: string }[] = [
   { fr: "20 se dit ยี่สิบ (yîi-sìp), jamais « สองสิบ »." },
   { fr: "10 se dit สิบ tout court (pas « หนึ่งสิบ »)." },
   { fr: "Le thaï a un mot pour 10 000 (หมื่น) et 100 000 (แสน) : 25 000 = สองหมื่นห้าพัน." },
-  { fr: "Les chiffres thaïs ๐–๙ se lisent exactement comme les chiffres arabes ; on les voit surtout sur les documents officiels, les prix d'entrée et les billets." },
+  { fr: "Les chiffres thaïs ๐–๙ se lisent exactement comme les chiffres arabes ; on les voit surtout sur les documents officiels, les prix d’entrée et les billets." },
 ];

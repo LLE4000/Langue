@@ -1,1 +1,98 @@
 /* Corrections de la revue visuelle (global) — fusionnées ensuite dans app.css */
+
+/* ---------- Chevrons de liste : le « › » texte devient le même chevron vectoriel que les boutons ---------- */
+/* Toutes les lignes (.row, .prog-card, .ra-home) : le caractère reste dans le DOM mais c'est un masque SVG qui se voit.
+   Une ligne qui porte déjà <Icon name="next" /> garde son icône. */
+.chev { color: var(--ink3); display: inline-grid; place-items: center; flex: none; }
+.chev svg { width: 18px; height: 18px; }
+.chev.chev:not(:has(svg)) {
+  width: 18px; height: 18px; font-size: 0; line-height: 0; overflow: hidden; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 5l7 7-7 7'/%3E%3C/svg%3E") center / 18px 18px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 5l7 7-7 7'/%3E%3C/svg%3E") center / 18px 18px no-repeat;
+}
+
+/* ---------- Disclosure « Plus d’options » (details.note) : le même chevron tournant que les replis .fold ---------- */
+details.note > summary { cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; gap: var(--s-2); min-height: 28px; }
+details.note > summary::-webkit-details-marker { display: none; }
+details.note > summary::after { content: "›"; margin-left: auto; font-size: 22px; line-height: 1; color: var(--ink3); transform: rotate(90deg); transition: transform .2s; }
+details.note[open] > summary::after { transform: rotate(-90deg); }
+details.note[open] > summary { margin-bottom: var(--s-2); }
+
+/* ---------- Pastille de maîtrise : anneau vide à 0 % (et non un point gris qui semble désactivé) ---------- */
+.row .end .mdot { margin-right: var(--s-1); }
+
+/* ---------- Boutons audio des dialogues et lectures : ronds, comme .ib ---------- */
+.mini { border-radius: 50%; border: 1.5px solid var(--line); }
+.mini.txt { border-radius: var(--r-pill); }
+
+/* ---------- Toast : largeur réelle du texte (le left: 50% bridait sa largeur à 50vw), lignes équilibrées ---------- */
+.toast { width: max-content; max-width: min(calc(100vw - 2 * var(--s-5)), 440px); text-wrap: balance; }
+
+/* ---------- Grilles à deux ou trois colonnes : des colonnes égales même avec un mot long (« Compréhension ») ---------- */
+.modes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 560px) { .modes { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 700px) { .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.mode .t, .tile .t { overflow-wrap: anywhere; hyphens: auto; }
+
+/* ---------- Réviser : cartes d'entraînement en colonne (icône au-dessus), la dernière seule prend la ligne ---------- */
+@media (max-width: 559px) {
+  .mode { flex-direction: column; align-items: flex-start; gap: var(--s-2); padding: var(--s-3) var(--s-3) var(--s-4); }
+  .mode .grow { flex: none; width: 100%; }
+  .modes > .mode:last-child:nth-child(odd) { grid-column: 1 / -1; flex-direction: row; align-items: center; padding: var(--s-3); }
+  .modes > .mode:last-child:nth-child(odd) .grow { flex: 1; width: auto; }
+}
+
+/* ---------- Bibliothèque : titres à la même hauteur dans une rangée ; la jauge en bas ---------- */
+.tile .t { margin-top: 0; }
+.tile > .th { height: 40px; display: flex; align-items: center; }
+.tile .bar { margin-top: auto; flex: none; }
+.tile .s:has(+ .bar) { padding-bottom: var(--s-2); }
+.tile.ctr { justify-content: center; }
+
+/* ---------- Grille de lettres : la romanisation sous la lettre (les pieds de ฎ ฏ ฐ ญ ne la chevauchent plus) ---------- */
+.cell { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 28px; line-height: 1.3; }
+.cell small { position: static; line-height: 1.2; font-size: 11px; }
+.cell.wide { padding: var(--s-2) var(--s-1); }
+/* Lettres pas encore vues : plus claires, mais lisibles en sombre */
+.cell.locked { opacity: .78; }
+
+/* ---------- Syllabes : une rangée pleine plutôt qu'une tuile seule sur la deuxième ligne ---------- */
+.syls { grid-template-columns: repeat(auto-fit, minmax(56px, 1fr)); }
+
+/* ---------- Accueil : carte de progression (titre équilibré, pas de « A1 » orphelin ; ligne de chiffres serrée) ---------- */
+.prog-card .t { text-wrap: balance; }
+.statline { gap: var(--s-1) var(--s-3); }
+
+/* ---------- Cartes : recto plus grand (moins de vide sous la carte), indice de retournement séparé du sens ---------- */
+.stage.fcard:not(.compact) { min-height: min(46dvh, 380px); padding-bottom: 48px; }
+.stage .hint { bottom: var(--s-3); }
+/* Forme moderne : glyphe à l'échelle de son libellé, sur la même ligne de base */
+.modern { align-items: baseline; }
+.modern .thm { font-size: 22px; font-weight: 500; line-height: 1; }
+/* Notes « Difficile » (orange) et « Bien » (vert-jaune) bien distinctes, en clair comme en sombre */
+.rate button[data-q="2"] { --rc: color-mix(in srgb, var(--ok) 55%, var(--acc)); }
+
+/* ---------- Choix corrigés : phonétique et thaï prennent la couleur du verdict ---------- */
+.choice.ok .rom, .choice.ko .rom, .choice.ok .th.sub, .choice.ko .th.sub { color: inherit; }
+.choice.ok .th.sub, .choice.ko .th.sub { opacity: .85; }
+
+/* ---------- Associer : colonnes alignées (repli sans subgrid), texte équilibré, paires trouvées lisibles ---------- */
+.match-col { display: grid; grid-auto-rows: 1fr; }
+.pr { padding: var(--s-2); text-wrap: balance; }
+.pr .rom.main { font-size: var(--fs-2); }
+.pr .th.sub { font-size: calc(14px * var(--ths)); }
+.pr.ok { opacity: 1; color: var(--ok); border-color: color-mix(in srgb, var(--ok) 55%, transparent); }
+.pr.ok .rom, .pr.ok .th, .pr.ok .th.sub { color: inherit; }
+
+/* ---------- Badge « Nombres » : le chiffre thaï ๑ centré et à la taille des lettres ---------- */
+.lbadge.k-numbers .g { transform: translateY(-.08em); }
+.lbadge.k-numbers .g:not(.len2):not(.len3) { font-size: 27px; }
+.lbadge.lg.k-numbers .g:not(.len2):not(.len3) { font-size: 36px; }
+.lkind .lbadge.k-numbers .g:not(.len2):not(.len3) { font-size: 18px; }
+
+/* ---------- Badges du profil : icône vectorielle (ou glyphe thaï) dans une pastille, au lieu d'un émoji grisé ---------- */
+.badge .e { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--surface2); color: var(--ink3); font-size: 22px; line-height: 1; filter: none; opacity: 1; }
+.badge .e svg { width: 22px; height: 22px; }
+.badge .e .th { line-height: 1; }
+.badge.on .e { background: var(--acc-soft); color: var(--acc-deep); filter: none; opacity: 1; }

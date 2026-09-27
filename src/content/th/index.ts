@@ -110,9 +110,12 @@ export const TONE_ITEMS = TONE_WORDS.map((w) => put({
 export const TONE_BY_THAI: Record<string, LearnItem & { kind: 'tone' }> = Object.fromEntries(TONE_ITEMS.map((t) => [t.thai, t]));
 export const TONE_BY_ID = Object.fromEntries(TONES.map((t) => [t.id, t])) as Record<ToneId, (typeof TONES)[number]>;
 
+/** Nombre en chiffres groupés par trois avec une espace fine insécable, dès 1 000 (« 1 000 », « 2 500 », « 10 000 »). */
+const groupDigits = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+
 export const NUM_ITEMS = NUM_KEY.map((n) => {
   const t = thaiNumber(n);
-  return put({ id: 'n:' + n, kind: 'num' as const, thai: t.thai, rom: t.rom, meaning: { fr: n.toLocaleString('fr-FR') }, value: n, digits: t.digits, say: t.thai, targets: [t.thai, String(n), t.digits] });
+  return put({ id: 'n:' + n, kind: 'num' as const, thai: t.thai, rom: t.rom, meaning: { fr: groupDigits(n) }, value: n, digits: t.digits, say: t.thai, targets: [t.thai, String(n), t.digits] });
 });
 
 export const CLF_ITEMS = CLASSIFIERS.map((c) => put({ id: c.id, kind: 'clf' as const, thai: c.thai, rom: c.rom, meaning: { fr: 'classificateur : ' + c.use.fr }, ref: c, say: c.thai, targets: [c.thai] }));

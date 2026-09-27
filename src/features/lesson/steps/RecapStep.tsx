@@ -4,8 +4,11 @@ import type { LessonSession } from '@/app/store';
 import type { LessonDef } from '@/curriculum/types';
 import type { PathLesson } from '@/curriculum/path';
 import { ITEMS } from '@/content/th';
-import { L, T } from '@/i18n';
-import { Thai, Rom, Fr, Icon } from '@/components/ui';
+import { T } from '@/i18n';
+import { Thai, Rom, Fr, Icon, AudioButton } from '@/components/ui';
+import { InitialSound } from '@/components/ItemCard';
+import { CardTitle } from '@/components/LessonCard';
+import { lessonCard } from '@/curriculum/card';
 
 export function RecapStep({ session, lesson, next, onClose, onNext, onRetry }: { session: LessonSession; lesson: LessonDef | null; next: PathLesson | null; onClose: () => void; onNext: (id: string) => void; onRetry: () => void; startedAt: number }) {
   const t = T();
@@ -14,6 +17,7 @@ export function RecapStep({ session, lesson, next, onClose, onNext, onRetry }: {
   const wrong = session.wrong.map((id) => ITEMS[id]).filter(Boolean).slice(0, 10);
   const news = lesson ? lesson.newConcepts.map((id) => ITEMS[id]).filter((x) => x && x.kind !== 'rule' && x.kind !== 'grammar').slice(0, 12) : [];
   const nextIsDifferent = next && next.lesson.id !== session.lessonId;
+  const nextCard = nextIsDifferent ? lessonCard(next!.lesson) : null;
   const minPct = Math.round((lesson?.minScore ?? 0.6) * 100);
   const medal = session.training ? 'target' : passed ? (pct >= 90 ? 'star' : 'check') : 'rotate';
   return (
@@ -26,14 +30,15 @@ export function RecapStep({ session, lesson, next, onClose, onNext, onRetry }: {
         <div className="mut sm">{session.title} · +{session.xp} XP</div>
       </div>
       {news.length > 0 && passed && (
-        <><div className="h2">{t.lesson.newItems}</div><div className="chips">{news.map((it) => <span key={it.id} className="chip"><Thai text={it.kind === 'num' ? it.digits : it.thai} className="th-s ink" /><span className="xs"><Fr text={it.kind === 'cons' ? it.ref.nameMeaning : it.meaning} /></span></span>)}</div></>
+        // Toutes les nouveautés visibles d'un coup (pastilles sur plusieurs lignes, pas de rangée coupée au bord)
+        <><div className="h2">{t.lesson.newItems}</div><div className="chips wrap recap-new">{news.map((it) => <span key={it.id} className="chip"><Thai text={it.kind === 'num' ? it.digits : it.thai} className="th-s ink" />{it.kind === 'cons' && <InitialSound s={it.ref.initial} />}<span className="xs"><Fr text={it.kind === 'cons' ? it.ref.nameMeaning : it.meaning} /></span></span>)}</div></>
       )}
       {wrong.length > 0 && (
-        <><div className="h2">{t.lesson.toReview}</div><div className="list">{wrong.map((it) => <div className="row" key={it.id}><span className="mid"><Thai text={it.thai} /><span className="s"><Rom text={it.rom} /> · <Fr text={it.meaning} /></span></span></div>)}</div><p className="foot-note">Ces éléments reviendront dans vos révisions.</p></>
+        <><div className="h2">{t.lesson.toReview}</div><div className="list">{wrong.map((it) => <div className="row" key={it.id}><span className="mid"><Thai text={it.thai} /><span className="s"><Rom text={it.rom} className="block" /><span className="block"><Fr text={it.kind === 'cons' ? it.ref.nameMeaning : it.meaning} /></span></span></span><span className="end"><AudioButton text={it.say} className="sm" /></span></div>)}</div><p className="foot-note">Ces éléments reviendront dans vos révisions.</p></>
       )}
       <div className="gap" />
       <div className="stack mt-3">
-        {!session.training && passed && nextIsDifferent && <button className="btn" onClick={() => onNext(next!.lesson.id)}>{t.lesson.nextLesson} : {L(next!.lesson.title)} <Icon name="next" size={18} /></button>}
+        {!session.training && passed && nextCard && <button className="btn" onClick={() => onNext(next!.lesson.id)}><span className="btn-2l"><b>{t.lesson.nextLesson}</b><small><CardTitle card={nextCard} /></small></span><Icon name="next" size={18} /></button>}
         {!session.training && !passed && <button className="btn" onClick={onRetry}>Refaire la leçon</button>}
         {session.training && <Link className="btn" to="/review" onClick={onClose}>Autre entraînement</Link>}
         <button className={`btn ${passed && nextIsDifferent && !session.training ? 'ghost' : 'soft'}`} onClick={onClose}>{session.training ? t.common.finish : t.lesson.backHome}</button>

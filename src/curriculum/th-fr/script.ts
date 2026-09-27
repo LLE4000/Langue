@@ -208,7 +208,7 @@ export function buildScriptTrack(): LessonDef[] {
     if (vowelIds.length) acts.push({ type: 'read', items: vowelIds, answer: 'rom', pool: knownVowels.map(VOWEL_ID), count: Math.min(6, vowelIds.length * 2) });
     if (drill.length) acts.push({ type: 'syllables', syllables: drill, count: 6 });
     if (wordIds.length) {
-      acts.push({ type: 'flashcard', items: wordIds, note: { fr: 'Vous savez maintenant lire ces mots. Lisez-les à voix haute avant de retourner la carte.' } });
+      acts.push({ type: 'flashcard', items: wordIds, note: { fr: 'Vous savez maintenant lire ces mots.' } });
       acts.push({ type: 'read', items: wordIds, answer: 'meaning', pool: practicePool, count: Math.min(8, wordIds.length) });
       if (practicePool.length >= 4) acts.push({ type: 'dictation', items: wordIds, pool: practicePool, count: Math.min(6, wordIds.length) });
       if (lessons.length >= 2) acts.push({ type: 'spell', items: wordIds, count: 3 });
@@ -231,7 +231,8 @@ export function buildScriptTrack(): LessonDef[] {
 }
 
 /** Leçons de lecture pure ajoutées après l'alphabet : chaque texte restant y trouve sa place. */
-export function readingPracticeLesson(n: number, prev: string, readingIds: string[]): LessonDef {
+/** `total` : nombre de leçons de la série, pour un titre « n/N » comme les autres séries. */
+export function readingPracticeLesson(n: number, prev: string, readingIds: string[], total?: number): LessonDef {
   const id = `read-txt-${n}`;
   const acts: ActivitySpec[] = [
     { type: 'theory', blocks: [{ kind: 'text', text: { fr: 'Vous connaissez tous les signes : place à la lecture. Lisez chaque phrase à voix haute AVANT d’afficher la phonétique ou la traduction, puis vérifiez avec l’audio.' } }] },
@@ -243,7 +244,7 @@ export function readingPracticeLesson(n: number, prev: string, readingIds: strin
     if (idx >= 0) acts.push({ type: 'build', sentences: [{ readingId: rid, index: idx }] });
   }
   acts.push({ type: 'review', count: 6 }, { type: 'recap' });
-  return { id, track: 'script', unit: 'u-script-4', kind: 'reading', title: { fr: `Textes à lire · ${n}` }, subtitle: { fr: readingIds.map((rid) => th.READINGS.find((x) => x.id === rid)!.title.fr).join(' · ') },
+  return { id, track: 'script', unit: 'u-script-4', kind: 'reading', title: { fr: `Textes à lire · ${total ? `${n}/${total}` : n}` }, subtitle: { fr: readingIds.map((rid) => th.READINGS.find((x) => x.id === rid)!.title.fr).join(' · ') },
     skills: ['reading'], prerequisites: [prev], newConcepts: [], activities: acts, minutes: 6 + 3 * readingIds.length, readLevel: 4, minScore: 0.5 };
 }
 

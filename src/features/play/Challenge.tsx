@@ -165,9 +165,9 @@ export function ChallengeHub() {
       <p className="lead">Sans compte ni serveur : le défi voyage dans un lien. Vous jouez, vous envoyez ; l’autre joue la même série et vous renvoie son résultat.</p>
       <Link className="btn" to="/play/defi/new"><Icon name="bolt" size={18} /> Lancer un défi</Link>
       <label className="f">J’ai reçu un lien ou un code</label>
-      <div className="row-flex"><input className="field" value={code} onChange={(e) => setCode(e.target.value)} placeholder="Collez le lien ou le code ici" aria-label="Code du défi" /><button className="btn auto sm" onClick={open} disabled={!code.trim()}>Ouvrir</button></div>
+      <div className="row-flex field-go"><input className="field" value={code} onChange={(e) => setCode(e.target.value)} placeholder="Collez le lien ou le code ici" aria-label="Code du défi" /><button className="btn auto" onClick={open} disabled={!code.trim()}>Ouvrir</button></div>
       <div className="h2">Mes défis <span className="sp" /><span className="sm mut">{records.length}</span></div>
-      {records.length === 0 ? <Empty icon="swords">Aucun défi pour l’instant.</Empty> : (
+      {records.length === 0 ? <Empty icon="send">Aucun défi pour l’instant.</Empty> : (
         <div className="list">
           {records.map((r) => {
             const status = r.dir === 'sent' ? (r.theirs ? `${r.theirs.name} : ${r.theirs.score}/${r.theirs.total} · vous : ${r.mine?.score ?? '?'}/${r.mine?.total ?? '?'}` : `Envoyé · vous : ${r.mine?.score ?? '?'}/${r.mine?.total ?? '?'} · en attente de réponse`) : `De ${r.from} : ${r.theirs?.score ?? '?'}/${r.theirs?.total ?? '?'} · vous : ${r.mine?.score ?? '?'}/${r.mine?.total ?? '?'}`;

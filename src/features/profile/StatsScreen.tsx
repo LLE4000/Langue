@@ -2,10 +2,9 @@
 import { usePage } from '@/app/Shell';
 import { useStore, streakDays } from '@/app/store';
 import { useProgress } from '@/app/hooks';
-import { tierLine } from '@/engine/progress';
 import { dayKey, todayKey } from '@/engine/util';
 import { T } from '@/i18n';
-import { Ico } from '@/components/ui';
+import { Empty, Ico } from '@/components/ui';
 
 export function StatsScreen() {
   const t = T();
@@ -22,19 +21,19 @@ export function StatsScreen() {
   return (
     <>
       <div className="h2">Les 14 derniers jours</div>
-      <div className="cal">{cells.map((c) => <div key={c.key} className={`cd ${c.ok ? 'ok' : c.some ? 'some' : ''} ${c.key === tk ? 'now' : ''}`} title={c.key}><small>{'DLMMJVS'[c.d.getDay()]}</small><b>{c.s ? c.s.minutes : c.d.getDate()}</b></div>)}</div>
-      <p className="foot-note">Minutes d’étude par jour · vert : objectif atteint ({goal} min) · safran : un peu d’activité.</p>
+      <div className="cal">{cells.map((c) => <div key={c.key} className={`cd ${c.ok ? 'ok' : c.some ? 'some' : ''} ${c.key === tk ? 'now' : ''}`} title={`${c.d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}${c.s?.minutes ? ` · ${c.s.minutes} min` : ''}`}><small>{'DLMMJVS'[c.d.getDay()]}</small><b>{c.d.getDate()}</b><em>{c.s?.minutes ? `${c.s.minutes}\u00a0min` : ''}</em></div>)}</div>
+      <p className="foot-note cal-leg"><span>Minutes d’étude par jour</span><span><i className="dot ok" aria-hidden="true" /> objectif atteint ({goal}&nbsp;min)</span><span><i className="dot some" aria-hidden="true" /> un peu d’activité</span></p>
       <div className="prog mt-4">
-        <div><div className="k"><span>Série</span><b>{streakDays(days)} j</b></div></div>
-        <div><div className="k"><span>Temps total</span><b>{tot.minutes} min</b></div></div>
-        <div><div className="k"><span>Réponses</span><b>{tot.answers}</b></div><div className="xs mut">{tot.answers ? Math.round((tot.correct / tot.answers) * 100) : 0} % justes</div></div>
-        <div><div className="k"><span>Palier</span><b>{p.tier}</b></div><div className="xs mut">{tierLine(p)}</div></div>
+        <div className="wide"><div className="k"><span>Palier</span><b>{p.tier}</b></div><div className="xs mut">{p.next && p.next !== 'B2' ? `${Math.round(p.toNext * 100)}\u00a0% du chemin vers ${p.next}` : 'palier atteint'}</div></div>
+        <div><div className="k"><span>Série</span><b>{streakDays(days)}&nbsp;j</b></div></div>
+        <div><div className="k"><span>Temps total</span><b>{tot.minutes}&nbsp;min</b></div></div>
+        <div><div className="k"><span>Réponses</span><b>{tot.answers}</b></div><div className="xs mut">{tot.answers ? Math.round((tot.correct / tot.answers) * 100) : 0}&nbsp;% justes</div></div>
         <div><div className="k"><span>Leçons validées</span><b>{p.counts.lessonsDone}</b></div></div>
         <div><div className="k"><span>Mots acquis</span><b>{p.counts.wordsAcquired}</b></div></div>
         <div><div className="k"><span>XP</span><b>{xp}</b></div></div>
       </div>
       <div className="h2">Historique</div>
-      {!history.length ? <div className="empty">Vos séances apparaîtront ici.</div> : <div className="list">{history.slice(0, 60).map((h, i) => <div key={i} className="row"><Ico name={icon[h.kind] ?? 'check'} /><span className="mid"><span className="t">{h.label}</span><span className="s">{new Date(h.t).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span></span><span className="end b">{h.total ? `${h.score}/${h.total}` : '✓'}</span></div>)}</div>}
+      {!history.length ? <Empty icon="clock">Vos séances apparaîtront ici.</Empty> : <div className="list">{history.slice(0, 60).map((h, i) => <div key={i} className="row"><Ico name={icon[h.kind] ?? 'check'} /><span className="mid"><span className="t">{h.label}</span><span className="s">{new Date(h.t).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span></span><span className="end b">{h.total ? `${h.score}/${h.total}` : '✓'}</span></div>)}</div>}
     </>
   );
 }

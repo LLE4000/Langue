@@ -25,8 +25,8 @@ export interface Ctx {
   micAvailable: boolean;
 }
 
-/** Une proposition de réponse. */
-export interface Choice { thai?: string; rom?: string; text?: string; tone?: string; ok: boolean }
+/** Une proposition de réponse. `sub` : précision en petit sous la réponse (ex. « longue » pour une voyelle). */
+export interface Choice { thai?: string; rom?: string; text?: string; tone?: string; sub?: string; ok: boolean }
 
 export interface Question {
   id: string; // unique dans la séance
@@ -73,13 +73,21 @@ function distractorPool(it: LearnItem, ctx: Ctx, extra: readonly string[] = []):
   let pool: LearnItem[] = [];
   if (it.kind === 'cons') pool = CONS_ITEMS.filter((c) => same(c) && (knownIds.has(c.id) || ctx.known.has(c.id) || extra.includes(c.id)));
   else if (it.kind === 'vow') pool = VOWEL_ITEMS.filter((v) => same(v) && v.ref.example && (knownIds.has(v.id) || ctx.known.has(v.id) || extra.includes(v.id)));
-  else if (it.kind === 'num') pool = NUM_ITEMS.filter(same);
+  else if (it.kind === 'num') {
+    // D'abord les nombres de la leçon, puis ceux déjà vus, sinon les valeurs les plus proches (jamais 2500 dans « 0 à 10 »)
+    const val = (x: LearnItem) => (x.kind === 'num' ? x.value : 0);
+    const inLesson = NUM_ITEMS.filter((x) => same(x) && extra.includes(x.id));
+    const seen = NUM_ITEMS.filter((x) => same(x) && knownIds.has(x.id));
+    pool = inLesson.length >= 3 ? inLesson : seen.length >= 3 ? seen
+      : NUM_ITEMS.filter(same).sort((a, b) => Math.abs(val(a) - it.value) - Math.abs(val(b) - it.value)).slice(0, 6);
+  }
   else if (it.kind === 'clf') pool = CLF_ITEMS.filter(same);
-  else if (it.kind === 'tone') pool = TONE_ITEMS.filter(same);
+  // Mots-tons : seulement ceux déjà rencontrés ou lisibles (pas de mot au hasard jamais vu)
+  else if (it.kind === 'tone') pool = TONE_ITEMS.filter((x) => same(x) && (knownIds.has(x.id) || isReadable(x.thai, ctx.known)));
   else pool = WORD_ITEMS.filter((w) => same(w) && (knownIds.has(w.id) || extra.includes(w.id)) && !/…/.test(w.thai));
   if (pool.length < 3) {
     // Dernier recours (très rare) : lettres de l'ordre d'apprentissage les plus proches, voyelles enseignées, mots courants
-    const fallback = it.kind === 'cons' ? [...th.CONSONANT_ORDER].map((c) => ITEMS['c:' + c]).filter((c): c is LearnItem => !!c && c.kind === 'cons' && !c.ref.obsolete) : it.kind === 'vow' ? VOWEL_ITEMS.filter((v) => v.ref.example) : it.kind === 'word' ? WORD_ITEMS.filter((w) => !w.sub && !/…/.test(w.thai)) : pool;
+    const fallback = it.kind === 'cons' ? [...th.CONSONANT_ORDER].map((c) => ITEMS['c:' + c]).filter((c): c is LearnItem => !!c && c.kind === 'cons' && !c.ref.obsolete) : it.kind === 'vow' ? VOWEL_ITEMS.filter((v) => v.ref.example) : it.kind === 'word' ? WORD_ITEMS.filter((w) => !w.sub && !/…/.test(w.thai)) : it.kind === 'tone' ? TONE_ITEMS : pool;
     pool = uniq([...pool, ...fallback.filter(same)]);
   }
   return pool;
@@ -117,9 +125,11 @@ export function qRead(it: LearnItem, answer: 'rom' | 'meaning' | 'sound', ctx: C
       sayAfter: it.say, reveal: { thai: it.thai + ' ' + it.ref.nameWord, rom: it.rom, text: `classe ${it.ref.cls === 'M' ? 'moyenne' : it.ref.cls === 'H' ? 'haute' : 'basse'} · ${meaningOf(it)}` } };
   }
   if (it.kind === 'vow') {
-    const lab = (v: LearnItem) => v.kind === 'vow' ? `${v.rom} · ${v.ref.length === 'S' ? 'courte' : 'longue'}` : v.rom;
+    // La longueur (courte / longue) se lit en petit sous la transcription : distingue les paires sans alourdir chaque choix
+    const len = (v: LearnItem) => v.kind === 'vow' ? (v.ref.length === 'S' ? 'courte' : 'longue') : undefined;
+    const lab = (v: LearnItem) => `${v.rom} · ${len(v) ?? ''}`;
     return { id: qid(), itemId: it.id, kind: 'read', prompt: L('Quelle est cette voyelle ?'), stage: { thai: it.thai, big: true },
-      choices: mk({ rom: lab(it), ok: true }, withDistractors(pool, it, 3, lab).map((x) => ({ rom: lab(x), ok: false }))),
+      choices: mk({ rom: it.rom, sub: len(it), ok: true }, withDistractors(pool, it, 3, lab).map((x) => ({ rom: x.rom, sub: len(x), ok: false }))),
       sayAfter: it.ref.example?.thai ?? it.say, reveal: it.ref.example ? { thai: it.ref.example.thai, rom: it.ref.example.rom, text: it.ref.example.meaning.fr } : undefined };
   }
   if (answer === 'rom') {
@@ -128,23 +138,25 @@ export function qRead(it: LearnItem, answer: 'rom' | 'meaning' | 'sound', ctx: C
   }
   return { id: qid(), itemId: it.id, kind: 'meaning', prompt: L('Que veut dire ce mot ?'), stage: { thai: it.thai, big: true, showRom: false },
     choices: mk({ text: meaningOf(it), ok: true }, withDistractors(sizeSimilar(it, pool), it, 3, (x) => meaningOf(x)).map((x) => ({ text: meaningOf(x), ok: false }))), sayAfter: it.say,
-    reveal: { rom: it.rom }, meaningHint: ctx.knownOrally ? L('Vous connaissez déjà ce mot à l’oral : ici, on apprend à le lire.') : undefined };
+    reveal: { rom: it.rom, text: meaningOf(it) }, meaningHint: ctx.knownOrally ? L('Vous connaissez déjà ce mot à l’oral : ici, on apprend à le lire.') : undefined };
 }
 
 export function qMeaning(it: LearnItem, direction: 'thaiToMeaning' | 'meaningToThai', ctx: Ctx, extra: readonly string[] = []): Question {
   const pool = sizeSimilar(it, distractorPool(it, ctx, extra));
+  // « Comment dit-on… » : des phrases du même thème, pour que les distracteurs ne se trahissent pas d'eux-mêmes
+  const themed = it.kind === 'word' ? pool.filter((x) => x.kind === 'word' && x.ref.themes.some((t) => it.ref.themes.includes(t))) : [];
   if (direction === 'thaiToMeaning') {
     return { id: qid(), itemId: it.id, kind: 'meaning', prompt: L('Que veut dire…'), stage: { thai: it.thai, rom: it.rom, big: true, showRom: true }, say: it.say,
       choices: mk({ text: meaningOf(it), ok: true }, withDistractors(pool, it, 3, meaningOf).map((x) => ({ text: meaningOf(x), ok: false }))) };
   }
   return { id: qid(), itemId: it.id, kind: 'toThai', prompt: L('Comment dit-on…'), stage: { text: meaningOf(it) },
-    choices: mk({ thai: it.thai, rom: it.rom, ok: true }, withDistractors(pool, it, 3, (x) => x.thai).map((x) => ({ thai: x.thai, rom: x.rom, ok: false }))), sayAfter: it.say, reveal: { thai: it.thai, rom: it.rom } };
+    choices: mk({ thai: it.thai, rom: it.rom, ok: true }, withDistractors(themed.length >= 3 ? themed : pool, it, 3, (x) => x.thai).map((x) => ({ thai: x.thai, rom: x.rom, ok: false }))), sayAfter: it.say, reveal: { thai: it.thai, rom: it.rom } };
 }
 
 export function qDictation(it: LearnItem, ctx: Ctx, extra: readonly string[] = []): Question {
   const pool = sizeSimilar(it, distractorPool(it, ctx, extra).filter((x) => x.kind !== 'cons' && x.kind !== 'vow' && isReadable(x.thai, ctx.known)));
   return { id: qid(), itemId: it.id, kind: 'dictation', prompt: L('Quel mot entendez-vous ?'), stage: { ear: true }, say: it.say,
-    choices: mk({ thai: it.thai, ok: true }, withDistractors(pool, it, 3, (x) => x.thai).map((x) => ({ thai: x.thai, ok: false }))), reveal: { rom: it.rom, text: meaningOf(it) } };
+    choices: mk({ thai: it.thai, ok: true }, withDistractors(pool, it, 3, (x) => x.thai).map((x) => ({ thai: x.thai, ok: false }))), reveal: { thai: it.thai, rom: it.rom, text: meaningOf(it) } };
 }
 
 /** Épeler : assembler le mot à partir de ses signes (dans l'ordre d'écriture) + quelques intrus. */
@@ -161,8 +173,10 @@ export function qSpell(it: LearnItem, ctx: Ctx): Question | null {
 
 export function qSyllable(s: { thai: string; rom: string }, all: { thai: string; rom: string }[]): Question {
   const wrong = withDistractors(all.filter((x) => x.rom !== s.rom), s, 3, (x) => x.rom);
+  const y = parseSyl(s.rom);
   return { id: qid(), kind: 'syllable', prompt: L('Comment se lit cette syllabe ?'), stage: { thai: s.thai, big: true },
-    choices: mk({ rom: s.rom, ok: true }, wrong.map((x) => ({ rom: x.rom, ok: false }))), sayAfter: s.thai };
+    choices: mk({ rom: s.rom, ok: true }, wrong.map((x) => ({ rom: x.rom, ok: false }))), sayAfter: s.thai,
+    reveal: y ? { rom: s.rom, text: 'ton ' + toneNameFr(y.tone) } : { rom: s.rom } };
 }
 
 const toneChoices = (right: string): Choice[] => TONES.map((t) => ({ tone: t.id, text: toneNameFr(t.id), ok: t.id === right }));

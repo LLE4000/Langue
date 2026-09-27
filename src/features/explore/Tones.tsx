@@ -23,11 +23,11 @@ function Menu() {
   usePage(t.explore.tones, { back: '/explore' });
   return (
     <>
-      <p className="lead">Chaque syllabe thaïe porte un des cinq tons. L’objectif : regarder un mot écrit et savoir quel ton prononcer.</p>
+      <p className="lead">Chaque syllabe thaïe porte un des cinq tons. L’objectif&nbsp;: regarder un mot écrit et savoir quel ton prononcer.</p>
       <div className="h2">Écouter</div>
-      <div className="list"><Row ico="music" t="Les cinq tons" s="Courbe, exemple en grand, écoute" to="five" /><Row ico="users" t="Même syllabe, tons différents" s={`${th.TONE_SETS.length} séries : มา · ม้า · หมา…`} to="sets" /></div>
+      <div className="list"><Row ico="music" t="Les cinq tons" s="Courbe, exemple en grand, écoute" to="five" /><Row ico="users" t="Même syllabe, tons différents" s={`${th.TONE_SETS.length} séries\u00a0: มา · ม้า · หมา…`} to="sets" /></div>
       <div className="h2">Comprendre</div>
-      <div className="list"><Row ico="bulb" t="Syllabe vivante ou morte ?" s="La notion clé avant les règles" to="livedead" /><Row ico="compass" t="La méthode en 4 questions" s="Classe, marque, fin de syllabe, durée" to="method" /><Row ico="clipboard" t="Le tableau des règles" s="Tout sur un écran, avec exemples" to="table" /></div>
+      <div className="list"><Row ico="bulb" t="Syllabe vivante ou morte&#8239;?" s="La notion clé avant les règles" to="livedead" /><Row ico="compass" t="La méthode en 4 questions" s="Classe, marque, fin de syllabe, durée" to="method" /><Row ico="clipboard" t="Le tableau des règles" s="Tout sur un écran, avec exemples" to="table" /></div>
       <div className="h2">S’entraîner</div>
       <div className="list"><Link className="row" to="/train/tones"><Ico name="target" /><span className="mid"><span className="t">S’entraîner aux tons</span><span className="s">Lire le ton, l’entendre, paires, vivante ou morte</span></span><span className="end"><span className="chev">›</span></span></Link></div>
     </>
@@ -43,7 +43,7 @@ function Sets() {
   usePage('Même syllabe, tons différents', { back: '/explore/tones' });
   return (
     <>
-      <p className="lead">Seul le ton change, et le sens n’a plus rien à voir. Touchez une série, puis chaque mot : il s’affiche en grand pendant que vous l’écoutez.</p>
+      <p className="lead">Seul le ton change, et le sens n’a plus rien à voir. Touchez une série, puis chaque mot&nbsp;: il s’affiche en grand pendant que vous l’écoutez.</p>
       <div className="list">{th.TONE_SETS.map((s, i) => { const ws = s.words.map((w) => TONE_BY_THAI[w]).filter(Boolean); return <Link key={i} className="row" to={`set/${i}`}><span className="mid"><span className="th" lang="th">{ws.map((w) => w.thai).join('  ·  ')}</span><span className="s">{ws.map((w) => <span key={w.id} className="rom">{w.rom} · </span>)}</span></span><span className="end"><span className="chev">›</span></span></Link>; })}</div>
     </>
   );
@@ -85,12 +85,12 @@ function SetPlayer() {
 }
 
 function LiveDead() {
-  usePage('Vivante ou morte ?', { back: '/explore/tones' });
+  usePage('Vivante ou morte\u202f?', { back: '/explore/tones' });
   return (
     <>
       <p className="lead">Avant de chercher le ton, on regarde comment la syllabe se termine.</p>
       <TheoryBlockView b={{ kind: 'toneRule', ruleKey: 'rule:live-dead' }} />
-      <div className="note info">Attention au son final, pas à la lettre : <Thai text="ส จ ช ด ต" />… en fin de syllabe se prononcent tous <b>t</b>, donc syllabe morte. <Thai text="ร ล ญ" /> se prononcent <b>n</b>, donc vivante. Les voyelles <Thai text="อำ ไอ ใอ เอา" /> comptent comme vivantes : elles finissent par m, i, o.</div>
+      <div className="note info">Attention au son final, pas à la lettre&nbsp;: <Thai text="ส จ ช ด ต" />… en fin de syllabe se prononcent tous <b>t</b>, donc syllabe morte. <Thai text="ร ล ญ" /> se prononcent <b>n</b>, donc vivante. Les voyelles <Thai text="อำ ไอ ใอ เอา" /> comptent comme vivantes&nbsp;: elles finissent par m, i, o.</div>
       <Link className="btn" to="/train/tones">Faire l’exercice</Link>
     </>
   );
@@ -100,10 +100,10 @@ function Method() {
   usePage('La méthode en 4 questions', { back: '/explore/tones' });
   return (
     <>
-      <div className="step"><span className="num">1</span><div><h3>Quelle est la classe de la consonne initiale ?</h3><p><b className="c-M">Moyenne</b> <Thai text="ก จ ด ต บ ป อ ฎ ฏ" /> · <b className="c-H">haute</b> <Thai text="ข ฉ ถ ผ ฝ ส ศ ษ ห ฐ ฃ" /> · <b className="c-L">basse</b> : toutes les autres.</p><p>Si un <Thai text="ห" /> muet précède <Thai text="ง ญ น ม ย ร ล ว" />, la syllabe suit la classe <b>haute</b> : <Thai text="หมา" /> <Rom text="mǎa" />.</p></div></div>
-      <div className="step"><span className="num">2</span><div><h3>Y a-t-il une marque de ton ?</h3><p>Si oui, elle décide avec la classe, et c’est fini.</p><p><Thai text="◌่" /> : bas — mais <b>descendant</b> en classe basse.<br /><Thai text="◌้" /> : descendant — mais <b>haut</b> en classe basse.<br /><Thai text="◌๊" /> : haut · <Thai text="◌๋" /> : montant (classe moyenne uniquement).</p></div></div>
-      <div className="step"><span className="num">3</span><div><h3>Sans marque : vivante ou morte ?</h3><p><b>Vivante</b> : ton moyen — sauf classe haute : <b>montant</b>.</p><p><b>Morte</b> : ton bas pour les classes moyenne et haute. Pour la classe basse, passer à la question 4.</p></div></div>
-      <div className="step"><span className="num">4</span><div><h3>Classe basse + morte : voyelle courte ou longue ?</h3><p>Courte : ton <b>haut</b> — <Thai text="รัก" /> <Rom text="rák" />.<br />Longue : ton <b>descendant</b> — <Thai text="มาก" /> <Rom text="mâak" />.</p></div></div>
+      <div className="step"><span className="num">1</span><div><h3>Quelle est la classe de la consonne initiale&#8239;?</h3><p><b className="c-M">Moyenne</b> <Thai text="ก จ ด ต บ ป อ ฎ ฏ" /> · <b className="c-H">haute</b> <Thai text="ข ฉ ถ ผ ฝ ส ศ ษ ห ฐ ฃ" /> · <b className="c-L">basse</b>&nbsp;: toutes les autres.</p><p>Si un <Thai text="ห" /> muet précède <Thai text="ง ญ น ม ย ร ล ว" />, la syllabe suit la classe <b>haute</b>&nbsp;: <Thai text="หมา" /> <Rom text="mǎa" />.</p></div></div>
+      <div className="step"><span className="num">2</span><div><h3>Y a-t-il une marque de ton&#8239;?</h3><p>Si oui, elle décide avec la classe, et c’est fini.</p><p><Thai text="◌่" />&nbsp;: bas — mais <b>descendant</b> en classe basse.<br /><Thai text="◌้" />&nbsp;: descendant — mais <b>haut</b> en classe basse.<br /><Thai text="◌๊" />&nbsp;: haut · <Thai text="◌๋" />&nbsp;: montant (classe moyenne uniquement).</p></div></div>
+      <div className="step"><span className="num">3</span><div><h3>Sans marque&nbsp;: vivante ou morte&#8239;?</h3><p><b>Vivante</b>&nbsp;: ton moyen — sauf classe haute&nbsp;: <b>montant</b>.</p><p><b>Morte</b>&nbsp;: ton bas pour les classes moyenne et haute. Pour la classe basse, passer à la question 4.</p></div></div>
+      <div className="step"><span className="num">4</span><div><h3>Classe basse + morte&nbsp;: voyelle courte ou longue&#8239;?</h3><p>Courte&nbsp;: ton <b>haut</b> — <Thai text="รัก" /> <Rom text="rák" />.<br />Longue&nbsp;: ton <b>descendant</b> — <Thai text="มาก" /> <Rom text="mâak" />.</p></div></div>
       <div className="btns"><Link className="btn" to="/train/tones">M’entraîner</Link><Link className="btn ghost" to="/explore/tones/table">Voir le tableau</Link></div>
     </>
   );
@@ -123,7 +123,7 @@ function Table() {
       <div className="tbl"><table><thead>{head}</thead><tbody>{([['Syllabe vivante', true, true], ['Morte, voyelle courte', false, false], ['Morte, voyelle longue', false, true]] as const).map(([lab, live, long]) => <tr key={lab}><th>{lab}</th>{(['M', 'H', 'L'] as ConsonantClass[]).map((c) => cell(c, live, long, 0))}</tr>)}</tbody></table></div>
       <div className="h2">Avec une marque de ton</div>
       <div className="tbl"><table><thead>{head}</thead><tbody>{TONE_MARKS.map((mk) => <tr key={mk.n}><th><span className="th th-m">◌{mk.char}</span><br /><span className="xs th" lang="th">{mk.name}</span></th>{(['M', 'H', 'L'] as ConsonantClass[]).map((c) => cell(c, true, true, mk.n))}</tr>)}</tbody></table></div>
-      <div className="note">À retenir : sans marque, tout est <b>moyen</b> ou <b>bas</b>, sauf la classe haute vivante (montant) et la classe basse morte (haut si courte, descendant si longue). Les marques <Thai text="◌๊ ◌๋" /> ne s’emploient qu’avec la classe moyenne.</div>
+      <div className="note">À retenir&nbsp;: sans marque, tout est <b>moyen</b> ou <b>bas</b>, sauf la classe haute vivante (montant) et la classe basse morte (haut si courte, descendant si longue). Les marques <Thai text="◌๊ ◌๋" /> ne s’emploient qu’avec la classe moyenne.</div>
       {ex && <Sheet open onClose={() => setEx(null)} title={`Classe ${classNameFr(ex.cls)} → ton ${toneNameFr(toneRule(ex.cls, ex.live, ex.long, ex.mark) ?? 'M')}`}>
         {list.length ? <div className="list">{list.map((w, i) => <button key={w.id} className="row" onClick={() => setDetail(i)}><span className="mid"><Thai text={w.thai} /><span className="s"><Rom text={w.rom} /> · {L(w.meaning)}</span></span><span className="end"><span className="chev">›</span></span></button>)}</div> : <div className="empty">Pas de mot d’exemple dans la base pour cette case.</div>}
         {detail != null && <ItemDetailSheet ids={list.map((w) => w.id)} index={detail} onClose={() => setDetail(null)} onNav={setDetail} />}

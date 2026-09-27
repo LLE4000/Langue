@@ -35,7 +35,7 @@ export function LessonRow({ lesson, state, end, extra, rowRef, current }: { less
     <Link ref={rowRef} to={`/lesson/${lesson.id}`} className={`row lrow ${kindClass(c)} ${state ?? ''}`} aria-current={current ? 'step' : undefined}>
       <span className="lcol"><LessonBadge card={c} state={state} /><span className="min">{lesson.minutes} min</span></span>
       <span className="mid">
-        <span className="t"><CardTitle card={c} /></span>
+        <span className="t"><span className="tt">{c.title}</span>{c.part && <span className="part">{c.part}</span>}</span>
         <span className="s">{c.sub}</span>
         <span className="meta">{current && <span className="now">Conseillée</span>}<span className="kl">{c.label}</span><span>{c.count}</span>{extra && <span>{extra}</span>}</span>
       </span>

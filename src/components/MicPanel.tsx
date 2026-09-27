@@ -20,7 +20,7 @@ import { L } from '@/i18n';
 import { Icon, Thai, Rom, useTokens, AudioPair, Sheet } from './ui';
 import { useWbw } from './WordByWord';
 
-const VERDICT_TEXT: Record<PronResult['verdict'], string> = { ok: 'Compris !', near: 'Presque compris', ko: 'Pas compris' };
+const VERDICT_TEXT: Record<PronResult['verdict'], string> = { ok: 'Compris\u202f!', near: 'Presque compris', ko: 'Pas compris' };
 const TONE_ONLY_MS = 1700;
 
 /** Courbe du ton : gabarit attendu (couleur du ton) et courbe de la voix (pointillés). */
@@ -100,7 +100,7 @@ export function MicPanel({ item, onClose, inline, onScore }: { item: LearnItem; 
         } else {
           setListening(false);
           if (recorder.active) recorder.stop();
-          if (!got) setMsg('Rien entendu : touchez le micro, puis dites le mot.');
+          if (!got) setMsg('Rien entendu\u00a0: touchez le micro, puis dites le mot.');
         }
       });
     } catch { setListening(false); if (recorder.active) recorder.stop(); setMsg('La reconnaissance vocale n’a pas pu démarrer.'); }

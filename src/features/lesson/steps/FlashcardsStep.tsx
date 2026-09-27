@@ -61,11 +61,13 @@ export function FlashcardsStep({ step, onDone }: { step: RuntimeStep & { type: '
   const swipeCls = dx > SWIPE_PX / 2 ? 'sw-right' : dx < -SWIPE_PX / 2 ? 'sw-left' : '';
   return (
     <>
-      <p className="qprompt">{step.note ? step.note.fr : shown ? t.lesson.howWell : 'Vous vous en souvenez ?'}</p>
+      {/* Au verso, toujours « Comment ça s’est passé ? » ; la consigne de lecture (note de l'activité) reste au recto, en sous-titre */}
+      <p className="qprompt">{shown ? t.lesson.howWell : step.note ? 'Lisez ce mot à voix haute' : 'Vous vous en souvenez ?'}</p>
+      {step.note && !shown && <p className="qsub">{step.note.fr}</p>}
       {step.knownOrally && !shown && <div className="note info sm mt-0">Vous connaissez ce mot à l’oral : essayez de le LIRE avant de retourner la carte.</div>}
       <div className={`stage fcard ${shown ? 'compact' : ''} ${swipeCls}`} onClick={() => !shown && setShown(true)} role={shown ? undefined : 'button'} style={{ cursor: shown ? 'grab' : 'pointer', transform: dx ? `translateX(${dx}px) rotate(${dx / 30}deg)` : undefined, transition: dx ? 'none' : 'transform .2s' }}
         onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={() => { drag.current = null; setDx(0); }}>
-        {!useStore.getState().srs[it.id] && <span className="tag gold center">{t.common.new}</span>}
+        {!useStore.getState().srs[it.id] && <span className="tag gold end">{t.common.new}</span>}
         {shown && <><span className="sw-hint left">✗ Encore</span><span className="sw-hint right">✓ Bien</span></>}
         <ItemFront it={it} hideClass={!shown} modern={shown} oral={oral && !shown} />
         {!shown && <span className="hint">Touchez ou faites glisser la carte pour la retourner</span>}
@@ -73,7 +75,7 @@ export function FlashcardsStep({ step, onDone }: { step: RuntimeStep & { type: '
       <div className="audio"><AudioPair text={it.say} big /><button className="ib big" onClick={() => setMic(true)} aria-label="Vérifier ma prononciation" title="Vérifier ma prononciation"><Icon name="mic" /></button></div>
       {shown ? (
         <>
-          <div className="ans"><ItemBack it={it} /></div>
+          <div className="ans"><ItemBack it={it} noThai /></div>
           <div className="sp" />
           <StepFooter meta={<><span>Glissez : à droite « Bien », à gauche « Encore »</span>{counter}</>}>
             <div className="rate mt-0">
@@ -84,7 +86,7 @@ export function FlashcardsStep({ step, onDone }: { step: RuntimeStep & { type: '
       ) : (
         <>
           <div className="sp" />
-          <StepFooter meta={<><span>Lisez, écoutez, essayez de vous rappeler</span>{counter}</>}>
+          <StepFooter meta={<><span>{step.note ? 'Dites-le, puis retournez la carte' : 'Lisez, écoutez, essayez de vous rappeler'}</span>{counter}</>}>
             <ContinueButton onClick={() => setShown(true)} label={t.common.reveal} icon={false} />
           </StepFooter>
         </>

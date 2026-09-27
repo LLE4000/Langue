@@ -89,7 +89,7 @@ export function Writing() {
   return (
     <>
       <Segmented value={set} options={[{ v: 'cons', label: 'Consonnes' }, { v: 'vow', label: 'Voyelles' }, { v: 'dig', label: 'Chiffres' }]} onChange={(v) => { setSet(v); setI(0); reset(); }} />
-      <div className="strip" style={{ marginTop: 8 }}>{chars.map((x, k) => <button key={x + k} className={k === i ? 'on' : ''} onClick={() => pick(k)} lang="th">{x}</button>)}</div>
+      <div className="strip mt-2">{chars.map((x, k) => <button key={x + k} className={k === i ? 'on' : ''} onClick={() => pick(k)} lang="th">{x}</button>)}</div>
       <div className="wpad">
         <canvas ref={bg} />
         <canvas ref={fg} className="fg" aria-label="Zone de dessin"
@@ -97,7 +97,12 @@ export function Writing() {
           onPointerMove={(e) => { if (!cur.current) return; e.preventDefault(); cur.current.push(pt(e)); drawFg(); }}
           onPointerUp={() => { cur.current = null; }} onPointerCancel={() => { cur.current = null; }} onPointerLeave={() => { cur.current = null; }} />
       </div>
-      <div className="btns mt-3"><button className="ib" onClick={say} aria-label="Écouter"><Icon name="speaker" /></button><button className="btn ghost sm" aria-pressed={model} onClick={() => setModel(!model)}><Icon name="eye" size={16} /> Filigrane</button><button className="btn ghost sm" aria-pressed={answer} onClick={() => setAnswer(!answer)}><Icon name="bulb" size={16} /> Superposer</button><button className="btn ghost sm" onClick={reset}><Icon name="rotate" size={16} /> Effacer</button></div>
+      <div className="audio acts wtools mt-3">
+        <span className="act"><button className="ib" onClick={say} aria-label="Écouter"><Icon name="speaker" /></button><small aria-hidden="true">Écouter</small></span>
+        <span className="act"><button className="ib" aria-pressed={model} onClick={() => setModel(!model)} aria-label="Filigrane"><Icon name="eye" /></button><small aria-hidden="true">Filigrane</small></span>
+        <span className="act"><button className="ib" aria-pressed={answer} onClick={() => setAnswer(!answer)} aria-label="Superposer le modèle"><Icon name="bulb" /></button><small aria-hidden="true">Superposer</small></span>
+        <span className="act"><button className="ib" onClick={reset} aria-label="Effacer"><Icon name="rotate" /></button><small aria-hidden="true">Effacer</small></span>
+      </div>
       {set === 'cons' && CONS_BY_CHAR[c] && <p className="sm mut ctr mt-2"><Thai text={c + ' ' + CONS_BY_CHAR[c].nameWord} className="th-s ink" /> <Rom text={CONS_BY_CHAR[c].nameRom} /></p>}
       <div className="btns mt-2"><button className="btn soft sm auto" onClick={() => pick((i - 1 + chars.length) % chars.length)} aria-label="Précédent"><Icon name="back" size={18} /></button><button className="btn sm" onClick={check}>Comparer au modèle</button><button className="btn soft sm auto" onClick={() => pick((i + 1) % chars.length)} aria-label="Suivant"><Icon name="next" size={18} /></button></div>
       {res && <div className={`note ${res.covered > 0.6 && res.outside < 0.4 ? 'info' : 'plain'}`}>{res.covered > 0.6 && res.outside < 0.4 ? <span className="verdict ok"><Icon name="check" />Bien tracé</span> : <b>À reprendre</b>} · modèle recouvert à {Math.round(res.covered * 100)} %, traits hors modèle {Math.round(res.outside * 100)} %<br /><span className="xs mut">Mesure géométrique indicative. L’ordre et le sens des traits ne sont pas vérifiés.</span></div>}

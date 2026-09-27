@@ -27,7 +27,10 @@
   --gold: var(--acc-deep); --gold-soft: var(--acc-soft);
   --t-mid: #6b6a72; --t-low: #3b55a6; --t-fall: #c0392b; --t-high: #a5620c; --t-rise: #1b6e6a;
   --c-M: var(--jade); --c-M-soft: var(--jade-soft); --c-H: var(--red); --c-H-soft: var(--red-soft); --c-L: var(--indigo); --c-L-soft: var(--indigo-soft);
-  --w0: #1b6e6a; --w1: #c0392b; --w2: #3b55a6; --w3: #a5620c; --w4: #8a3f9c; --w5: #c8601a;
+  /* Mot à mot : aucune teinte de verdict (--w1 était le rouge « faux ») */
+  --w0: #1b6e6a; --w1: #a8327a; --w2: #3b55a6; --w3: #a5620c; --w4: #8a3f9c; --w5: #c8601a;
+  /* Choix écartés après une réponse ; segment sélectionné (relief au-dessus du rail) */
+  --dim-op: .45; --seg-on: var(--surface);
   /* Carte « prochaine leçon » : émeraude et or (les tuiles des temples, les toits dorés) */
   --hero-1: #0e4a47; --hero-2: #12605b; --hero-3: #1d7a6a; --hero-ink: #f3fbf8; --hero-acc: #f7c35f; --hero-line: transparent;
   /* Types de leçon (cartes) : une teinte par type ; --kd-* reste foncé pour les surfaces claires (carte « prochaine leçon ») */
@@ -42,7 +45,8 @@
   --f-display: "Instrument Serif", "Iowan Old Style", Georgia, "Times New Roman", serif;
   --f-th: "Sarabun", "Noto Sans Thai Looped", "Noto Serif Thai", "Leelawadee UI", Thonburi, sans-serif;
   --f-thm: "Kanit", "Prompt", "IBM Plex Sans Thai", sans-serif;
-  --f-rom: "Plus Jakarta Sans Variable", "Noto Sans", Roboto, "Segoe UI", Arial, sans-serif;
+  /* Phonétique : Plus Jakarta n'a pas ʉ ɔ ɛ ; ces signes seuls passent à Andika (dessinée pour l'API) si elle est chargée, sinon au système */
+  --f-rom: "Plus Jakarta Sans Variable", "Andika", "Noto Sans", Roboto, "Segoe UI", Arial, sans-serif;
   --ths: 1.15;
   /* Espacements (grille de 4 px), rayons, ombres, mouvement */
   --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px; --s-7: 32px; --s-8: 40px;
@@ -61,7 +65,8 @@
   --ok: #5fd092; --ok-soft: #143224; --on-ok: #062012; --ko: #f2877a; --ko-soft: #3f1d19; --on-ko: #2a0b07;
   --red: #f2877a; --red-soft: #3f1d19; --indigo: #9db2f4; --indigo-soft: #1d2641; --plum: #d2a4ea; --plum-soft: #2e1f38; --orange: #f4a76a; --orange-soft: #3d2514;
   --t-mid: #9a98a3; --t-low: #9db2f4; --t-fall: #f2877a; --t-high: #f2a541; --t-rise: #5dc0b8;
-  --w0: #5dc0b8; --w1: #f2877a; --w2: #9db2f4; --w3: #f2a541; --w4: #d2a4ea; --w5: #f4a76a;
+  --w0: #5dc0b8; --w1: #ee90c6; --w2: #9db2f4; --w3: #f2a541; --w4: #d2a4ea; --w5: #f4a76a;
+  --dim-op: .62; --seg-on: #353b43;
   --hero-1: #0d3735; --hero-2: #104845; --hero-3: #175a52; --hero-line: rgba(255, 255, 255, .08);
   --k-letters: #f2ad5b; --k-vowels: #f28fae; --k-tones: #b8a3ff; --k-read: #deaf80; --k-vocab: #62d4aa; --k-dialog: #93b4ff; --k-num: #6fd2e8;
   --e1: 0 1px 0 rgba(255, 255, 255, .02), 0 10px 28px -18px rgba(0, 0, 0, .7); --e2: 0 20px 48px -20px rgba(0, 0, 0, .85);
@@ -73,7 +78,8 @@
   --ok: #5fd092; --ok-soft: #143224; --on-ok: #062012; --ko: #f2877a; --ko-soft: #3f1d19; --on-ko: #2a0b07;
   --red: #f2877a; --red-soft: #3f1d19; --indigo: #9db2f4; --indigo-soft: #1d2641; --plum: #d2a4ea; --plum-soft: #2e1f38; --orange: #f4a76a; --orange-soft: #3d2514;
   --t-mid: #9a98a3; --t-low: #9db2f4; --t-fall: #f2877a; --t-high: #f2a541; --t-rise: #5dc0b8;
-  --w0: #5dc0b8; --w1: #f2877a; --w2: #9db2f4; --w3: #f2a541; --w4: #d2a4ea; --w5: #f4a76a;
+  --w0: #5dc0b8; --w1: #ee90c6; --w2: #9db2f4; --w3: #f2a541; --w4: #d2a4ea; --w5: #f4a76a;
+  --dim-op: .62; --seg-on: #353b43;
   --hero-1: #0d3735; --hero-2: #104845; --hero-3: #175a52; --hero-line: rgba(255, 255, 255, .08);
   --k-letters: #f2ad5b; --k-vowels: #f28fae; --k-tones: #b8a3ff; --k-read: #deaf80; --k-vocab: #62d4aa; --k-dialog: #93b4ff; --k-num: #6fd2e8;
   --e1: 0 1px 0 rgba(255, 255, 255, .02), 0 10px 28px -18px rgba(0, 0, 0, .7); --e2: 0 20px 48px -20px rgba(0, 0, 0, .85);
@@ -137,7 +143,7 @@ svg.i { flex: none; }
 .thm { font-family: var(--f-thm); }
 .rom { font-family: var(--f-rom); color: var(--jade); font-size: .95em; letter-spacing: .005em; font-weight: 500; }
 .ipa { font-family: var(--f-rom); color: var(--ink2); font-size: .85em; }
-.mut { color: var(--ink2); } .sm { font-size: var(--fs-2); } .xs { font-size: var(--fs-1); } .ctr { text-align: center; } .b { font-weight: 650; }
+.mut { color: var(--ink2); } .sm { font-size: var(--fs-2); } .xs { font-size: var(--fs-1); } .ctr { text-align: center; text-wrap: balance; } .b { font-weight: 650; }
 .serif { font-family: var(--f-display); font-weight: 400; letter-spacing: -.01em; }
 .h2 { font-family: var(--f-ui); font-size: var(--fs-4); font-weight: 700; color: var(--ink); letter-spacing: -.015em; margin: var(--s-7) 2px var(--s-3); display: flex; align-items: baseline; gap: var(--s-2); line-height: 1.2; }
 .h2:first-child { margin-top: var(--s-2); } .h2 .sp { flex: 1; } .h2 a, .h2 button { font-size: var(--fs-2); font-weight: 650; color: var(--acc-deep); text-decoration: none; letter-spacing: 0; }
@@ -162,6 +168,8 @@ svg.i { flex: none; }
 .btn.sm { min-height: 44px; font-size: var(--fs-2); padding: var(--s-2) var(--s-3); line-height: 1.2; border-radius: var(--r-sm); }
 .btn.auto { width: auto; }
 .btn[disabled] { opacity: .4; pointer-events: none; }
+/* Bouton plein désactivé : une surface neutre lisible (et non un safran délavé, brun en sombre) */
+.btn:not(.ghost):not(.quiet)[disabled] { opacity: 1; background: var(--surface2); color: var(--ink3); box-shadow: inset 0 0 0 1px var(--line); filter: none; }
 .btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .btn .fill { position: absolute; inset: 0; z-index: -1; background: rgba(255, 255, 255, .22); transform-origin: left; transform: scaleX(0); animation: fill var(--d, 1s) linear forwards; }
 @keyframes fill { to { transform: scaleX(1); } }
@@ -181,7 +189,7 @@ svg.i { flex: none; }
 .chip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .seg { display: flex; background: var(--surface2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 3px; gap: 3px; }
 .seg button { flex: 1; min-height: 42px; border-radius: var(--r-sm); font-weight: 600; font-size: var(--fs-2); color: var(--ink2); padding: var(--s-1) 6px; text-align: center; transition: background var(--d-fast), color var(--d-fast); }
-.seg button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+.seg button.on { background: var(--seg-on); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .12), inset 0 0 0 1px var(--line); }
 
 /* ---------- Cartes et listes ---------- */
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--e1); padding: var(--s-4) var(--s-5); }
@@ -200,7 +208,7 @@ svg.i { flex: none; }
 .row .chev { color: var(--ink3); font-size: 22px; line-height: 1; }
 .row.muted { color: var(--ink2); } .row.muted .t { color: var(--ink2); font-weight: 600; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line2); display: inline-block; flex: none; }
-.dot.m1 { background: var(--acc); } .dot.m2 { background: var(--ok); } .dot.m3 { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+.dot.m0 { background: transparent; box-shadow: inset 0 0 0 1.5px var(--line2); } .dot.m1 { background: var(--acc); } .dot.m2 { background: var(--ok); } .dot.m3 { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
 .bar { height: 8px; background: color-mix(in srgb, var(--ink) 9%, transparent); border-radius: var(--r-pill); overflow: hidden; }
 .bar i { display: block; height: 100%; background: var(--acc); border-radius: var(--r-pill); transition: width .5s var(--ease); }
 .bar.thin { height: 6px; }
@@ -276,7 +284,7 @@ dl.kv { display: grid; grid-template-columns: auto 1fr; gap: var(--s-1) var(--s-
 @media (hover: hover) { .choice:hover { border-color: var(--ink3); } }
 .choice .k { display: none; position: absolute; top: 6px; left: var(--s-2); font-size: 10.5px; font-weight: 700; color: var(--ink2); opacity: .55; font-variant-numeric: tabular-nums; }
 .choice.ok { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); box-shadow: 0 2px 0 color-mix(in srgb, var(--ok) 35%, transparent); } .choice.ko { background: var(--ko-soft); border-color: var(--ko); color: var(--ko); animation: shake .3s; box-shadow: none; }
-.choice.dim { opacity: .45; box-shadow: none; } .choices.lock .choice { pointer-events: none; }
+.choice.dim { opacity: var(--dim-op); box-shadow: none; } .choices.lock .choice { pointer-events: none; }
 @keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 .qfoot { position: sticky; bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px)); z-index: 5; margin: var(--s-4) calc(-1 * var(--s-5)) calc(-1 * var(--s-4)); padding: var(--s-4) var(--s-5); background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -18px 30px -24px rgba(22, 21, 26, .35); animation: qf .2s ease-out; }
 .no-tabs .qfoot { bottom: 0; padding-bottom: calc(var(--s-4) + env(safe-area-inset-bottom, 0px)); }
@@ -800,7 +808,7 @@ pre.note { white-space: pre-wrap; font-family: inherit; }
 .ra-s.o0.voice::after { background: var(--acc); width: 56%; }
 .ra-s .dot { width: 18px; height: 18px; } .ra-s .dot.ok { background: var(--ok); } .ra-s .dot.near { background: var(--acc); } .ra-s .dot.ko { background: var(--ko); } .ra-s .dot.none { background: var(--line2); } .ra-s .dot.wait { background: transparent; box-shadow: inset 0 0 0 2px var(--line2); }
 .ra-under { min-height: 118px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 0 var(--s-5); }
-.ra-under .rom.lg { font-size: 26px; color: var(--jade); font-weight: 600; }
+.ra-under .rom.lg { display: block; font-size: 26px; color: var(--jade); font-weight: 600; }
 .ra-under .mean { font-size: var(--fs-2); color: var(--ink2); }
 .ra-cue { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-2); color: var(--ink3); font-weight: 600; min-height: 22px; }
 .ra-cue svg { stroke: currentColor; fill: none; stroke-width: 2; }

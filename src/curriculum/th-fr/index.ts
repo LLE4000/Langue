@@ -33,8 +33,9 @@ function attachReadings(script: LessonDef[]) {
   // Les textes restants (mots longs, tournures complexes) : leçons de lecture après l'alphabet
   const rest = th.READINGS.filter((r) => !placed.has(r.id)).sort((a, b) => a.level - b.level).map((r) => r.id);
   let prev = script[script.length - 1].id, n = 1;
+  const total = Math.ceil(rest.length / 2);
   for (let i = 0; i < rest.length; i += 2) {
-    const l = readingPracticeLesson(n++, prev, rest.slice(i, i + 2));
+    const l = readingPracticeLesson(n++, prev, rest.slice(i, i + 2), total);
     script.push(l);
     prev = l.id;
   }

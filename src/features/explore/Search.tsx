@@ -2,15 +2,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
-import { ITEMS, th, type LearnItem } from '@/content/th';
+import { ITEMS, WORD_BY_THAI, th, type LearnItem } from '@/content/th';
 import { asciiRom, stripAccents } from '@/engine/util';
 import { romToRTGS } from '@/engine/thai/transcription';
 import { isThaiText } from '@/engine/thai/script';
 import { useTokens } from '@/components/ui';
 import { resolveTokens } from '@/engine/tokens';
 import { L, T } from '@/i18n';
-import { Empty, Ico } from '@/components/ui';
+import { Empty, GlyphIcon, Icon, Ico } from '@/components/ui';
+import { themeIcon } from '@/content/th/themeIcons';
 import { ItemRow } from './Vocabulary';
+import { GrammarGlyph, GrammarRowTitle } from './Grammar';
 import { ItemDetailSheet } from '@/components/ItemCard';
 
 // Élément stable (hors composant) : un nouvel élément à chaque rendu relancerait usePage en boucle
@@ -30,7 +32,7 @@ export function Search() {
     const h = setTimeout(() => setParams(q ? { q } : {}, { replace: true }), 300);
     return () => clearTimeout(h);
   }, [q, urlQ, setParams]);
-  const index = useMemo(() => Object.values(ITEMS).filter((it) => it.kind !== 'rule' && it.kind !== 'grammar').map((it) => { const r = resolveTokens(it.rom, tok).replace(/\.\.\./g, ' '); return { it, fr: stripAccents(resolveTokens(L(it.meaning), tok) + ' ' + (it.kind === 'cons' ? L(it.ref.nameMeaning) : '')), th: resolveTokens(it.thai, tok), r1: asciiRom(r), r2: asciiRom(romToRTGS(r)) }; }), [tok]);
+  const index = useMemo(() => Object.values(ITEMS).filter((it) => it.kind !== 'rule' && it.kind !== 'grammar' && !(it.kind === 'tone' && WORD_BY_THAI[it.thai])).map((it) => { const r = resolveTokens(it.rom, tok).replace(/\.\.\./g, ' '); return { it, fr: stripAccents(resolveTokens(L(it.meaning), tok) + ' ' + (it.kind === 'cons' ? L(it.ref.nameMeaning) : '')), th: resolveTokens(it.thai, tok), r1: asciiRom(r), r2: asciiRom(romToRTGS(r)) }; }), [tok]);
   const res = useMemo(() => {
     const s = q.trim(); if (!s) return null;
     const n = stripAccents(s), qa = asciiRom(s), isTh = isThaiText(s);
@@ -51,11 +53,11 @@ export function Search() {
     <>
       <input className="field" type="search" placeholder="Français, thaï ou transcription" value={q} onChange={(e) => setQ(e.target.value)} autoFocus autoComplete="off" />
       {!q.trim() && <div className="chips" style={{ paddingTop: 10 }}>{['bonjour', 'combien', 'poulet', 'khopkhun', 'ไป'].map((x) => <button key={x} className="chip" onClick={() => setQ(x)}>{x}</button>)}</div>}
-      {nothing && <Empty icon="search">Aucun résultat pour « {q} ».</Empty>}
-      {res && res.themes.length > 0 && <><div className="h2">Thèmes</div><div className="list">{res.themes.map((c) => <Link key={c.id} className="row" to={`/explore/vocab/${c.id}`}><span className="ico">{c.icon}</span><span className="mid"><span className="t">{L(c.name)}</span><span className="s">{c.items.length} éléments</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></>}
-      {res && res.items.length > 0 && <><div className="h2">Mots et phrases <span className="sp" /><span className="sm mut">{res.items.length >= 40 ? '40 premiers résultats' : res.items.length}</span></div><div className="list">{res.items.map((it, i) => <ItemRow key={it.id} it={it} onClick={() => setDetail(i)} />)}</div></>}
-      {res && res.grammar.length > 0 && <><div className="h2">Grammaire</div><div className="list">{res.grammar.map((g) => <Link key={g.id} className="row" to={`/explore/grammar/${encodeURIComponent(g.id)}`}><span className="ico">{g.icon}</span><span className="mid"><span className="t">{L(g.title)}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></>}
-      {res && res.dialogs.length > 0 && <><div className="h2">Conversations</div><div className="list">{res.dialogs.map((d) => <Link key={d.id} className="row" to={`/explore/dialogs/${encodeURIComponent(d.id)}`}><span className="ico">{d.icon}</span><span className="mid"><span className="t">{L(d.title)}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></>}
+      {nothing && <Empty icon="search">Aucun résultat pour «&nbsp;{q}&nbsp;».</Empty>}
+      {res && res.themes.length > 0 && <><div className="h2">Thèmes</div><div className="list">{res.themes.map((c) => <Link key={c.id} className="row" to={`/explore/vocab/${c.id}`}><span className="ico"><Icon name={themeIcon(c.id)} /></span><span className="mid"><span className="t">{L(c.name)}</span><span className="s">{c.items.length} éléments</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></>}
+      {res && res.items.length > 0 && <><div className="h2">Mots et phrases <span className="sp" /><span className="sm mut">{res.items.length >= 40 ? '40 premiers résultats' : `${res.items.length} résultat${res.items.length > 1 ? 's' : ''}`}</span></div><div className="list">{res.items.map((it, i) => <ItemRow key={it.id} it={it} onClick={() => setDetail(i)} />)}</div></>}
+      {res && res.grammar.length > 0 && <><div className="h2">Grammaire</div><div className="list">{res.grammar.map((g) => <Link key={g.id} className="row" to={`/explore/grammar/${encodeURIComponent(g.id)}`}><span className="ico"><GrammarGlyph icon={g.icon} /></span><GrammarRowTitle title={L(g.title)} /><span className="end"><span className="chev">›</span></span></Link>)}</div></>}
+      {res && res.dialogs.length > 0 && <><div className="h2">Conversations</div><div className="list">{res.dialogs.map((d) => <Link key={d.id} className="row" to={`/explore/dialogs/${encodeURIComponent(d.id)}`}><span className="ico"><GlyphIcon name={d.icon} /></span><span className="mid"><span className="t">{L(d.title)}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></>}
       {res && res.readings.length > 0 && <><div className="h2">Lectures</div><div className="list">{res.readings.map((r) => <Link key={r.id} className="row" to={`/explore/readings/${encodeURIComponent(r.id)}`}><Ico name="bookOpen" /><span className="mid"><span className="t">{L(r.title)}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></>}
       {detail != null && <ItemDetailSheet ids={ids} index={detail} onClose={() => setDetail(null)} onNav={setDetail} />}
     </>

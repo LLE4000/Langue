@@ -1,4 +1,5 @@
 /** Lectures : textes par niveau, avec indication de lisibilité selon le parcours. */
+import { Fragment } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
@@ -18,9 +19,9 @@ export function Readings() {
   const readable = (rid: string) => READING_BY_ID[rid].sentences.every((s) => s.tokens.every((tk) => /\{/.test(tk.thai) || isReadable(tk.thai, known.concepts)));
   return (
     <>
-      <p className="lead">Lisez d’abord sans aide. Les textes marqués « lisible » n’utilisent que des signes déjà vus dans votre parcours.</p>
+      <p className="lead">{'Lisez d’abord sans aide. Les textes marqués «\u00a0lisible\u00a0» n’utilisent que des signes déjà vus dans votre parcours.'}</p>
       {[1, 2, 3, 4, 5].map((lvl) => (
-        <div key={lvl}><div className="h2">Niveau {lvl}</div><div className="list">{th.READINGS.filter((r) => r.level === lvl).map((r) => <Link key={r.id} className={`row ${done.has(r.id) ? 'done' : ''}`} to={`/explore/readings/${encodeURIComponent(r.id)}`}><Ico name={done.has(r.id) ? 'check' : 'bookOpen'} /><span className="mid"><span className="t">{L(r.title)}</span><span className="s">{r.sentences.length} phrases{readable(r.id) ? ' · lisible avec ce que vous savez' : ''}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></div>
+        <Fragment key={lvl}><div className="h2">Niveau {lvl}</div><div className="list">{th.READINGS.filter((r) => r.level === lvl).map((r) => <Link key={r.id} className={`row ${done.has(r.id) ? 'done' : ''}`} to={`/explore/readings/${encodeURIComponent(r.id)}`}><Ico name={done.has(r.id) ? 'check' : 'bookOpen'} /><span className="mid"><span className="t">{L(r.title)}</span><span className="s">{r.sentences.length} phrases{readable(r.id) ? ' · lisible avec ce que vous savez' : ''}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></Fragment>
       ))}
     </>
   );

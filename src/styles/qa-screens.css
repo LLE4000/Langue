@@ -1,1 +1,43 @@
 /* Corrections de la revue visuelle (screens) — fusionnées ensuite dans app.css */
+
+/* Accueil, carte « Prochaine leçon » : la durée quitte les pastilles (elle y restait seule sur une ligne)
+   et rejoint le bouton, dans l'espace libre à sa droite. */
+.cta .dur { display: inline-flex; align-items: center; gap: var(--s-1); min-width: 0; font-size: var(--fs-2); font-weight: 600; line-height: 1; color: rgba(255, 255, 255, .78); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cta .dur svg { flex: none; opacity: .85; }
+
+/* Accueil, bandeau « aujourd'hui » : les deux cases ont la même structure (icône + nombre, puis le libellé),
+   calées en haut, pour des nombres alignés et un libellé qui ne se coupe pas. */
+.today .tk { align-content: start; }
+.today .tk .lab { grid-column: 1 / -1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.today .tk b small { font-size: var(--fs-1); font-weight: 500; letter-spacing: 0; color: var(--ink2); }
+
+/* Chevrons de fin de ligne : l'icône « next » tracée, comme les boutons, au lieu du caractère « › ». */
+.row .chev, .prog-card .chev, .ra-home .chev { display: grid; place-items: center; color: var(--ink3); line-height: 0; }
+.chev svg { width: 18px; height: 18px; flex: none; }
+/* Les lignes qui gardent encore le caractère « › » reçoivent le même chevron tracé (dessin de l'icône « next »). */
+.chev:not(:has(svg)) { display: inline-grid; place-items: center; font-size: 0; line-height: 0; color: var(--ink3); }
+.chev:not(:has(svg))::before { content: ""; width: 18px; height: 18px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 5l7 7-7 7'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 5l7 7-7 7'/%3E%3C/svg%3E") center / contain no-repeat; }
+
+/* Jeux, « Les mots du jeu » : trois choix fixes, qui passent à la ligne au lieu de déborder du bord de l'écran. */
+.chips.src-pick { flex-wrap: wrap; overflow: visible; margin: 0; padding: 2px 0 var(--s-3); }
+.chips.src-pick .chip { max-width: 100%; }
+
+/* Listes déroulantes : un chevron tracé, comme ceux de l'interface, au lieu de deux triangles en dégradé. */
+select.field { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236a665f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-position: right 16px center; background-size: 18px 18px; background-repeat: no-repeat; padding-right: 44px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) select.field { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a7a39b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); } }
+:root[data-theme="dark"] select.field { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a7a39b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); }
+
+/* Défi à distance : « Ouvrir » a la hauteur et l'arrondi du champ à côté. */
+.row-flex.field-go { align-items: stretch; } .row-flex.field-go > .field { flex: 1; min-width: 0; }
+.row-flex.field-go > .btn { flex: none; width: auto; min-height: 54px; padding: 0 var(--s-5); border-radius: var(--r-md); }
+
+/* Mon parcours : les thèmes d'une étape ne se coupent qu'entre deux thèmes ; le « · » ouvre la ligne suivante
+   au lieu de pendre en fin de ligne. */
+.unit-head .grow { min-width: 0; }
+.unit-head .s { display: flex; flex-wrap: wrap; line-height: 1.4; }
+.unit-head .s .u + .u::before { content: "·"; margin: 0 .4em; color: var(--ink3); }
+
+/* Ligne de leçon : seul le titre s'abrège ; la partie de série (« 1/2 ») reste toujours visible. */
+.lrow .t { display: flex; align-items: baseline; min-width: 0; white-space: normal; overflow: visible; }
+.lrow .t .tt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lrow .t .part { flex: none; white-space: nowrap; }

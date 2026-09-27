@@ -24,14 +24,14 @@ export function SourcePicker({ value, onChange }: { value: PlaySource; onChange:
   return (
     <>
       <label className="f">Les mots du jeu</label>
-      <div className="chips">
+      <div className="chips src-pick">
         <button className={`chip ${value.kind === 'known' ? 'on' : ''}`} disabled={known < 4} onClick={() => onChange({ kind: 'known' })}>Ce que je connais · {known}</button>
         <button className={`chip ${value.kind === 'numbers' ? 'on' : ''}`} onClick={() => onChange({ kind: 'numbers' })}>Nombres</button>
         <button className={`chip ${value.kind === 'theme' ? 'on' : ''}`} onClick={() => onChange({ kind: 'theme', theme: value.theme ?? 'sal' })}>Un thème</button>
       </div>
       {value.kind === 'theme' && (
         <select className="field" value={value.theme ?? 'sal'} onChange={(e) => onChange({ kind: 'theme', theme: e.target.value })} aria-label="Thème">
-          {th.THEME_ORDER.map((id) => th.VOCAB_THEMES.find((t) => t.id === id)).filter(Boolean).map((t) => <option key={t!.id} value={t!.id}>{t!.icon} {t!.name.fr} · {t!.items.length}</option>)}
+          {th.THEME_ORDER.map((id) => th.VOCAB_THEMES.find((t) => t.id === id)).filter(Boolean).map((t) => <option key={t!.id} value={t!.id}>{t!.name.fr} · {t!.items.length}</option>)}
         </select>
       )}
       {known < 4 && value.kind !== 'theme' && value.kind !== 'numbers' && <p className="xs mut">Faites d’abord une leçon pour jouer avec vos propres mots ; en attendant, un thème ou les nombres.</p>}

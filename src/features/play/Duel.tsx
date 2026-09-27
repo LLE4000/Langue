@@ -9,7 +9,7 @@ import { FullScreen } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { useSpeaker } from '@/app/services/speech';
 import { ITEMS } from '@/content/th';
-import { Icon, Thai, useToast } from '@/components/ui';
+import { Icon, Thai, useToast, Rom, Fr } from '@/components/ui';
 import { PlaySetup, type PlayConfig } from './PlaySetup';
 import { buildPlayQuestions, meaningOf, poolFor, type PlayQuestion } from './quiz';
 
@@ -22,7 +22,7 @@ function Half({ who, name, score, q, locked, picked, resolved, onPick }: { who: 
     <section className={`half p${who} ${done ? (resolved === who ? 'won' : 'lost') : ''}`} aria-label={`Côté de ${name}`}>
       <header><b>{name}</b><span className="score-pill">{score}</span>{done && <span className="verdict-mini">{resolved === who ? '+1' : resolved === 'none' ? '—' : ''}</span>}</header>
       <div className="stem">
-        {q.kind === 'meaning' ? <><Thai text={it.thai} className="big-h" /><span className="rom xs">{it.rom}</span></> : <span className="frbig">{meaningOf(it)}</span>}
+        {q.kind === 'meaning' ? <><Thai text={it.thai} className="big-h" /><Rom text={it.rom} className="xs" /></> : <span className="frbig"><Fr text={meaningOf(it)} /></span>}
       </div>
       <div className="choices c2 duel-choices">
         {q.choiceIds.map((id, k) => {
@@ -31,7 +31,7 @@ function Half({ who, name, score, q, locked, picked, resolved, onPick }: { who: 
           const cls = done ? (isOk ? 'ok' : picked === k ? 'ko' : 'dim') : picked === k ? 'ko' : '';
           return (
             <button key={id} className={`choice ${cls}`} disabled={done || locked} onPointerDown={(e) => { e.preventDefault(); onPick(k); }} onClick={(e) => { if (e.detail === 0) onPick(k); }} data-side={who} data-ok={isOk ? '1' : '0'}>
-              {q.kind === 'meaning' ? <span>{meaningOf(c)}</span> : <><Thai text={c.thai} /><span className="rom">{c.rom}</span></>}
+              {q.kind === 'meaning' ? <span><Fr text={meaningOf(c)} /></span> : <><Thai text={c.thai} /><Rom text={c.rom} /></>}
             </button>
           );
         })}

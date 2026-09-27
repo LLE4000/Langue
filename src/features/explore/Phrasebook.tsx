@@ -16,10 +16,10 @@ export function Phrasebook() {
   const nFav = Object.keys(favs).filter((k) => WORD_BY_THAI[k.slice(2)]).length;
   return (
     <>
-      <p className="lead">Les phrases essentielles, sur place. Touchez une phrase pour l’afficher en très grand et la montrer à votre interlocuteur.</p>
+      <p className="lead">Choisissez une situation, puis touchez une phrase pour l’afficher en très grand et la montrer à votre interlocuteur.</p>
       <div className="tiles">
-        {th.PHRASEBOOK.map((s) => <Link key={s.id} to={`/explore/phrasebook/${s.id}`} className="tile ctr"><span className="e">{s.icon}</span><span className="t">{L(s.title)}</span></Link>)}
-        <Link to="/explore/phrasebook/favs" className="tile ctr"><span className="ic"><Icon name="star" /></span><span className="t">Mes favoris</span><span className="s">{nFav} phrase{nFav > 1 ? 's' : ''}</span></Link>
+        {th.PHRASEBOOK.map((s) => { const n = s.keys.filter((k) => WORD_BY_THAI[k]).length; return <Link key={s.id} to={`/explore/phrasebook/${s.id}`} className="tile ctr"><span className="e">{s.icon}</span><span className="t">{L(s.title)}</span><span className="s">{n} phrase{n > 1 ? 's' : ''}</span></Link>; })}
+        <Link to="/explore/phrasebook/favs" className="tile ctr"><span className="e fav"><Icon name="star" size={38} /></span><span className="t">Mes favoris</span><span className="s">{nFav} phrase{nFav > 1 ? 's' : ''}</span></Link>
       </div>
     </>
   );
@@ -43,7 +43,7 @@ export function PhrasebookSection() {
   const { id = '' } = useParams();
   const favs = useStore((s) => s.favorites);
   const sec = th.PHRASEBOOK.find((s) => s.id === id);
-  const title = id === 'favs' ? 'Mes favoris' : sec ? `${sec.icon} ${L(sec.title)}` : 'Phrases';
+  const title = id === 'favs' ? 'Mes favoris' : sec ? L(sec.title) : 'Phrases';
   usePage(title, { back: '/explore/phrasebook' });
   const [big, setBig] = useState<LearnItem | null>(null);
   const items = id === 'favs' ? Object.keys(favs).sort((a, b) => favs[b] - favs[a]).map((k) => WORD_BY_THAI[k.slice(2)]).filter(Boolean) : (sec?.keys ?? []).map((k) => WORD_BY_THAI[k]).filter(Boolean);

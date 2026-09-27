@@ -10,7 +10,7 @@ import { useSpeaker } from '@/app/services/speech';
 import { DIALOG_BY_ID, th } from '@/content/th';
 import { dialogOtherGender } from '@/engine/speakers';
 import { L } from '@/i18n';
-import { Icon, Empty } from '@/components/ui';
+import { Icon, Empty, GlyphIcon } from '@/components/ui';
 import { DialogView } from '@/components/DialogView';
 import { StepFooter, ContinueButton, useDigitKeys } from '@/components/StepFooter';
 import { buildComprehensionQuiz, dialogSeconds, type CQuestion } from './comprehension';
@@ -28,7 +28,7 @@ export function ComprehensionHub() {
   const random = () => { const pool = th.DIALOGS.filter((d) => !best[d.id]); const d = (pool.length ? pool : th.DIALOGS)[Math.floor(Math.random() * (pool.length ? pool : th.DIALOGS).length)]; nav(`/explore/comprehension/${encodeURIComponent(d.id)}`); };
   return (
     <>
-      <p className="lead">Une conversation, deux voix, pas de texte. Écoutez autant de fois que vous voulez, puis répondez en français : qui a dit quoi, combien, quand. Le texte s’affiche seulement à la fin.</p>
+      <p className="lead">Une conversation, deux voix, pas de texte. Écoutez autant de fois que vous voulez, puis répondez en français&nbsp;: qui a dit quoi, combien, quand. Le texte s’affiche seulement à la fin.</p>
       <button className="btn" onClick={random}><Icon name="play" size={18} /> Une conversation au hasard</button>
       {LEVELS.map((lv) => {
         const list = th.DIALOGS.filter((d) => d.level === lv);
@@ -52,7 +52,7 @@ export function ComprehensionHub() {
       <div className="list">
         {th.DIALOGS.filter((d) => !d.level).map((d) => (
           <Link key={d.id} className="row" to={`/explore/comprehension/${encodeURIComponent(d.id)}`}>
-            <span className="ico">{d.icon}</span>
+            <span className="ico"><GlyphIcon name={d.icon} /></span>
             <span className="mid"><span className="t">{L(d.title)}</span><span className="s">≈ {dialogSeconds(d)} s · {d.lines.length} répliques · {(d.questions?.length ?? 0) + 2} questions</span></span>
             <span className="end">{best[d.id] ? <span className="tag ok">{best[d.id]}</span> : <span className="chev">›</span>}</span>
           </Link>
@@ -117,7 +117,7 @@ export function ComprehensionRun() {
     return (
       <>
         <div className="stage">
-          {d.level ? <span className="comp-ic"><Icon name={d.icon} /></span> : <div style={{ fontSize: 56 }}>{d.icon}</div>}
+          <span className="comp-ic"><GlyphIcon name={d.icon} /></span>
           <div className="title-xl mt-2">{L(d.title)}</div>
           <div className="mut sm mt-1">Vous et {L(d.other).toLowerCase()} · {d.lines.length} répliques · ≈ {dialogSeconds(d)} s</div>
           <div className="takes" aria-label="Répliques : touchez-en une pour reprendre de là">{d.lines.map((l, k) => <button key={k} className={`take ${line === k ? 'on' : line !== null && k < line ? 'done' : ''}`} onClick={() => play(k)} aria-label={`Reprendre à la réplique ${k + 1}`}>{l.who === 'me' ? <Icon name="user" size={12} /> : '●'}</button>)}</div>
@@ -170,7 +170,7 @@ export function ComprehensionRun() {
         <div className="mut sm">{L(d.title)} · +{3 + score * 2} XP</div>
       </div>
       <div className="h2">Le texte de la conversation</div>
-      <p className="note-under">Relisez avec la phonétique et la traduction, puis réécoutez : les phrases devraient sonner plus clairement.</p>
+      <p className="note-under">Relisez avec la phonétique et la traduction, puis réécoutez&nbsp;: les phrases devraient sonner plus clairement.</p>
       <DialogView id={d.id} />
       <div className="stack mt-4">
         <button className="btn" onClick={() => nav('/explore/comprehension')}>Une autre conversation</button>

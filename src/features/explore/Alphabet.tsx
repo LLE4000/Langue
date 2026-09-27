@@ -65,16 +65,16 @@ export function Alphabet() {
     <>
       <div className="chips">{([['all', 'Toutes · 44'], ['M', 'Classe moyenne · 9'], ['H', 'Classe haute · 11'], ['L', 'Classe basse · 24']] as const).map(([f, lab]) => <button key={f} className={`chip ${filter === f ? 'on' : ''} ${f !== 'all' ? 'cls-' + f : ''}`} onClick={() => setFilter(f)}>{f !== 'all' && <i className="dot" aria-hidden="true" />}{lab}</button>)}</div>
       <div className="btns mb-3"><button className="btn soft sm" onClick={() => nav('/explore/listen?set=cons')}><Icon name="repeat" size={18} /> Écouter l’alphabet en boucle</button></div>
-      <p className="xs mut mt-n1 mb-3">Touchez une lettre pour l’entendre ; touchez-la encore pour ouvrir sa fiche.</p>
+      <p className="xs mut mt-n1 mb-3">Touchez une lettre pour l’entendre&#8239;; touchez-la encore pour ouvrir sa fiche.</p>
       <div className="lgrid">{list.map((c) => <LetterCell key={c.id} it={c} locked={!known.concepts.has(c.id)} active={peekItem?.id === c.id} onClick={() => tap(c, ids)} />)}</div>
-      <p className="foot-note">Les lettres estompées n’ont pas encore été enseignées dans votre parcours ; vous pouvez tout de même les écouter et les consulter.</p>
+      <p className="foot-note">Les lettres estompées n’ont pas encore été enseignées dans votre parcours&#8239;; vous pouvez tout de même les écouter et les consulter.</p>
       <details className="fold">
-        <summary>Sons voisins à l’oreille <span className="sm mut">· ป / พ, ต / ท, ก / ค…</span></summary>
+        <summary><span className="grow">Sons voisins à l’oreille<span className="sub"><span className="th" lang="th">ป / พ, ต / ท, ก / ค…</span></span></span></summary>
         <p className="sm mut mt-2 mb-3">La deuxième lettre est <b>aspirée</b> (un souffle après la consonne). Écoutez-les l’une après l’autre, en boucle.</p>
         <div className="chips">{th.NEAR_SOUNDS.map(([lab, chars]) => <Link key={lab} className="chip" to={`/explore/listen?ids=${encodeURIComponent([...chars].map((c) => 'c:' + c).join(','))}`}><b className="rom">{lab}</b> <Thai text={[...chars].join(' ')} className="th-s ink" /> <Icon name="repeat" size={14} /></Link>)}</div>
       </details>
       <details className="fold">
-        <summary>Lettres qui se ressemblent <span className="sm mut">· {th.LOOKALIKES.length} groupes</span></summary>
+        <summary><span className="grow">Lettres qui se ressemblent<span className="sub">{th.LOOKALIKES.length} groupes</span></span></summary>
         <p className="sm mut mt-2 mb-3">Comparez la place de la petite boucle (dedans, dehors, en haut, en bas) et la fin du trait.</p>
         {th.LOOKALIKES.map((g, k) => {
           const gi = g.map((y) => 'c:' + y);
@@ -88,8 +88,8 @@ export function Alphabet() {
       </details>
       <details className="fold">
         <summary>Pour retenir et tracer</summary>
-        <div className="note info mt-2">Les 9 consonnes de classe moyenne : <Thai text="ไก่จิกเด็กตายบนปากโอ่ง" /> <Rom text="kài jìk dèk taai bon pàak òong" /> — « le poulet picore l’enfant mort sur le bord de la jarre ».</div>
-        <div className="note sm">On commence par la petite boucle (la « tête », <Thai text="หัว" />), puis on trace le reste d’un seul geste, en général de gauche à droite. Seules <Thai text="ก" /> et <Thai text="ธ" /> n’ont pas de tête. Le mot du nom de chaque lettre (ก ไก่ « poulet ») est la façon dont un Thaï épelle.</div>
+        <div className="note info mt-2">Les 9 consonnes de classe moyenne&nbsp;: <Thai text="ไก่จิกเด็กตายบนปากโอ่ง" /> <Rom text="kài jìk dèk taai bon pàak òong" /> — «&nbsp;le poulet picore l’enfant mort sur le bord de la jarre&nbsp;».</div>
+        <div className="note sm">On commence par la petite boucle (la «&nbsp;tête&nbsp;», <Thai text="หัว" />), puis on trace le reste d’un seul geste, en général de gauche à droite. Seules <Thai text="ก" /> et <Thai text="ธ" /> n’ont pas de tête. Le mot du nom de chaque lettre (ก ไก่ «&nbsp;poulet&nbsp;») est la façon dont un Thaï épelle.</div>
       </details>
       {peekItem && !detail && <PeekBar it={peekItem} onDetail={() => setDetail(peek)} onClose={() => setPeek(null)} />}
       {detail && <ItemDetailSheet ids={detail.ids} index={detail.i} onClose={() => setDetail(null)} onNav={(i) => setDetail({ ...detail, i })} />}

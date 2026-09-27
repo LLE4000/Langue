@@ -8,6 +8,8 @@ import '@fontsource/sarabun/thai-500.css';
 import '@fontsource/sarabun/thai-600.css';
 import '@fontsource/kanit/thai-400.css';
 import '@fontsource/kanit/thai-500.css';
+// Andika : seulement pour les signes phonétiques absents de la police d'interface (ɔ ɛ ʉ ŋ) dans la romanisation
+import '@fontsource/andika/latin-ext-400.css';
 import './styles/app.css';
 import './styles/qa-global.css';
 import './styles/qa-lesson.css';

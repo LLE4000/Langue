@@ -15,7 +15,7 @@ import { dialogOtherGender } from '@/engine/speakers';
 import { resolveTokens } from '@/engine/tokens';
 import { judgeReply, replyStarter, type Reply, type ReplyJudgement } from '@/engine/conversation';
 import { REPLY_VARIANTS } from './variants';
-import { Icon, Segmented } from '@/components/ui';
+import { Icon, Segmented, GlyphIcon } from '@/components/ui';
 
 type Aid = 'full' | 'hint' | 'none';
 const AID: Record<Aid, { label: string; desc: string }> = {
@@ -42,7 +42,7 @@ export function TalkHub() {
     const mine = d.lines.filter((l) => l.who === 'me').length;
     return (
       <Link key={d.id} className="row" to={`/talk/${encodeURIComponent(d.id)}`}>
-        <span className="ico jade">{d.level ? <Icon name={d.icon} /> : <Icon name="chat" />}</span>
+        <span className="ico jade"><GlyphIcon name={d.icon} /></span>
         <span className="mid"><span className="t">{L(d.title)}</span><span className="s">{mine} répliques à dire · avec {L(d.other).toLowerCase()}</span></span>
         <span className="end">{best != null ? <span className={`tag ${best >= 80 ? 'ok' : ''}`}>{best} %</span> : <span className="chev">›</span>}</span>
       </Link>

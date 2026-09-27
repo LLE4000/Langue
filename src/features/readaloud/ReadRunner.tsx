@@ -18,7 +18,7 @@ import { PitchBaseline } from '@/engine/audio/pitch';
 import { ContinuousRecognizer } from '@/engine/audio/mic';
 import { assessPronunciation, azureConfig } from '@/engine/audio/azure';
 import { visualLength } from '@/engine/thai/script';
-import { Icon, Segmented } from '@/components/ui';
+import { Icon, Segmented, Rom } from '@/components/ui';
 import { RaRun, type RaMode, type RunState } from './run';
 import { chronoSeries, errorsSeries, raPrefs, saveRaPrefs } from './data';
 import { MODE_INFO } from './ReadHub';
@@ -195,7 +195,7 @@ function Belt({ run, state, title, onClose, rom, setRom }: { run: RaRun; state: 
           })}
         </div>
         <div className="ra-under">
-          {cur && showRom && <div className="rom lg">{cur.rom}</div>}
+          {cur && showRom && <Rom text={cur.rom} className="lg block" />}
           {cur?.meaning && (cur.kind !== 'syl') && <div className="mean">{cur.meaning}</div>}
           <div className="ra-cue">{state.modelPlaying ? <><Icon name="speaker" size={16} /> Écoutez…</> : state.voice ? <><span className="lv" /> On vous entend</> : state.phase === 'paused' ? 'En pause' : state.mic || state.asr === 'ok' ? 'À vous' : 'Touchez l’écran pour avancer'}</div>
           {flash && <div key={flash.index} className={`ra-flash ${flash.j.verdict}`}><span lang="th">{flash.j.heard && flash.j.heard !== queue[flash.index]?.item.thai ? flash.j.heard : queue[flash.index]?.item.thai}</span>{flash.j.detail && <> · {flash.j.detail}</>}</div>}

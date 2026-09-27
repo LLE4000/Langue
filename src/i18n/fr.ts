@@ -5,7 +5,7 @@ export const fr = {
   common: {
     continue: 'Continuer', start: 'Commencer', next: 'Suivant', check: 'Vérifier', back: 'Retour', close: 'Fermer', quit: 'Quitter', cancel: 'Annuler',
     listen: 'Écouter', slow: 'Lentement', reveal: 'Voir la réponse', correct: 'Correct', wrong: 'Pas tout à fait', goodAnswer: 'Bonne réponse',
-    minutes: 'min', new: 'nouveau', known: 'déjà connu', seeAll: 'Tout voir', search: 'Rechercher', loading: 'Chargement…', yes: 'Oui', no: 'Non',
+    minutes: 'min', new: 'Nouveau', known: 'déjà connu', seeAll: 'Tout voir', search: 'Rechercher', loading: 'Chargement…', yes: 'Oui', no: 'Non',
     skip: 'Passer', finish: 'Terminer', again: 'Rejouer', save: 'Enregistrer',
   },
   skills: { listening: 'Comprendre', speaking: 'Parler', reading: 'Lire', writing: 'Écrire' },

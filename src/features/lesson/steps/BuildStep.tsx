@@ -41,7 +41,7 @@ export function BuildStep({ step, onDone }: { step: RuntimeStep & { type: 'build
             <ContinueButton onClick={check} label={t.common.check} icon={false} disabled={pick.length !== cur.toks.length} />
           </div>
         ) : (
-          <><div className="qfin"><span className={`verdict ${res ? 'ok' : 'ko'}`}><Icon name={res ? 'check' : 'close'} />{res ? t.common.correct : t.common.wrong}</span>{!res && <span className="good"> · {t.common.goodAnswer} :</span>}<div className="mt-1"><Thai text={full} /><br /><Rom text={sentenceRom(cur.toks)} /></div></div>
+          <><div className="qfin"><div className={`verdict ${res ? 'ok' : 'ko'}`}><Icon name={res ? 'check' : 'close'} />{res ? t.common.correct : t.common.wrong}</div><div className="good stack-l">{!res && <span className="lbl">{t.common.goodAnswer} :</span>}<Thai text={full} /><Rom text={sentenceRom(cur.toks)} /></div></div>
             <ContinueButton onClick={next} label={t.common.continue} auto={res} autoMs={1600} autoFocus /></>
         )}
       </StepFooter>

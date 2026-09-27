@@ -1,1 +1,100 @@
 /* Corrections de la revue visuelle (lesson) — fusionnées ensuite dans app.css */
+
+/* ---------- Boutons d'étape : texte centré même sur deux lignes (button hérite sinon de text-align) ---------- */
+.qfoot .btn, .recap ~ .stack .btn { text-align: center; }
+.btn-2l { display: flex; flex-direction: column; align-items: center; min-width: 0; line-height: 1.2; text-align: center; }
+.btn-2l small { font-size: var(--fs-2); font-weight: 600; opacity: .85; }
+.btn-2l .part { color: inherit; opacity: .75; }
+
+/* ---------- Questions : verdict, bonne réponse, correction ---------- */
+/* Verdict sur sa ligne ; la réponse dessous, alignée sur le texte du verdict (icône 20px + écart 6px) */
+.qfoot .qfin > div.verdict { display: flex; }
+.qfoot .qfin > div.good, .qfoot .qfin > .rv, .qfoot .qfin > .mut.mt-1 { margin-top: var(--s-1); padding-left: 26px; }
+/* Chaque morceau (libellé, thaï, transcription, sens) passe à la ligne en bloc, jamais au milieu d'une expression */
+.qfoot .qfin > div.good, .qfoot .qfin > .rv { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; }
+.qfoot .qfin > div.good .lbl { color: var(--ink2); }
+.qfoot .qfin > div.good.stack-l { display: block; }
+.qfoot .qfin > div.good.stack-l > * { display: block; }
+.qfoot .qfin > .rv .th { font-size: 17px; }
+.qfoot .qfin ol { padding-left: calc(26px + var(--s-4)); }
+
+/* Rangée audio réservée avant la réponse : même hauteur, invisible et hors du parcours clavier (rien ne saute) */
+.audio.pending { visibility: hidden; }
+
+/* Carte d'écoute : même boîte avant et après la réponse */
+.stage.ear { min-height: 176px; padding: var(--s-4); }
+.stage.ear.done .big { line-height: 1.25; }
+.stage.ear .ear-ic { cursor: pointer; transition: transform .08s, filter var(--d-fast); }
+.stage.ear .ear-ic:active { transform: scale(.94); }
+@media (hover: hover) { .stage.ear .ear-ic:hover { filter: brightness(.97); } }
+.stage.ear .ear-ic:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
+.stage .rv-name { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; column-gap: var(--s-2); }
+.stage .rv-name .th { font-size: calc(22px * var(--ths)); color: var(--ink); font-weight: 500; }
+@media (max-height: 700px) { .stage.ear { min-height: 150px; } }
+
+/* Nombre à traduire (« 5 ») : à l'échelle de sa carte */
+.stage .frbig.num { font-size: clamp(56px, 16vw, 72px); line-height: 1; font-variant-numeric: lining-nums; }
+/* Phonétique en grand : lignes équilibrées */
+.stage .oral-main { text-wrap: balance; }
+/* Précision sous un choix (longueur d'une voyelle) */
+.choice .csub { font-size: var(--fs-1); font-weight: 600; color: var(--ink2); letter-spacing: .01em; }
+.choice.ok .csub, .choice.ko .csub { color: inherit; opacity: .8; }
+
+/* Sous-titre de consigne (associer, répéter, cartes à lire) : lignes équilibrées, pas de mot orphelin */
+.qsub { font-size: var(--fs-2); color: var(--ink2); text-align: center; text-wrap: balance; line-height: 1.4; margin: calc(-1 * var(--s-1)) 0 var(--s-3); }
+
+/* Lien discret dans la ligne d'état (« Passer l’exercice › ») */
+.qfoot .meta .link { flex: none; min-height: 44px; margin: calc(-1 * var(--s-2)) 0; padding: 0 0 0 var(--s-2); color: var(--acc-deep); font-size: var(--fs-2); font-weight: 650; white-space: nowrap; }
+@media (hover: hover) { .qfoot .meta .link:hover { text-decoration: underline; text-underline-offset: 3px; } }
+
+/* ---------- Associer : deux colonnes sur une grille commune, la ligne i a la même hauteur des deux côtés ---------- */
+@supports (grid-template-rows: subgrid) {
+  .match { row-gap: var(--s-2); }
+  .match-col { display: grid; grid-template-rows: subgrid; grid-row: 1 / span var(--rows, 1); row-gap: var(--s-2); }
+}
+
+/* ---------- Cartes ---------- */
+/* « nouveau » en haut à droite, en face du type ; s'efface quand l'indice « ✓ Bien » prend sa place */
+.stage .tag.end { left: auto; right: var(--s-3); transition: opacity .15s; }
+.fcard.sw-right .tag.end { opacity: 0; }
+/* Verso compact : le thaï (signes suscrits compris) passe sous la rangée des étiquettes */
+.stage.fcard.compact { padding-top: calc(var(--s-3) + 24px + var(--s-2)); }
+/* Forme moderne alignée sur la ligne de base de son libellé */
+.stage .modern { align-items: baseline; }
+.stage .modern .thm { line-height: 1; }
+/* Mot à mot : pastilles alignées à gauche dans le verso (lui-même aligné à gauche) ; mot entier insécable */
+.ans .wchips { justify-content: flex-start; }
+.rom.block > span { white-space: nowrap; }
+.wchip.slot i { color: var(--ink2); font-style: italic; }
+
+/* ---------- À retenir (théorie) ---------- */
+.theory-block .lead, .theory-block .h2 { margin-left: 0; margin-right: 0; }
+.lkind { gap: 6px; }
+.lkind .sep { color: var(--ink3); font-weight: 600; }
+.lkind .lbadge .g { transform: translateY(-1px); }
+.theory-title .part { font-family: var(--f-ui); font-size: var(--fs-3); font-weight: 600; color: var(--ink2); letter-spacing: 0; margin-left: var(--s-2); vertical-align: .35em; }
+/* Icône de rubrique de grammaire (au lieu d'un émoji) */
+.h2-ic { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; flex: none; align-self: center; background: var(--indigo-soft); color: var(--indigo); }
+.h2-ic svg { width: 16px; height: 16px; }
+/* Formule : pastille discrète en police d'interface (et non un bloc inversé en police thaïe) */
+.theory-block .pattern { font-family: var(--f-ui); background: var(--surface2); color: var(--ink); border: 1px solid var(--line2); font-weight: 650; letter-spacing: .01em; }
+.theory-block .pattern .th { font-family: var(--f-th); color: var(--jade); font-weight: 600; line-height: 1.3; }
+/* Lignes : le thaï en ligne n'agrandit plus l'interligne */
+.row .s .th, .row .s .thm { line-height: 1.25; }
+.row .s + .s { margin-top: var(--s-1); }
+/* Segments d'une ligne de lettre / voyelle : chacun passe à la ligne en bloc */
+.row .s.segs { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--s-2); }
+.row .nw { white-space: nowrap; }
+/* Exemple d'un mot : en retrait, plus léger que le mot lui-même */
+.row .wex { display: block; margin-top: var(--s-2); padding-left: var(--s-3); border-left: 2px solid var(--line2); font-size: var(--fs-2); color: var(--ink2); line-height: 1.4; }
+.row .wex .th { display: block; font-size: calc(16px * var(--ths)); color: var(--ink); font-weight: 400; line-height: 1.45; }
+/* Chiffre thaï court : à la taille des autres glyphes de tuile */
+.lglyph.sm-num.short { font-size: 32px; }
+
+/* ---------- Bilan ---------- */
+/* Nouveautés : toutes visibles, sur plusieurs lignes */
+.chips.wrap { flex-wrap: wrap; overflow: visible; margin: 0; padding: 2px 0 0; }
+.chips.wrap .chip { white-space: normal; max-width: 100%; }
+.recap-new .chip { align-items: baseline; }
+.recap-new .chip .rom { font-size: var(--fs-2); font-weight: 650; }
+.recap-new .chip .xs { font-size: var(--fs-2); color: var(--ink2); }

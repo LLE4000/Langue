@@ -27,7 +27,7 @@ export function LevelPicker({ levels, onChange, skills = SKILLS }: { levels: Ski
           <p>{t.levels[LEVEL_KEYS[sk]][levels[sk]]}</p>
           <div className="lvl" role="radiogroup" aria-label={t.skills[sk]}>
             {[0, 1, 2, 3, 4].map((n) => (
-              <button key={n} role="radio" aria-checked={levels[sk] === n} className={levels[sk] === n ? 'on' : ''} onClick={() => onChange({ ...levels, [sk]: n as Level })}>{['0', 'A1', 'A2', 'B1', 'B2+'][n]}</button>
+              <button key={n} role="radio" aria-checked={levels[sk] === n} className={levels[sk] === n ? 'on' : ''} onClick={() => onChange({ ...levels, [sk]: n as Level })}>{['A0', 'A1', 'A2', 'B1', 'B2+'][n]}</button>
             ))}
           </div>
           {sk === 'reading' && <button className="btn ghost sm mt-3" onClick={() => setPlacement(true)}><Icon name="search" size={16} /> {t.onboarding.placement}</button>}

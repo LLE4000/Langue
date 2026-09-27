@@ -29,14 +29,12 @@ export function RepeatStep({ step, onDone }: { step: RuntimeStep & { type: 'repe
   return (
     <>
       <p className="qprompt">{t.lesson.repeat}</p>
-      <p className="sm mut ctr mt-n1">Écoutez, puis dites-le : l’application vérifie que le thaï est compris.</p>
+      <p className="qsub">Écoutez, puis dites-le à voix haute.</p>
       <MicPanel key={it.id} item={it} inline onScore={(s) => setScores((prev) => ({ ...prev, [it.id]: Math.max(prev[it.id] ?? 0, s) }))} />
       <div className="sp" />
-      <StepFooter meta={<><span>{best != null ? `Note : ${best}/10` : step.graded ? 'Dites le mot pour obtenir une note' : 'Facultatif : jamais bloquant.'}</span>{!inLesson && <span className="b">{i + 1} / {items.length}</span>}</>}>
-        <div className="btns">
-          {!step.graded && <button className="btn ghost" onClick={() => onDone({ xp: i + 1 })}>Passer l’exercice</button>}
-          <ContinueButton onClick={() => (i + 1 < items.length ? setI(i + 1) : finish())} label={i + 1 < items.length ? 'Mot suivant' : t.common.finish} />
-        </div>
+      {/* Facultatif : « Passer » est un lien discret dans la ligne d'état, l'action principale garde toute la largeur */}
+      <StepFooter meta={<><span>{best != null ? `Note : ${best}/10` : step.graded ? 'Dites le mot pour obtenir une note' : 'Facultatif : vous pouvez passer.'}</span>{!inLesson && <span className="b">{i + 1} / {items.length}</span>}{!step.graded && <button type="button" className="link" aria-label="Passer l’exercice" onClick={() => onDone({ xp: i + 1 })}>Passer l’exercice ›</button>}</>}>
+        <ContinueButton onClick={() => (i + 1 < items.length ? setI(i + 1) : finish())} label={i + 1 < items.length ? 'Mot suivant' : t.common.finish} />
       </StepFooter>
     </>
   );

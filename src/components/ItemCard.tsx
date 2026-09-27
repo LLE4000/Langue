@@ -15,10 +15,24 @@ import { resolveTokens } from '@/engine/tokens';
 import { L } from '@/i18n';
 import { AudioButton, BigThai, Icon, MasteryDot, Sheet, Thai, Rom, useTokens } from './ui';
 import { ToneCurve } from './ToneCurve';
-import { WordByWord } from './WordByWord';
+import { WordByWord, useWbw } from './WordByWord';
 import { MicPanel } from './MicPanel';
 
-const POS_LABEL: Record<string, string> = { L: 'avant', T: 'au-dessus', R: 'après', B: 'en dessous' };
+const POS_ADV: Record<string, string> = { L: 'avant', T: 'au-dessus', R: 'après', B: 'en dessous' };
+/**
+ * Place d'une voyelle autour de la consonne, en français correct : « après la consonne », « en dessous de la consonne »,
+ * « avant et après la consonne », « au-dessus et après la consonne ».
+ */
+export function vowelPosFr(positions: string): string {
+  const ks = [...(positions || '')].filter((k) => POS_ADV[k]);
+  if (!ks.length) return 'autour de la consonne';
+  const a = ks.map((k) => POS_ADV[k]);
+  const list = a.length > 1 ? a.slice(0, -1).join(', ') + ' et ' + a[a.length - 1] : a[0];
+  const last = ks[ks.length - 1];
+  return `${list} ${last === 'T' || last === 'B' ? 'de la' : 'la'} consonne`;
+}
+/** Son initial : « muet » se dit en clair, pas comme un phonème. */
+export const InitialSound = ({ s }: { s: string }) => (s === '(muet)' ? <span className="mut">muet</span> : <b className="rom">{s}</b>);
 const IPA_CODA: Record<string, string> = { k: 'k̚', t: 't̚', p: 'p̚', ng: 'ŋ' };
 
 /** Tons d'un mot, syllabe par syllabe, calculés à partir de la transcription. */
@@ -50,14 +64,15 @@ export function ItemFront({ it, hideClass, modern = true, oral }: { it: LearnIte
   );
 }
 
-export function ItemBack({ it }: { it: LearnItem }) {
+/** `noThai` : le thaï est déjà en grand juste au-dessus (flashcard) ; l'en-tête garde la transcription et le sens. */
+export function ItemBack({ it, noThai }: { it: LearnItem; noThai?: boolean }) {
   const tok = useTokens();
   const rows: [string, ReactNode][] = [];
   let head: ReactNode = null;
   if (it.kind === 'cons') {
     head = <><div className="l1"><Thai text={it.thai + ' ' + it.ref.nameWord} /><Rom text={it.rom} /></div><div className="fr">{L(it.ref.nameMeaning)}</div></>;
     rows.push(['Classe', <span className={`tag ${it.ref.cls}`}>{classNameFr(it.ref.cls)}</span>]);
-    rows.push(['Son initial', <><b className="rom">{it.ref.initial}</b> <span className="ipa">/{it.ref.initialIPA}/</span></>]);
+    rows.push(['Son initial', <><InitialSound s={it.ref.initial} /> <span className="ipa">/{it.ref.initialIPA}/</span></>]);
     rows.push(['Son final', it.ref.final ? <><b className="rom">-{it.ref.final}</b> <span className="ipa">/{IPA_CODA[it.ref.final] ?? it.ref.final}/</span></> : 'jamais en fin de syllabe']);
     rows.push(['API du nom', <span className="ipa">{romToIPA(it.rom)}</span>]);
     rows.push(['RTGS', <span className="ipa">{romToRTGS(it.rom)}</span>]);
@@ -65,20 +80,21 @@ export function ItemBack({ it }: { it: LearnItem }) {
   } else if (it.kind === 'vow') {
     const v = it.ref;
     head = <><div className="l1"><Thai text={vowelDisplay(v.form)} /><Rom text={v.rom} /><span className="ipa">/{v.ipa}/</span></div><div className="fr">Voyelle {v.length === 'S' ? 'courte' : 'longue'}</div></>;
-    if (v.positions) rows.push(['Position', <><div className="posmap">{['x', 'T', 'x', 'L', 'c', 'R', 'x', 'B', 'x'].map((k, i) => k === 'x' ? <i key={i} className="x" /> : k === 'c' ? <i key={i} className="c">C</i> : <i key={i} className={v.positions.includes(k) ? 'on' : ''}>{v.positions.includes(k) ? '●' : ''}</i>)}</div><span className="sm">{[...v.positions].map((k) => POS_LABEL[k]).join(' + ')} de la consonne (C)</span></>]);
+    if (v.positions) rows.push(['Position', <><div className="posmap">{['x', 'T', 'x', 'L', 'c', 'R', 'x', 'B', 'x'].map((k, i) => k === 'x' ? <i key={i} className="x" /> : k === 'c' ? <i key={i} className="c">C</i> : <i key={i} className={v.positions.includes(k) ? 'on' : ''}>{v.positions.includes(k) ? '●' : ''}</i>)}</div><span className="sm">{vowelPosFr(v.positions)} (C)</span></>]);
     if (v.closedForm) rows.push(['Avec finale', <Thai text={v.closedForm} />]);
     if (v.note) rows.push(['Note', L(v.note)]);
   } else if (it.kind === 'tone') {
-    head = <><div className="l1"><Thai text={it.thai} /><Rom text={it.rom} /></div><div className="fr">{L(it.meaning)}</div></>;
+    head = <><div className="l1">{!noThai && <Thai text={it.thai} />}<Rom text={it.rom} /></div><div className="fr">{L(it.meaning)}</div></>;
     rows.push(['Ton', <span className="tone"><ToneCurve tone={it.tone} /><b>{toneNameFr(it.tone)}</b></span>]);
     rows.push(['Pourquoi', <ol style={{ margin: 0, paddingLeft: 18 }}>{explainTone(it.ref).map((s, i) => <li key={i}>{L(s.text)}</li>)}</ol>]);
   } else if (it.kind === 'num') {
-    head = <><div className="l1"><Thai text={it.thai} /><Rom text={it.rom} /></div><div className="fr">{it.meaning.fr} · <Thai text={it.digits} /></div></>;
+    head = <><div className="l1">{!noThai && <Thai text={it.thai} />}<Rom text={it.rom} /></div><div className="fr">{it.meaning.fr} · <Thai text={it.digits} /></div></>;
     rows.push(['API', <span className="ipa">{romToIPA(it.rom)}</span>]);
+    rows.push(['RTGS', <span className="ipa">{romToRTGS(it.rom)}</span>]);
   } else if (it.kind === 'clf') {
-    head = <><div className="l1"><Thai text={it.thai} /><Rom text={it.rom} /></div><div className="fr">{L(it.ref.use)}</div></>;
+    head = <><div className="l1">{!noThai && <Thai text={it.thai} />}<Rom text={it.rom} /></div><div className="fr">{L(it.ref.use)}</div></>;
   } else if (it.kind === 'word') {
-    head = <><div className="l1"><Thai text={it.thai} /><Rom text={it.rom} /></div><div className="fr">{resolveTokens(L(it.meaning), tok)}</div></>;
+    head = <><div className="l1">{!noThai && <Thai text={it.thai} />}<Rom text={it.rom} /></div><div className="fr">{resolveTokens(L(it.meaning), tok)}</div></>;
     rows.push(['API', <span className="ipa">{romToIPA(resolveTokens(it.rom, tok).replace(/\.\.\./g, ''))}</span>]);
     rows.push(['RTGS', <span className="ipa">{romToRTGS(resolveTokens(it.rom, tok))}</span>]);
     if (it.ref.themes.length) rows.push(['Thème', it.ref.themes.map((t) => L(THEME_BY_ID[t]?.name)).filter(Boolean).join(', ')]);
@@ -86,7 +102,9 @@ export function ItemBack({ it }: { it: LearnItem }) {
     head = <div className="fr">{L(it.meaning)}</div>;
   }
   const ex = it.kind === 'word' ? it.ref.example : it.kind === 'clf' ? it.ref.example : it.kind === 'vow' ? it.ref.example : null;
-  const wbw = it.kind === 'word' && /[\s]|.{6,}/.test(it.thai);
+  // Mot à mot : seulement si la phrase se découpe vraiment (sinon la section resterait vide)
+  const seg = useWbw(it.kind === 'word' ? it.thai : '', it.kind === 'word' ? it.rom : '');
+  const wbw = it.kind === 'word' && /[\s]|.{6,}/.test(it.thai) && !!seg;
   // Les notations savantes (API, RTGS) vont dans un repli : utiles, mais pas au premier regard.
   const isTech = (k: string) => /^(API|RTGS)/.test(k);
   const main = rows.filter(([k]) => !isTech(k)), tech = rows.filter(([k]) => isTech(k));
@@ -94,10 +112,10 @@ export function ItemBack({ it }: { it: LearnItem }) {
     <>
       {head}
       {it.kind !== 'vow' && it.kind !== 'tone' && it.rom && <ToneChips rom={it.rom} />}
-      {wbw && <><div className="xs mut b mt-3">Mot à mot</div><WordByWord thai={it.thai} rom={it.rom} /></>}
+      {wbw && <><div className="xs mut b mt-3">Mot à mot</div><WordByWord thai={it.thai} rom={it.rom} lines={false} /></>}
       {main.length > 0 && <dl className="kv">{main.map(([k, v], i) => <Fragment key={i}><dt>{k}</dt><dd>{v}</dd></Fragment>)}</dl>}
       {ex && <div className="ex"><span className="mid"><Thai text={ex.thai} /><Rom text={ex.rom} /><br /><span className="sm mut">{resolveTokens(L(ex.meaning), tok)}</span></span><AudioButton text={ex.thai} className="sm" /></div>}
-      {tech.length > 0 && <details className="fold sm mt-3"><summary>Notations API et RTGS</summary><dl className="kv">{tech.map(([k, v], i) => <Fragment key={i}><dt>{k}</dt><dd>{v}</dd></Fragment>)}</dl></details>}
+      {tech.length > 0 && <details className="fold sm mt-3"><summary>Notations {[...new Set(tech.map(([k]) => k.replace(/ du nom$/, '')))].join(' et ')}</summary><dl className="kv">{tech.map(([k, v], i) => <Fragment key={i}><dt>{k}</dt><dd>{v}</dd></Fragment>)}</dl></details>}
     </>
   );
 }

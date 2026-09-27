@@ -37,6 +37,10 @@ export const daysAgoKey = (n: number) => {
 
 export const stripAccents = (s: string) =>
   String(s)
+    // apostrophes typographiques, espaces insécables, gluon (voir frTypo) : la recherche reste insensible à la typographie
+    .replace(/[’‘ʼ]/g, "'")
+    .replace(/[\u00a0\u202f]/g, ' ')
+    .replace(/\u2060/g, '')
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase();

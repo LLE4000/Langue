@@ -5,7 +5,7 @@ import { useStore } from '@/app/store';
 import { DIALOG_BY_ID, th } from '@/content/th';
 import { L, T } from '@/i18n';
 import { DialogView } from '@/components/DialogView';
-import { Empty, Icon } from '@/components/ui';
+import { Empty, Icon, GlyphIcon } from '@/components/ui';
 
 export function Dialogs() {
   const t = T();
@@ -14,9 +14,9 @@ export function Dialogs() {
   const done = new Set(hist.filter((h) => h.kind === 'dialog').map((h) => h.label));
   return (
     <>
-      <p className="lead">Des situations réelles. La traduction est masquée au départ : essayez d’abord de comprendre seul.</p>
+      <p className="lead">Des situations réelles. La traduction est masquée au départ&nbsp;: essayez d’abord de comprendre seul.</p>
       <div className="btns mb-3"><Link className="btn soft sm" to="/explore/comprehension"><Icon name="headphones" size={16} /> Tester ma compréhension orale</Link></div>
-      <div className="list">{th.DIALOGS.map((d) => <Link key={d.id} className={`row ${done.has(d.id) ? 'done' : ''}`} to={`/explore/dialogs/${encodeURIComponent(d.id)}`}><span className="ico">{done.has(d.id) ? <Icon name="check" /> : d.icon}</span><span className="mid"><span className="t">{L(d.title)}</span><span className="s">{d.lines.length} répliques · avec : {L(d.other).toLowerCase()}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div>
+      <div className="list">{th.DIALOGS.map((d) => <Link key={d.id} className={`row ${done.has(d.id) ? 'done' : ''}`} to={`/explore/dialogs/${encodeURIComponent(d.id)}`}><span className="ico">{done.has(d.id) ? <Icon name="check" /> : <GlyphIcon name={d.icon} />}</span><span className="mid"><span className="t">{L(d.title)}</span><span className="s">{d.lines.length} répliques · avec : {L(d.other).toLowerCase()}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div>
     </>
   );
 }

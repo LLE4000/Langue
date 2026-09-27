@@ -7,12 +7,12 @@ export const NEAR_SOUNDS: [string, string][] = [["k · kh","กขค"],["j · c
 
 /** Conseils affichés au fil des leçons d'alphabet. */
 export const LETTER_TIPS: { fr: string }[] = [
-  { fr: "Une syllabe thaïe = une consonne + une voyelle. La voyelle s'écrit après (กา), avant (เก), au-dessus (กี) ou en dessous (กุ), mais elle se prononce toujours <b>après</b> la consonne." },
-  { fr: "Chaque consonne a une <b>classe</b> (moyenne, haute ou basse). La classe ne change pas le son de la lettre : elle sert à trouver le ton de la syllabe. Retenez-la avec la lettre, comme le genre d'un nom en français." },
+  { fr: "Une syllabe thaïe = une consonne + une voyelle. La voyelle s’écrit après (กา), avant (เก), au-dessus (กี) ou en dessous (กุ), mais elle se prononce toujours <b>après</b> la consonne." },
+  { fr: "Chaque consonne a une <b>classe</b> (moyenne, haute ou basse). La classe ne change pas le son de la lettre : elle sert à trouver le ton de la syllabe. Retenez-la avec la lettre, comme le genre d’un nom en français." },
   { fr: "Voyelle <b>courte</b> ou <b>longue</b> : la durée fait partie du mot. Une syllabe ouverte à voyelle longue se dit sur un ton moyen (classe moyenne ou basse) ou montant (classe haute) ; à voyelle courte, sur un ton bas (moyenne, haute) ou haut (basse)." },
-  { fr: "Le mot qui accompagne chaque lettre (ก ไก่ « poulet ») est son nom : c'est ainsi qu'un Thaï épelle. Apprendre le nom, c'est apprendre la lettre et un mot." },
-  { fr: "Lisez les syllabes à voix haute après l'audio, puis sans l'audio. Le but n'est pas de réciter l'alphabet mais de <b>déchiffrer</b> : consonne, voyelle, ton." },
-  { fr: "Plusieurs lettres ont le <b>même son</b> (ส ศ ษ = s). Ce qui les distingue, c'est leur classe et les mots où elles apparaissent : inutile de chercher une différence à l'oreille." },
+  { fr: "Le mot qui accompagne chaque lettre (ก ไก่ « poulet ») est son nom : c’est ainsi qu’un Thaï épelle. Apprendre le nom, c’est apprendre la lettre et un mot." },
+  { fr: "Lisez les syllabes à voix haute après l’audio, puis sans l’audio. Le but n’est pas de réciter l’alphabet mais de <b>déchiffrer</b> : consonne, voyelle, ton." },
+  { fr: "Plusieurs lettres ont le <b>même son</b> (ส ศ ษ = s). Ce qui les distingue, c’est leur classe et les mots où elles apparaissent : inutile de chercher une différence à l’oreille." },
 ];
 
 

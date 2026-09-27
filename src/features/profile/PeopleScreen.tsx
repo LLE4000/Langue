@@ -6,7 +6,7 @@ import { createProfile, deleteProfile, readRegistry, reloadToHome, switchProfile
 import { Icon, Sheet } from '@/components/ui';
 
 export function PeopleScreen() {
-  usePage('Personnes sur cet appareil', { back: '/profile' });
+  usePage('Personnes', { back: '/profile' });
   const me = useStore((s) => s.profile?.name ?? '');
   const [reg, setReg] = useState(readRegistry());
   const [ask, setAsk] = useState<string | null>(null);
@@ -33,8 +33,8 @@ export function PeopleScreen() {
           );
         })}
       </div>
-      <p className="sm mut mt-4 mb-2">Ajouter une personne redémarre l’application sur l’écran de bienvenue du nouveau profil. Pour revenir à votre profil, repassez par cet écran.</p>
-      <button className="btn" onClick={() => setAskAdd(true)}>+ Ajouter une personne</button>
+      <p className="note-under mt-4 mb-3">Ajouter une personne redémarre l’application sur l’écran de bienvenue du nouveau profil. Pour revenir à votre profil, repassez par cet écran.</p>
+      <button className="btn" onClick={() => setAskAdd(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg> Ajouter une personne</button>
 
       <Sheet open={askAdd} onClose={() => setAskAdd(false)} title="Ajouter une personne ?" footer={null}>
         <p className="lead">L’application va redémarrer sur l’écran de bienvenue pour créer le nouveau profil. Votre progression est conservée.</p>

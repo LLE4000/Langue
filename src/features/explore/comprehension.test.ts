@@ -5,7 +5,7 @@ import { buildComprehensionQuiz, replyQuestions, whoQuestions } from './comprehe
 
 describe('compréhension orale', () => {
   it('chaque dialogue a des questions rédigées cohérentes', () => {
-    for (const d of th.DIALOGS) {
+    for (const d of th.DIALOGS.filter((x) => !x.level)) { // écoute longue : questions dans le dialogue (longDialogs.test.ts)
       const qs = DIALOG_QUESTIONS[d.id];
       expect(qs, d.id).toBeDefined();
       expect(qs.length, d.id).toBeGreaterThanOrEqual(2);

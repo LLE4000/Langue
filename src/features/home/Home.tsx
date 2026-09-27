@@ -70,9 +70,9 @@ export function Home() {
             <span className="k">{t.home.nextLesson}{lessonNo > 0 ? ` · n° ${lessonNo}` : ''}{next.status === 'locked' ? ' · à débloquer' : ''}</span>
             <span className={`t ${card.title.length > 19 ? 'long' : ''}`}><CardTitle card={card} /></span>
             <span className="s">{card.sub}</span>
-            <span className="pills"><span className="kl">{card.label}</span><span>{card.count}</span>{card.extras.map((x) => <span key={x}>{x}</span>)}<span>{next.lesson.minutes} {t.common.minutes}</span>{next.knownOrally && <span>à lire</span>}</span>
+            <span className="pills"><span className="kl">{card.label}</span><span>{card.count}</span>{card.extras.map((x) => <span key={x}>{x}</span>)}{next.knownOrally && <span>à lire</span>}</span>
           </span>
-          <span className="foot"><span className="go">{t.common.start} <Icon name="next" /></span></span>
+          <span className="foot"><span className="go">{t.common.start} <Icon name="next" /></span><span className="dur"><Icon name="clock" size={16} />{next.lesson.minutes} {t.common.minutes}</span></span>
         </Link>
       ) : (
         <div className="card"><div className="row-flex"><Ico name="sparkles" tone="acc" /><b>Parcours terminé</b></div><p className="mut sm mt-2">{t.home.allDone}</p></div>
@@ -82,8 +82,8 @@ export function Home() {
 
       {/* L'essentiel du jour : ce qui attend en révision, les minutes faites */}
       <div className="today" aria-label="Aujourd’hui">
-        <Link to="/review" className={`tk ${due.length ? 'due' : ''}`}><Icon name="repeat" size={18} /><span><b>{due.length}</b> à réviser</span></Link>
-        <Link to="/profile/stats" className="tk"><Icon name="bolt" size={18} /><span><b>{minutes}</b> / {goalMin} min aujourd’hui</span><Bar p={minutes / goalMin} thin /></Link>
+        <Link to="/review" className={`tk ${due.length ? 'due' : ''}`}><Icon name="repeat" size={18} /><b>{due.length}</b><span className="lab">à réviser</span></Link>
+        <Link to="/profile/stats" className="tk"><Icon name="bolt" size={18} /><b>{minutes}<small> / {goalMin} min</small></b><span className="lab">aujourd’hui</span><Bar p={minutes / goalMin} thin /></Link>
       </div>
 
       {/* Lire à voix haute : l'entraînement intensif de lecture, avec son propre programme */}
@@ -91,7 +91,7 @@ export function Home() {
         <Link to="/read" className="ra-home" aria-label="Lire à voix haute">
           <span className="ic"><Icon name="mic" /></span>
           <span className="mid"><span className="k">Lire à voix haute</span><span className="t">Séance {raNext.n} · {raNext.title}</span><span className="s">{raNext.items.length} lectures · ≈ {raNext.minutes} min{raWeak ? ` · ${raWeak} à reprendre` : ''}</span></span>
-          <span className="chev">›</span>
+          <span className="chev"><Icon name="next" size={18} /></span>
         </Link>
       )}
 
@@ -107,7 +107,7 @@ export function Home() {
             <span><b>{doneCount}</b> leçon{doneCount > 1 ? 's' : ''} faite{doneCount > 1 ? 's' : ''}</span>
           </span>
         </span>
-        <span className="chev">›</span>
+        <span className="chev"><Icon name="next" size={18} /></span>
       </Link>
 
       {/* La suite du parcours : les leçons suivantes, dans l'ordre */}

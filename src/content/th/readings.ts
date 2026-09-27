@@ -20,7 +20,7 @@ export const READINGS: Reading[] = [
         { thai: "มี", rom: "mii", gloss: { fr: "avoir" } },
         { thai: "ขา", rom: "khǎa", gloss: { fr: "patte, jambe" } },
       ] },
-      { tr: { fr: "L'oncle a une rizière." }, tokens: [
+      { tr: { fr: "L’oncle a une rizière." }, tokens: [
         { thai: "อา", rom: "aa", gloss: { fr: "oncle, tante (cadet du père)" } },
         { thai: "มี", rom: "mii", gloss: { fr: "avoir" } },
         { thai: "นา", rom: "naa", gloss: { fr: "rizière" } },
@@ -54,9 +54,9 @@ export const READINGS: Reading[] = [
   {
     id: "r:r3", level: 2, title: { fr: "Je me présente" },
     sentences: [
-      { tr: { fr: "Je m'appelle {n}." }, tokens: [
+      { tr: { fr: "Je m’appelle {n}." }, tokens: [
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
-        { thai: "ชื่อ", rom: "chʉ̂ʉ", gloss: { fr: "s'appeler ; nom" } },
+        { thai: "ชื่อ", rom: "chʉ̂ʉ", gloss: { fr: "s’appeler ; nom" } },
         { thai: "{N}", rom: "{n}", gloss: { fr: "(votre prénom)" } },
       ] },
       { tr: { fr: "Je suis ingénieur." }, tokens: [
@@ -70,7 +70,7 @@ export const READINGS: Reading[] = [
         { thai: "จาก", rom: "jàak", gloss: { fr: "de" } },
         { thai: "เบลเยียม", rom: "ben-yîam", gloss: { fr: "Belgique" } },
       ] },
-      { tr: { fr: "J'aime la cuisine thaïe." }, tokens: [
+      { tr: { fr: "J’aime la cuisine thaïe." }, tokens: [
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
         { thai: "ชอบ", rom: "chɔ̂ɔp", gloss: { fr: "aimer bien" } },
         { thai: "อาหาร", rom: "aa-hǎan", gloss: { fr: "nourriture" } },
@@ -81,7 +81,7 @@ export const READINGS: Reading[] = [
   {
     id: "r:r4", level: 2, title: { fr: "Au café" },
     sentences: [
-      { tr: { fr: "J'ai envie de boire un café." }, tokens: [
+      { tr: { fr: "J’ai envie de boire un café." }, tokens: [
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
         { thai: "อยาก", rom: "yàak", gloss: { fr: "avoir envie de" } },
         { thai: "ดื่ม", rom: "dʉ̀ʉm", gloss: { fr: "boire" } },
@@ -98,7 +98,7 @@ export const READINGS: Reading[] = [
         { thai: "ใส่", rom: "sài", gloss: { fr: "mettre" } },
         { thai: "น้ำตาล", rom: "náam-taan", gloss: { fr: "sucre" } },
       ] },
-      { tr: { fr: "C'est cinquante bahts." }, tokens: [
+      { tr: { fr: "C’est cinquante bahts." }, tokens: [
         { thai: "ห้าสิบ", rom: "hâa-sìp", gloss: { fr: "cinquante" } },
         { thai: "บาท", rom: "bàat", gloss: { fr: "baht" } },
       ] },
@@ -107,13 +107,13 @@ export const READINGS: Reading[] = [
   {
     id: "r:r5", level: 3, title: { fr: "Au marché" },
     sentences: [
-      { tr: { fr: "Aujourd'hui je vais au marché." }, tokens: [
-        { thai: "วันนี้", rom: "wan-níi", gloss: { fr: "aujourd'hui" } },
+      { tr: { fr: "Aujourd’hui je vais au marché." }, tokens: [
+        { thai: "วันนี้", rom: "wan-níi", gloss: { fr: "aujourd’hui" } },
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
         { thai: "ไป", rom: "pai", gloss: { fr: "aller" } },
         { thai: "ตลาด", rom: "tà-làat", gloss: { fr: "marché" } },
       ] },
-      { tr: { fr: "J'achète des fruits." }, tokens: [
+      { tr: { fr: "J’achète des fruits." }, tokens: [
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
         { thai: "ซื้อ", rom: "sʉ́ʉ", gloss: { fr: "acheter" } },
         { thai: "ผลไม้", rom: "phǒn-lá-máai", gloss: { fr: "fruits" } },
@@ -123,7 +123,7 @@ export const READINGS: Reading[] = [
         { thai: "อร่อย", rom: "à-rɔ̀i", gloss: { fr: "délicieux" } },
         { thai: "มาก", rom: "mâak", gloss: { fr: "très" } },
       ] },
-      { tr: { fr: "Le prix n'est pas élevé." }, tokens: [
+      { tr: { fr: "Le prix n’est pas élevé." }, tokens: [
         { thai: "ราคา", rom: "raa-khaa", gloss: { fr: "prix" } },
         { thai: "ไม่", rom: "mâi", gloss: { fr: "ne… pas" } },
         { thai: "แพง", rom: "phɛɛng", gloss: { fr: "cher" } },
@@ -153,8 +153,8 @@ export const READINGS: Reading[] = [
         { thai: "ไป", rom: "pai", gloss: { fr: "aller" } },
         { thai: "ทำงาน", rom: "tham-ngaan", gloss: { fr: "travailler" } },
       ] },
-      { tr: { fr: "Aujourd'hui il y a une réunion." }, tokens: [
-        { thai: "วันนี้", rom: "wan-níi", gloss: { fr: "aujourd'hui" } },
+      { tr: { fr: "Aujourd’hui il y a une réunion." }, tokens: [
+        { thai: "วันนี้", rom: "wan-níi", gloss: { fr: "aujourd’hui" } },
         { thai: "มี", rom: "mii", gloss: { fr: "il y a" } },
         { thai: "ประชุม", rom: "prà-chum", gloss: { fr: "réunion" } },
       ] },
@@ -183,8 +183,8 @@ export const READINGS: Reading[] = [
         { thai: "วิศวกร", rom: "wít-sà-wá-kɔɔn", gloss: { fr: "ingénieur" } },
         { thai: "โครงสร้าง", rom: "khroong-sâang", gloss: { fr: "structure" } },
       ] },
-      { tr: { fr: "Aujourd'hui je vais inspecter un nouveau bâtiment." }, tokens: [
-        { thai: "วันนี้", rom: "wan-níi", gloss: { fr: "aujourd'hui" } },
+      { tr: { fr: "Aujourd’hui je vais inspecter un nouveau bâtiment." }, tokens: [
+        { thai: "วันนี้", rom: "wan-níi", gloss: { fr: "aujourd’hui" } },
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
         { thai: "ไป", rom: "pai", gloss: { fr: "aller" } },
         { thai: "ตรวจสอบ", rom: "trùat-sɔ̀ɔp", gloss: { fr: "inspecter" } },
@@ -225,10 +225,10 @@ export const READINGS: Reading[] = [
     ],
   },
   {
-    id: "r:r8", level: 4, title: { fr: "Visite à l'hôpital" },
+    id: "r:r8", level: 4, title: { fr: "Visite à l’hôpital" },
     sentences: [
-      { tr: { fr: "Aujourd'hui je vais à l'hôpital." }, tokens: [
-        { thai: "วันนี้", rom: "wan-níi", gloss: { fr: "aujourd'hui" } },
+      { tr: { fr: "Aujourd’hui je vais à l’hôpital." }, tokens: [
+        { thai: "วันนี้", rom: "wan-níi", gloss: { fr: "aujourd’hui" } },
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
         { thai: "ไป", rom: "pai", gloss: { fr: "aller" } },
         { thai: "โรงพยาบาล", rom: "roong-phá-yaa-baan", gloss: { fr: "hôpital" } },
@@ -247,12 +247,12 @@ export const READINGS: Reading[] = [
         { thai: "ชั้น", rom: "chán", gloss: { fr: "niveau" } },
         { thai: "ห้า", rom: "hâa", gloss: { fr: "cinq" } },
       ] },
-      { tr: { fr: "Le médecin dit que son état s'est amélioré." }, tokens: [
+      { tr: { fr: "Le médecin dit que son état s’est amélioré." }, tokens: [
         { thai: "หมอ", rom: "mɔ̌ɔ", gloss: { fr: "médecin" } },
         { thai: "บอก", rom: "bɔ̀ɔk", gloss: { fr: "dire" } },
         { thai: "ว่า", rom: "wâa", gloss: { fr: "que" } },
         { thai: "อาการ", rom: "aa-kaan", gloss: { fr: "état, symptômes" } },
-        { thai: "ดีขึ้น", rom: "dii-khʉ̂n", gloss: { fr: "s'améliorer" } },
+        { thai: "ดีขึ้น", rom: "dii-khʉ̂n", gloss: { fr: "s’améliorer" } },
         { thai: "แล้ว", rom: "lɛ́ɛo", gloss: { fr: "déjà" } },
       ] },
       { tr: { fr: "Je suis très content." }, tokens: [
@@ -265,17 +265,17 @@ export const READINGS: Reading[] = [
   {
     id: "r:r9", level: 5, title: { fr: "Voyage à Chiang Mai" },
     sentences: [
-      { tr: { fr: "La semaine prochaine j'irai à Chiang Mai." }, tokens: [
+      { tr: { fr: "La semaine prochaine j’irai à Chiang Mai." }, tokens: [
         { thai: "อาทิตย์", rom: "aa-thít", gloss: { fr: "semaine" } },
         { thai: "หน้า", rom: "nâa", gloss: { fr: "prochain" } },
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
-        { thai: "จะ", rom: "jà", gloss: { fr: "(futur)" } },
+        { thai: "จะ", rom: "jà", gloss: { fr: "(futur : va…)" } },
         { thai: "ไป", rom: "pai", gloss: { fr: "aller" } },
         { thai: "เชียงใหม่", rom: "chiang-mài", gloss: { fr: "Chiang Mai" } },
       ] },
-      { tr: { fr: "J'irai en avion." }, tokens: [
+      { tr: { fr: "J’irai en avion." }, tokens: [
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
-        { thai: "จะ", rom: "jà", gloss: { fr: "(futur)" } },
+        { thai: "จะ", rom: "jà", gloss: { fr: "(futur : va…)" } },
         { thai: "ไป", rom: "pai", gloss: { fr: "aller" } },
         { thai: "โดย", rom: "dooi", gloss: { fr: "par" } },
         { thai: "เครื่องบิน", rom: "khrʉ̂ang-bin", gloss: { fr: "avion" } },
@@ -287,14 +287,14 @@ export const READINGS: Reading[] = [
         { thai: "หนึ่ง", rom: "nʉ̀ng", gloss: { fr: "un" } },
         { thai: "ชั่วโมง", rom: "chûa-moong", gloss: { fr: "heure" } },
       ] },
-      { tr: { fr: "Là-bas il fait plus frais qu'à Bangkok." }, tokens: [
+      { tr: { fr: "Là-bas il fait plus frais qu’à Bangkok." }, tokens: [
         { thai: "ที่นั่น", rom: "thîi-nân", gloss: { fr: "là-bas" } },
         { thai: "อากาศ", rom: "aa-kàat", gloss: { fr: "temps, air" } },
         { thai: "เย็น", rom: "yen", gloss: { fr: "frais" } },
         { thai: "กว่า", rom: "kwàa", gloss: { fr: "plus… que" } },
         { thai: "กรุงเทพ", rom: "krung-thêep", gloss: { fr: "Bangkok" } },
       ] },
-      { tr: { fr: "J'ai envie d'aller au temple et de manger du khao soi." }, tokens: [
+      { tr: { fr: "J’ai envie d’aller au temple et de manger du khao soi." }, tokens: [
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
         { thai: "อยาก", rom: "yàak", gloss: { fr: "avoir envie de" } },
         { thai: "ไป", rom: "pai", gloss: { fr: "aller" } },
@@ -318,7 +318,7 @@ export const READINGS: Reading[] = [
         { thai: "ว่าง", rom: "wâang", gloss: { fr: "libre" } },
         { thai: "ไหม", rom: "mái", gloss: { fr: "(question)" } },
       ] },
-      { tr: { fr: "J'aimerais t'inviter à aller manger." }, tokens: [
+      { tr: { fr: "J’aimerais t’inviter à aller manger." }, tokens: [
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
         { thai: "อยาก", rom: "yàak", gloss: { fr: "avoir envie de" } },
         { thai: "ชวน", rom: "chuan", gloss: { fr: "inviter" } },
@@ -326,7 +326,7 @@ export const READINGS: Reading[] = [
         { thai: "กิน", rom: "kin", gloss: { fr: "manger" } },
         { thai: "ข้าว", rom: "khâao", gloss: { fr: "riz, repas" } },
       ] },
-      { tr: { fr: "Un restaurant de l'Isan vient d'ouvrir près de chez moi." }, tokens: [
+      { tr: { fr: "Un restaurant de l’Isan vient d’ouvrir près de chez moi." }, tokens: [
         { thai: "มี", rom: "mii", gloss: { fr: "il y a" } },
         { thai: "ร้านอาหาร", rom: "ráan-aa-hǎan", gloss: { fr: "restaurant" } },
         { thai: "อีสาน", rom: "ii-sǎan", gloss: { fr: "Isan (Nord-Est)" } },
@@ -360,7 +360,7 @@ export const READINGS: Reading[] = [
         { thai: "กิน", rom: "kin", gloss: { fr: "manger" } },
         { thai: "ปลา", rom: "plaa", gloss: { fr: "poisson" } },
       ] },
-      { tr: { fr: "Le chien n'aime pas le chat." }, tokens: [
+      { tr: { fr: "Le chien n’aime pas le chat." }, tokens: [
         { thai: "หมา", rom: "mǎa", gloss: { fr: "chien" } },
         { thai: "ไม่", rom: "mâi", gloss: { fr: "ne… pas" } },
         { thai: "ชอบ", rom: "chɔ̂ɔp", gloss: { fr: "aimer bien" } },
@@ -377,12 +377,12 @@ export const READINGS: Reading[] = [
   {
     id: "r:r12", level: 3, title: { fr: "Un jour de fièvre" },
     sentences: [
-      { tr: { fr: "Aujourd'hui je ne me sens pas bien." }, tokens: [
-        { thai: "วันนี้", rom: "wan-níi", gloss: { fr: "aujourd'hui" } },
+      { tr: { fr: "Aujourd’hui je ne me sens pas bien." }, tokens: [
+        { thai: "วันนี้", rom: "wan-níi", gloss: { fr: "aujourd’hui" } },
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
         { thai: "ไม่สบาย", rom: "mâi sà-baai", gloss: { fr: "ne pas se sentir bien" } },
       ] },
-      { tr: { fr: "J'ai mal à la tête et de la fièvre." }, tokens: [
+      { tr: { fr: "J’ai mal à la tête et de la fièvre." }, tokens: [
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
         { thai: "ปวดหัว", rom: "pùat-hǔa", gloss: { fr: "avoir mal à la tête" } },
         { thai: "และ", rom: "lɛ́", gloss: { fr: "et" } },
@@ -434,7 +434,7 @@ export const READINGS: Reading[] = [
         { thai: "เป็น", rom: "pen", gloss: { fr: "être" } },
         { thai: "ครู", rom: "khruu", gloss: { fr: "enseignant" } },
       ] },
-      { tr: { fr: "Ma petite sœur étudie à l'université." }, tokens: [
+      { tr: { fr: "Ma petite sœur étudie à l’université." }, tokens: [
         { thai: "น้องสาว", rom: "nɔ́ɔng-sǎao", gloss: { fr: "petite sœur" } },
         { thai: "เรียน", rom: "rian", gloss: { fr: "étudier" } },
         { thai: "ที่", rom: "thîi", gloss: { fr: "à" } },
@@ -466,8 +466,8 @@ export const READINGS: Reading[] = [
         { thai: "ที่", rom: "thîi", gloss: { fr: "à" } },
         { thai: "สวน", rom: "sǔan", gloss: { fr: "parc, jardin" } },
       ] },
-      { tr: { fr: "L'après-midi, je retrouve des amis." }, tokens: [
-        { thai: "ตอนบ่าย", rom: "tɔɔn-bàai", gloss: { fr: "l'après-midi" } },
+      { tr: { fr: "L’après-midi, je retrouve des amis." }, tokens: [
+        { thai: "ตอนบ่าย", rom: "tɔɔn-bàai", gloss: { fr: "l’après-midi" } },
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
         { thai: "ไป", rom: "pai", gloss: { fr: "aller" } },
         { thai: "เจอ", rom: "jəə", gloss: { fr: "retrouver" } },
@@ -494,8 +494,8 @@ export const READINGS: Reading[] = [
   {
     id: "r:r15", level: 4, title: { fr: "Jour de coulage" },
     sentences: [
-      { tr: { fr: "Aujourd'hui, l'équipe coule la dalle du troisième niveau." }, tokens: [
-        { thai: "วันนี้", rom: "wan-níi", gloss: { fr: "aujourd'hui" } },
+      { tr: { fr: "Aujourd’hui, l’équipe coule la dalle du troisième niveau." }, tokens: [
+        { thai: "วันนี้", rom: "wan-níi", gloss: { fr: "aujourd’hui" } },
         { thai: "ทีมงาน", rom: "thiim-ngaan", gloss: { fr: "équipe" } },
         { thai: "เท", rom: "thee", gloss: { fr: "couler, verser" } },
         { thai: "พื้น", rom: "phʉ́ʉn", gloss: { fr: "dalle, sol" } },
@@ -535,11 +535,11 @@ export const READINGS: Reading[] = [
   {
     id: "r:r16", level: 5, title: { fr: "En train vers Ayutthaya" },
     sentences: [
-      { tr: { fr: "Dimanche prochain, j'irai à Ayutthaya en train." }, tokens: [
+      { tr: { fr: "Dimanche prochain, j’irai à Ayutthaya en train." }, tokens: [
         { thai: "วันอาทิตย์", rom: "wan-aa-thít", gloss: { fr: "dimanche" } },
         { thai: "หน้า", rom: "nâa", gloss: { fr: "prochain" } },
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
-        { thai: "จะ", rom: "jà", gloss: { fr: "(futur)" } },
+        { thai: "จะ", rom: "jà", gloss: { fr: "(futur : va…)" } },
         { thai: "ไป", rom: "pai", gloss: { fr: "aller" } },
         { thai: "อยุธยา", rom: "à-yút-thá-yaa", gloss: { fr: "Ayutthaya" } },
         { thai: "โดย", rom: "dooi", gloss: { fr: "par" } },
@@ -570,7 +570,7 @@ export const READINGS: Reading[] = [
       ] },
       { tr: { fr: "Je louerai un vélo pour visiter la ville." }, tokens: [
         { thai: "{I}", rom: "{i}", gloss: { fr: "je" } },
-        { thai: "จะ", rom: "jà", gloss: { fr: "(futur)" } },
+        { thai: "จะ", rom: "jà", gloss: { fr: "(futur : va…)" } },
         { thai: "เช่า", rom: "châo", gloss: { fr: "louer" } },
         { thai: "จักรยาน", rom: "jàk-krà-yaan", gloss: { fr: "vélo" } },
         { thai: "เที่ยว", rom: "thîao", gloss: { fr: "visiter, se promener" } },

@@ -13,10 +13,18 @@ import { StepFooter, ContinueButton } from '@/components/StepFooter';
 import { ToneCurve } from '@/components/ToneCurve';
 import { useMastery } from '@/app/hooks';
 import { lessonCard } from '@/curriculum/card';
-import { LessonBadge, kindClass } from '@/components/LessonCard';
+import { LessonBadge, CardTitle, kindClass } from '@/components/LessonCard';
+import { InitialSound, vowelPosFr } from '@/components/ItemCard';
 import type { ConsonantClass } from '@/content/types';
 
-const POS_LABEL: Record<string, string> = { L: 'avant', T: 'au-dessus', R: 'après', B: 'en dessous' };
+/** Séparateur collé à l'élément qui suit : une ligne ne finit jamais sur « · ». */
+const SEP = '·\u00a0';
+
+/** Formule de grammaire (« phrase + ครับ / ค่ะ ») : texte en police d'interface, parties thaïes en police thaïe. */
+function Pattern({ text }: { text: string }) {
+  const parts = text.split(/([\u0E00-\u0E7F][\u0E00-\u0E7F\s]*)/g).filter(Boolean);
+  return <div className="pattern">{parts.map((p, i) => (/[\u0E00-\u0E7F]/.test(p) ? <Thai key={i} text={p.trim()} /> : <span key={i}>{p}</span>))}</div>;
+}
 
 function KnownTag({ id }: { id: string }) {
   const m = useMastery(id);
@@ -31,8 +39,9 @@ function WordRow({ it, knownOrally }: { it: LearnItem; knownOrally?: boolean }) 
     <div className="row">
       <span className="mid">
         <Thai text={it.thai} />
-        <span className="s">{showRom && <><Rom text={it.rom} /> · </>}<Fr text={it.meaning} /> {knownOrally && m < 0.5 && <span className="tag jade">connu à l’oral</span>}<KnownTag id={it.id} /></span>
-        {ex && <span className="s mt-1"><Thai text={ex.thai} /> {showRom && <Rom text={ex.rom} />}<br /><Fr text={ex.meaning} /></span>}
+        {/* Transcription et sens sur deux lignes ; l'exemple en retrait, plus discret que le mot lui-même */}
+        <span className="s">{showRom && <Rom text={it.rom} className="block" />}<span className="block"><Fr text={it.meaning} />{knownOrally && m < 0.5 && <> <span className="tag jade">connu à l’oral</span></>} <KnownTag id={it.id} /></span></span>
+        {ex && <span className="wex"><Thai text={ex.thai} />{showRom && <Rom text={ex.rom} className="block" />}<span className="block"><Fr text={ex.meaning} /></span></span>}
       </span>
       <span className="end"><MasteryDot m={m} /><AudioButton text={it.say} className="sm" /></span>
     </div>
@@ -46,13 +55,15 @@ export function TheoryBlockView({ b, knownOrally }: { b: TheoryBlock; knownOrall
     case 'text': return <p className="lead theory-text"><Fr text={b.text} /></p>;
     case 'note': return <div className="note info"><Fr text={b.text} /></div>;
     case 'tip': return <div className="note"><b>Astuce.</b> <Fr text={b.text} /></div>;
-    case 'pattern': return <div className="pattern" lang="th"><Fr text={b.text} /></div>;
+    case 'pattern': return <Pattern text={L(b.text)} />;
     case 'letters': return (
       <><div className="h2">Les consonnes</div><div className="list">{(b.ids ?? []).map((id) => { const c = ITEMS[id]; if (!c || c.kind !== 'cons') return null; return (
         <div className="row" key={id}>
           <span className="lglyph" lang="th">{c.thai}</span>
-          <span className="mid"><span className="t"><Thai text={c.thai + ' ' + c.ref.nameWord} /> <Rom text={c.rom} /> · {L(c.ref.nameMeaning)} <KnownTag id={id} /></span>
-            <span className="s">son <b className="rom">{c.ref.initial}</b>{c.ref.final ? <> · en finale <b className="rom">-{c.ref.final}</b></> : null} · <span className={`tag ${c.ref.cls}`}>classe {classNameFr(c.ref.cls)}</span>{c.ref.note ? <><br />{L(c.ref.note)}</> : null}{showModern ? <> · <span className="mut">moderne : <span className="thm th-s ink" lang="th">{c.thai}</span></span></> : null}</span></span>
+          <span className="mid"><span className="t"><span className="nw"><Thai text={c.thai + ' ' + c.ref.nameWord} /> <Rom text={c.rom} /></span> {SEP}<Fr text={c.ref.nameMeaning} /> <KnownTag id={id} /></span>
+            {/* Segments insécables qui passent à la ligne en bloc (jamais « · » en fin de ligne, jamais une lettre seule) */}
+            <span className="s segs"><span className="nw">son <InitialSound s={c.ref.initial} /></span>{c.ref.final ? <span className="nw">{SEP}en finale <b className="rom">-{c.ref.final}</b></span> : null}<span className={`tag ${c.ref.cls}`}>classe {classNameFr(c.ref.cls)}</span>{showModern ? <span className="nw mut">moderne{'\u00a0'}: <span className="thm th-s ink" lang="th">{c.thai}</span></span> : null}</span>
+            {c.ref.note ? <span className="s"><Fr text={c.ref.note} /></span> : null}</span>
           <span className="end"><AudioButton text={c.say} className="sm" /></span>
         </div>); })}</div></>);
     case 'vowels': return (
@@ -60,7 +71,8 @@ export function TheoryBlockView({ b, knownOrally }: { b: TheoryBlock; knownOrall
         <div className="row" key={id}>
           <span className="lglyph" lang="th">{vowelDisplay(r.form)}</span>
           <span className="mid"><span className="t"><Rom text={r.rom} /> · {r.length === 'S' ? 'courte' : 'longue'} <span className="ipa">/{r.ipa}/</span> <KnownTag id={id} /></span>
-            <span className="s">s’écrit {[...(r.positions || '')].map((k) => POS_LABEL[k]).join(' + ') || 'autour'} de la consonne{r.closedForm ? <> · avec finale : <Thai text={r.closedForm} /></> : null}{r.example ? <> · <Thai text={r.example.thai} /> <Rom text={r.example.rom} /> « {L(r.example.meaning)} »</> : null}{r.note ? <><br />{L(r.note)}</> : null}</span></span>
+            <span className="s segs"><span>s’écrit {vowelPosFr(r.positions || '')}</span>{r.closedForm ? <span className="nw">{SEP}avec finale{'\u00a0'}: <Thai text={r.closedForm} /></span> : null}{r.example ? <span>{SEP}<span className="nw"><Thai text={r.example.thai} /> <Rom text={r.example.rom} /></span> «{'\u00a0'}<Fr text={r.example.meaning} />{'\u00a0'}»</span> : null}</span>
+            {r.note ? <span className="s"><Fr text={r.note} /></span> : null}</span>
           <span className="end"><AudioButton text={r.example ? r.example.thai : v.say} className="sm" /></span>
         </div>); })}</div></>);
     case 'toneMarks': return (
@@ -97,21 +109,21 @@ export function TheoryBlockView({ b, knownOrally }: { b: TheoryBlock; knownOrall
       <div className="note">Phrase célèbre : <Thai text="ไม้ใหม่ไม่ไหม้ไหม" className="th-m" /> <Rom text="máai mài mâi mâi mái" /> — « le bois neuf ne brûle pas, n’est-ce pas ? » <button className="mini" onClick={() => sp.speak('ไม้ใหม่ไม่ไหม้ไหม')} aria-label="Écouter"><Icon name="speaker" /></button></div></>);
     case 'syllables': return (
       <><div className="h2">Lire des syllabes</div><p className="note-under">Touchez pour écouter. Le ton est donné par la classe de la consonne et la voyelle.</p>
-        <div className="syls">{(b.syllables ?? []).map((s, i) => <button key={i} className="syl" onClick={() => sp.speak(s.thai)}><b lang="th">{s.thai}</b><em>{s.rom}</em></button>)}</div>
+        <div className="syls">{(b.syllables ?? []).map((s, i) => <button key={i} className="syl" onClick={() => sp.speak(s.thai)}><b lang="th">{s.thai}</b><em><Fr text={s.rom} /></em></button>)}</div>
         <div className="btns mt-2"><button className="btn soft sm" onClick={() => { const list = (b.syllables ?? []).map((s) => s.thai); let i = 0; const next = () => { if (i < list.length) sp.speak(list[i++], { onend: () => setTimeout(next, 500) }); }; next(); }}><Icon name="play" size={16} /> Toute la série</button></div></>);
     case 'words': return (
       <><div className="h2">Les mots</div><div className="list">{(b.ids ?? []).map((id) => ITEMS[id] ? <WordRow key={id} it={ITEMS[id]} knownOrally={knownOrally} /> : null)}</div></>);
     case 'numbers': return (
-      <><div className="h2">Les nombres</div><div className="list">{(b.ids ?? []).map((id) => { const n = ITEMS[id]; if (!n || n.kind !== 'num') return null; return <div className="row" key={id}><span className="lglyph sm-num" lang="th">{n.digits}</span><span className="mid"><span className="t">{n.meaning.fr}</span><span className="s"><Thai text={n.thai} /> <Rom text={n.rom} /></span></span><span className="end"><AudioButton text={n.say} className="sm" /></span></div>; })}</div></>);
+      <><div className="h2">Les nombres</div><div className="list">{(b.ids ?? []).map((id) => { const n = ITEMS[id]; if (!n || n.kind !== 'num') return null; return <div className="row" key={id}><span className={`lglyph sm-num ${n.digits.length <= 2 ? 'short' : ''}`} lang="th">{n.digits}</span><span className="mid"><span className="t">{n.meaning.fr}</span><span className="s"><Thai text={n.thai} /> <Rom text={n.rom} /></span></span><span className="end"><AudioButton text={n.say} className="sm" /></span></div>; })}</div></>);
     case 'classifiers': return (
-      <><div className="h2">Les classificateurs</div><div className="list">{(b.ids ?? []).map((id) => { const c = ITEMS[id]; if (!c || c.kind !== 'clf') return null; return <div className="row" key={id}><span className="mid"><span className="t"><Thai text={c.thai} className="th-m" /> <Rom text={c.rom} /></span><span className="s">{L(c.ref.use)} · <Thai text={c.ref.example.thai} /> <Rom text={c.ref.example.rom} /> « {L(c.ref.example.meaning)} »</span></span><span className="end"><AudioButton text={c.ref.example.thai} className="sm" /></span></div>; })}</div></>);
+      <><div className="h2">Les classificateurs</div><div className="list">{(b.ids ?? []).map((id) => { const c = ITEMS[id]; if (!c || c.kind !== 'clf') return null; return <div className="row" key={id}><span className="mid"><span className="t"><Thai text={c.thai} className="th-m" /> <Rom text={c.rom} /></span><span className="s"><Fr text={c.ref.use} /> {SEP}<span className="nw"><Thai text={c.ref.example.thai} /> <Rom text={c.ref.example.rom} /></span> «{'\u00a0'}<Fr text={c.ref.example.meaning} />{'\u00a0'}»</span></span><span className="end"><AudioButton text={c.ref.example.thai} className="sm" /></span></div>; })}</div></>);
     case 'grammar': {
       const g = b.grammarId ? GRAMMAR_BY_ID[b.grammarId] : null;
       if (!g) return null;
       return (
-        <><div className="h2">{g.icon} {L(g.title)} <span className="sp" /><Link to={`/explore/grammar/${encodeURIComponent(g.id)}`}>Fiche complète ›</Link></div>
-          <p className="lead ink">{L(g.rule)}</p><div className="pattern" lang="th">{g.pattern}</div>
-          <div className="list">{g.examples.slice(0, 3).map((e, i) => <div className="row" key={i}><span className="mid"><Thai text={e.thai} /><span className="s"><Rom text={e.rom} /><br /><Fr text={e.meaning} /></span></span><span className="end"><AudioButton text={e.thai} className="sm" /></span></div>)}</div>
+        <><div className="h2"><span className="h2-ic" aria-hidden="true"><Icon name="layers" size={16} /></span>{L(g.title)} <span className="sp" /><Link to={`/explore/grammar/${encodeURIComponent(g.id)}`}>Fiche complète ›</Link></div>
+          <p className="lead ink"><Fr text={g.rule} /></p><Pattern text={g.pattern} />
+          <div className="list">{g.examples.slice(0, 3).map((e, i) => <div className="row" key={i}><span className="mid"><Thai text={e.thai} /><span className="s"><Rom text={e.rom} className="block" /><span className="block"><Fr text={e.meaning} /></span></span></span><span className="end"><AudioButton text={e.thai} className="sm" /></span></div>)}</div>
           {g.tip && <div className="note sm">{L(g.tip)}</div>}</>);
     }
     case 'compare': return null;
@@ -124,8 +136,8 @@ export function TheoryStep({ step, onDone, title, subtitle, lesson }: { step: Ru
   return (
     <>
       {/* Le type de la leçon, tel que sur sa carte : badge, libellé, indicateur */}
-      {card && <div className={`lkind ${kindClass(card)}`}><LessonBadge card={card} /><span>{card.label}</span><span className="n">· {card.count}</span></div>}
-      <h2 className="theory-title">{step.title ? L(step.title) : title}</h2>
+      {card && <div className={`lkind ${kindClass(card)}`}><LessonBadge card={card} /><span>{card.label}</span><span className="sep" aria-hidden="true">·</span><span className="n">{card.count}</span></div>}
+      <h2 className="theory-title">{step.title ? L(step.title) : card ? <CardTitle card={card} /> : title}</h2>
       {subtitle && <p className="theory-sub">{subtitle}</p>}
       {step.blocks.map((b, i) => <div className="theory-block" key={i}><TheoryBlockView b={b} /></div>)}
       <div className="gap" />

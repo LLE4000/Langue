@@ -232,8 +232,8 @@ export function computeProgress(input: ProgressInput): Progress {
       case 'grammar': return `${Math.round(raws.grammar)} / ${c.grammar.length} points`;
       case 'tones': return toneN >= 8 || floors.tones > 0 ? `${pct(raws.tones)} de tons justes` : 'pas encore mesuré';
       case 'reading': return `${c.scriptLessons.filter((id) => doneLessons.has(id)).length} / ${c.scriptLessons.length} leçons · ${readingsDone} lecture${readingsDone > 1 ? 's' : ''}`;
-      case 'listening': return comps.length ? `${pct(compMean)} compris · ${comps.length} conversation${comps.length > 1 ? 's' : ''}` : 'écoutez une conversation';
-      case 'speaking': return prons.length ? `${r1(pronMean * 10)} / 10 sur ${prons.length} mot${prons.length > 1 ? 's' : ''}` : 'dites un mot au micro';
+      case 'listening': return comps.length ? `${pct(compMean)} compris · ${comps.length} conversation${comps.length > 1 ? 's' : ''}` : 'pas encore mesuré';
+      case 'speaking': return prons.length ? `${r1(pronMean * 10)} / 10 sur ${prons.length} mot${prons.length > 1 ? 's' : ''}` : 'pas encore mesuré';
       case 'conversation': return `${dialogsDone} / ${c.dialogs.length} dialogues`;
     }
   };

@@ -6,7 +6,7 @@ export const TONES: Tone[] = [
   { id: "L", name: { fr: "bas" }, thaiName: "เสียงเอก", rom: "sǐang èek", mark: "à", color: "var(--t-low)", path: "M6 40 C 36 44, 66 50, 94 54", desc: { fr: "Part un peu sous la voix normale et descend doucement vers le grave." }, example: { thai: "ไข่", rom: "khài", meaning: { fr: "œuf" } } },
   { id: "F", name: { fr: "descendant" }, thaiName: "เสียงโท", rom: "sǐang thoo", mark: "â", color: "var(--t-fall)", path: "M6 18 C 30 8, 50 12, 66 30 S 86 54, 94 56", desc: { fr: "Part haut, monte à peine, puis tombe nettement. Comme un « ah ! » de compréhension." }, example: { thai: "ข้าว", rom: "khâao", meaning: { fr: "riz" } } },
   { id: "H", name: { fr: "haut" }, thaiName: "เสียงตรี", rom: "sǐang trii", mark: "á", color: "var(--t-high)", path: "M6 28 C 34 24, 62 16, 94 8", desc: { fr: "Part au-dessus de la voix normale et monte encore, voix un peu tendue." }, example: { thai: "น้ำ", rom: "náam", meaning: { fr: "eau" } } },
-  { id: "R", name: { fr: "montant" }, thaiName: "เสียงจัตวา", rom: "sǐang jàt-tà-waa", mark: "ǎ", color: "var(--t-rise)", path: "M6 40 C 28 52, 46 56, 60 44 S 84 14, 94 10", desc: { fr: "Descend d'abord dans le grave puis remonte franchement. Comme un « ah ? » interrogatif." }, example: { thai: "หมา", rom: "mǎa", meaning: { fr: "chien" } } },
+  { id: "R", name: { fr: "montant" }, thaiName: "เสียงจัตวา", rom: "sǐang jàt-tà-waa", mark: "ǎ", color: "var(--t-rise)", path: "M6 40 C 28 52, 46 56, 60 44 S 84 14, 94 10", desc: { fr: "Descend d’abord dans le grave puis remonte franchement. Comme un « ah ? » interrogatif." }, example: { thai: "หมา", rom: "mǎa", meaning: { fr: "chien" } } },
 ];
 
 export const TONE_MARKS: ToneMark[] = [
@@ -40,7 +40,7 @@ export const TONE_WORDS: ToneWord[] = [
   { id: "t:เดี๋ยว", thai: "เดี๋ยว", rom: "dǐao", meaning: { fr: "un instant" }, cls: "M", live: true, long: true, mark: 4 },
   { id: "t:อ่าน", thai: "อ่าน", rom: "àan", meaning: { fr: "lire" }, cls: "M", live: true, long: true, mark: 1, note: { fr: "อ est une consonne de classe moyenne." } },
   { id: "t:อิ่ม", thai: "อิ่ม", rom: "ìm", meaning: { fr: "rassasié" }, cls: "M", live: true, long: false, mark: 1 },
-  { id: "t:จะ", thai: "จะ", rom: "jà", meaning: { fr: "(futur)" }, cls: "M", live: false, long: false, mark: 0, note: { fr: "Voyelle brève sans finale : syllabe morte." } },
+  { id: "t:จะ", thai: "จะ", rom: "jà", meaning: { fr: "marque du futur (va…)" }, cls: "M", live: false, long: false, mark: 0, note: { fr: "Voyelle brève sans finale : syllabe morte." } },
   { id: "t:ขา", thai: "ขา", rom: "khǎa", meaning: { fr: "jambe" }, cls: "H", live: true, long: true, mark: 0 },
   { id: "t:สี", thai: "สี", rom: "sǐi", meaning: { fr: "couleur" }, cls: "H", live: true, long: true, mark: 0 },
   { id: "t:ผม", thai: "ผม", rom: "phǒm", meaning: { fr: "je (homme) ; cheveux" }, cls: "H", live: true, long: false, mark: 0 },
@@ -100,7 +100,7 @@ export const TONE_WORDS: ToneWord[] = [
   { id: "t:เสื่อ", thai: "เสื่อ", rom: "sʉ̀a", meaning: { fr: "natte" }, cls: "H", live: true, long: true, mark: 1 },
   { id: "t:เสื้อ", thai: "เสื้อ", rom: "sʉ̂a", meaning: { fr: "chemise, haut" }, cls: "H", live: true, long: true, mark: 2 },
   { id: "t:ปา", thai: "ปา", rom: "paa", meaning: { fr: "lancer" }, cls: "M", live: true, long: true, mark: 0 },
-  { id: "t:ป้า", thai: "ป้า", rom: "pâa", meaning: { fr: "tante (sœur aînée d'un parent)" }, cls: "M", live: true, long: true, mark: 2 },
+  { id: "t:ป้า", thai: "ป้า", rom: "pâa", meaning: { fr: "tante (sœur aînée d’un parent)" }, cls: "M", live: true, long: true, mark: 2 },
   { id: "t:ไม้", thai: "ไม้", rom: "máai", meaning: { fr: "bois" }, cls: "L", live: true, long: true, mark: 2, note: { fr: "Écrit avec une voyelle courte, mais prononcé long." } },
   { id: "t:ไหม้", thai: "ไหม้", rom: "mâi", meaning: { fr: "brûler" }, cls: "H", live: true, long: false, mark: 2, note: { fr: "ห นำ : le ห muet donne la classe haute à ม." } },
   { id: "t:หา", thai: "หา", rom: "hǎa", meaning: { fr: "chercher" }, cls: "H", live: true, long: true, mark: 0 },
@@ -126,7 +126,7 @@ export const TONE_WORDS: ToneWord[] = [
   { id: "t:ช้า", thai: "ช้า", rom: "cháa", meaning: { fr: "lent" }, cls: "L", live: true, long: true, mark: 2 },
   { id: "t:รู", thai: "รู", rom: "ruu", meaning: { fr: "trou" }, cls: "L", live: true, long: true, mark: 0 },
   { id: "t:สื่อ", thai: "สื่อ", rom: "sʉ̀ʉ", meaning: { fr: "média ; communiquer" }, cls: "H", live: true, long: true, mark: 1 },
-  { id: "t:ใช่", thai: "ใช่", rom: "châi", meaning: { fr: "oui, c'est ça" }, cls: "L", live: true, long: false, mark: 1 },
+  { id: "t:ใช่", thai: "ใช่", rom: "châi", meaning: { fr: "oui, c’est ça" }, cls: "L", live: true, long: false, mark: 1 },
   { id: "t:ใช้", thai: "ใช้", rom: "chái", meaning: { fr: "utiliser" }, cls: "L", live: true, long: false, mark: 2 },
   { id: "t:ที", thai: "ที", rom: "thii", meaning: { fr: "fois" }, cls: "L", live: true, long: true, mark: 0 },
   { id: "t:ที่", thai: "ที่", rom: "thîi", meaning: { fr: "à ; qui, que ; lieu" }, cls: "L", live: true, long: true, mark: 1 },

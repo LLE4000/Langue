@@ -1,4 +1,4 @@
-/** Le parcours complet, par étapes de huit leçons, avec l'état de chaque leçon ; on arrive sur la leçon en cours. */
+/** Le parcours complet, par étapes de huit leçons (la dernière peut en compter jusqu'à onze), avec l'état de chaque leçon ; on arrive sur la leçon en cours. */
 import { useEffect, useRef } from 'react';
 import { usePage } from '@/app/Shell';
 import { useNextLesson, usePath, useProgress } from '@/app/hooks';
@@ -29,6 +29,13 @@ export function PathScreen() {
     const u = L(cur.units.find((x) => x.id === p.lesson.unit)?.title);
     if (u && !g.units.includes(u)) g.units.push(u);
   });
+  // Une dernière étape de une à trois leçons rejoint la précédente (pas d'« Étape 21 · leçons 161 à 161 » qui coupe une série)
+  if (groups.length > 1 && groups[groups.length - 1].items.length <= 3) {
+    const last = groups.pop()!;
+    const prev = groups[groups.length - 1];
+    prev.items.push(...last.items);
+    last.units.forEach((u) => { if (!prev.units.includes(u)) prev.units.push(u); });
+  }
   return (
     <>
       {/* En tête : le palier et sa jauge, calculés sur la maîtrise réelle ; pas de total de leçons (il grandit avec les mises à jour) */}
@@ -40,7 +47,7 @@ export function PathScreen() {
         const from = (g.n - 1) * STEP + 1;
         return (
           <section key={g.n} aria-label={`Étape ${g.n}`}>
-            <div className="unit-head"><div className="grow"><h3>Étape {g.n} <span className="range">· leçons {from} à {from + g.items.length - 1}</span></h3><div className="s">{g.units.join(' · ')}</div></div><span className={`tag ${unitDone ? 'ok' : ''}`}>{unitDone && <Icon name="check" />}{unitDoneN} / {g.items.length}</span></div>
+            <div className="unit-head"><div className="grow"><h3>Étape {g.n} <span className="range">· {g.items.length === 1 ? `leçon ${from}` : `leçons ${from} à ${from + g.items.length - 1}`}</span></h3><div className="s">{g.units.map((u) => <span key={u} className="u">{u}</span>)}</div></div><span className={`tag ${unitDone ? 'ok' : ''}`}>{unitDone && <Icon name="check" />}{unitDoneN} / {g.items.length}</span></div>
             <div className="unit-bar"><Bar p={unitDoneN / Math.max(1, g.items.length)} thin /></div>
             <div className="list">
               {g.items.map((p) => {
