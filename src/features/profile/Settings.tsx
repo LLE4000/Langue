@@ -60,7 +60,7 @@ function NativeVoices() {
     <>
       <label className="f">Garder les voix natives hors ligne</label>
       <div className="btns"><button className="btn soft sm" onClick={() => dl('m')} disabled={!!prog.m && prog.m !== 'prêt'}><Icon name="download" size={16} /> Voix d’homme{prog.m ? ` · ${prog.m}` : ''}</button><button className="btn soft sm" onClick={() => dl('f')} disabled={!!prog.f && prog.f !== 'prêt'}><Icon name="download" size={16} /> Voix de femme{prog.f ? ` · ${prog.f}` : ''}</button></div>
-      <p className="foot-note">Voix thaïes enregistrées, déjà installées&nbsp;: {clips.count('m')} phrases par voix. Gardées hors ligne, elles s’écoutent sans connexion.</p>
+      <p className="foot-note">Voix thaïes de synthèse (IA, Microsoft Azure), déjà installées&nbsp;: {clips.count('m')} phrases par voix. Gardées hors ligne, elles s’écoutent sans connexion.</p>
     </>
   );
 }

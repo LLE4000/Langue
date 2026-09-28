@@ -274,6 +274,8 @@ Blanc chaud et encre douce, un accent safran (robes des moines, guirlandes de so
 
 ## Données et vie privée
 
+- **Voix** : les voix thaïes livrées avec l’application sont des **voix de synthèse** (Microsoft Azure, pré-générées une fois, hors ligne) ; l’application l’indique dans Réglages › Voix. Pour une version vendue, l’audio doit être généré avec une ressource Azure **payante (S0)** — voir `docs/recherche-voix-thai.md` (options, licences, coûts, recommandation) et l’entrée « Tout régénérer » du workflow des voix.
+
 - Tout est local (IndexedDB, clé `langue-v1`). Profil › Mes données : **Exporter** (fichier JSON versionné), **Importer** (fichier ou texte collé), **Réinitialiser**.
 - Partager ma progression génère une **image sur l’appareil** (canvas) et utilise le partage natif ; rien n’est envoyé automatiquement à un serveur. Le format d’export est la base prévue pour une future synchronisation ou un mode duel.
 - Pour le débogage, le magasin d’état est exposé dans la console : `__langueStore.getState()`.

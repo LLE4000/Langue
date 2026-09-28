@@ -12,6 +12,10 @@ on:
         description: 'Voix à générer : m,f (homme et femme), m ou f'
         default: 'm,f'
         required: true
+      regen:
+        description: 'Tout régénérer (vide = seulement les nouveaux textes). Étiquette, p. ex. s0-2026 : relancer avec la même pour reprendre.'
+        default: ''
+        required: false
 
 permissions:
   contents: write
@@ -38,6 +42,7 @@ jobs:
           AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
           AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
           VOICES: ${{ github.event.inputs.voices }}
+          REGEN: ${{ github.event.inputs.regen }}
         run: npx vite-node scripts/gen-voices.ts
       - name: Publier les clips
         run: |

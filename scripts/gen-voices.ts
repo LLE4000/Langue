@@ -5,11 +5,15 @@
  * Idempotent : les clips déjà présents ne sont pas régénérés (on peut relancer après un ajout de contenu).
  *
  * Usage :  AZURE_SPEECH_KEY=… AZURE_SPEECH_REGION=northeurope npx vite-node scripts/gen-voices.ts [--dry]
- * Volume : ≈ 28 000 caractères par voix, largement sous le palier gratuit (500 000 caractères par mois).
- * Débit : le palier gratuit F0 accepte 20 requêtes par minute, soit ≈ 4 h pour les deux voix ; le script
- * s'arrête proprement avant la limite du job GitHub (TIME_BUDGET_MIN, 330 min) et reprend au prochain lancement.
+ * Volume : ≈ 92 000 caractères par voix (5 300 textes en 2026-09), soit ≈ 3 US$ pour les deux voix au tarif payant.
+ * Licence : seul le palier PAYANT (S0) accorde l'usage commercial de l'audio généré (conditions Microsoft, « paid tier
+ * TTS Service only ») : pour une application vendue, générer avec une ressource S0 et garder la facture.
+ * Tout régénérer (par ex. après passage en S0) : REGEN=<étiquette>, p. ex. REGEN=s0-2026 ; les clips refaits sont notés
+ * dans public/voices/regen-<étiquette>-<voix>.txt, ce qui permet de reprendre une régénération interrompue.
+ * Débit : le palier gratuit F0 accepte 20 requêtes par minute (S0 : bien davantage) ; le script s'arrête proprement
+ * avant la limite du job GitHub (TIME_BUDGET_MIN, 330 min) et reprend au prochain lancement.
  */
-import { mkdirSync, existsSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
+import { mkdirSync, existsSync, writeFileSync, readFileSync, readdirSync, appendFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { collectVoiceTexts, voiceCharacterCount } from '../src/content/voiceTexts';
 import { clipKey } from '../src/engine/audio/clipKey';
@@ -18,6 +22,7 @@ const KEY = process.env.AZURE_SPEECH_KEY ?? '';
 const REGION = process.env.AZURE_SPEECH_REGION ?? '';
 const VOICES: Record<'m' | 'f', string> = { m: process.env.VOICE_M ?? 'th-TH-NiwatNeural', f: process.env.VOICE_F ?? 'th-TH-PremwadeeNeural' };
 const ONLY = (process.env.VOICES ?? 'm,f').split(',').map((s) => s.trim()).filter((s): s is 'm' | 'f' => s === 'm' || s === 'f');
+const REGEN = (process.env.REGEN ?? '').replace(/[^a-z0-9-]/gi, '');
 const OUT = join(process.cwd(), 'public', 'voices');
 const DRY = process.argv.includes('--dry');
 const FORMAT = 'audio-24khz-48kbitrate-mono-mp3';
@@ -66,7 +71,11 @@ async function run() {
   for (const g of ONLY) {
     const dir = join(OUT, g);
     mkdirSync(dir, { recursive: true });
-    const present = new Set(readdirSync(dir).filter((f) => f.endsWith('.mp3')).map((f) => f.slice(0, -4)));
+    // régénération complète (REGEN=<étiquette>) : seuls comptent les clips déjà refaits sous cette étiquette
+    const regenLog = REGEN ? join(OUT, `regen-${REGEN}-${g}.txt`) : '';
+    const present = REGEN
+      ? new Set(existsSync(regenLog) ? readFileSync(regenLog, 'utf8').split('\n').filter(Boolean) : [])
+      : new Set(readdirSync(dir).filter((f) => f.endsWith('.mp3')).map((f) => f.slice(0, -4)));
     const todo = texts.filter((t) => !present.has(clipKey(t)));
     console.log(`Voix ${g} (${VOICES[g]}) : ${present.size} clips présents, ${todo.length} à générer`);
     let i = 0, failed = 0;
@@ -77,6 +86,7 @@ async function run() {
         try {
           const buf = await synth(VOICES[g], text);
           writeFileSync(join(dir, key + '.mp3'), buf);
+          if (regenLog) appendFileSync(regenLog, key + '\n');
           made++; chars += text.length;
           if (made % 50 === 0) console.log(`  … ${made} clips, ${chars} caractères, ${Math.round((Date.now() - started) / 60_000)} min`);
         } catch (e) {
