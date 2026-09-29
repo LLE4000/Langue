@@ -42,6 +42,11 @@ export function PeekBar({ it, onDetail, onClose }: { it: LearnItem; onDetail: ()
   );
 }
 
+const GRID_CLASS: Record<'all' | ConsonantClass, string> = { all: 'all', M: 'mid', H: 'high', L: 'low' };
+/** Grille de lecture sur la classe affichée : ses consonnes × des voyelles longues, sans marque ni finale, tirage neuf. */
+const gridLink = (filter: 'all' | ConsonantClass) =>
+  `/read/grid?c=${GRID_CLASS[filter]}&v=long&m=0&f=none&n=5&o=rows&s=${Math.random().toString(36).slice(2, 8)}`;
+
 export function Alphabet() {
   const t = T();
   const nav = useNavigate();
@@ -64,7 +69,7 @@ export function Alphabet() {
   return (
     <>
       <div className="chips">{([['all', 'Toutes · 44'], ['M', 'Classe moyenne · 9'], ['H', 'Classe haute · 11'], ['L', 'Classe basse · 24']] as const).map(([f, lab]) => <button key={f} className={`chip ${filter === f ? 'on' : ''} ${f !== 'all' ? 'cls-' + f : ''}`} onClick={() => setFilter(f)}>{f !== 'all' && <i className="dot" aria-hidden="true" />}{lab}</button>)}</div>
-      <div className="btns mb-3"><button className="btn soft sm" onClick={() => nav('/explore/listen?set=cons')}><Icon name="repeat" size={18} /> Écouter l’alphabet en boucle</button><button className="btn soft sm" onClick={() => nav('/read/grid')}><Icon name="grid" size={18} /> Lire une grille</button></div>
+      <div className="btns lib-acts mb-3"><button className="btn soft sm" onClick={() => nav(gridLink(filter))}><Icon name="grid" size={18} /> {filter === 'all' ? 'Lire ces lettres avec des voyelles' : 'Lire cette classe avec des voyelles'}</button><button className="btn soft sm" onClick={() => nav('/explore/listen?set=cons')}><Icon name="repeat" size={18} /> Écouter l’alphabet en boucle</button></div>
       <p className="xs mut mt-n1 mb-3">Touchez une lettre pour l’entendre&#8239;; touchez-la encore pour ouvrir sa fiche.</p>
       <div className="lgrid">{list.map((c) => <LetterCell key={c.id} it={c} locked={!known.concepts.has(c.id)} active={peekItem?.id === c.id} onClick={() => tap(c, ids)} />)}</div>
       <p className="foot-note">Les lettres estompées n’ont pas encore été enseignées dans votre parcours&#8239;; vous pouvez tout de même les écouter et les consulter.</p>

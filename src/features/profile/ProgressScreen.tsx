@@ -1,18 +1,16 @@
 /**
- * Ma progression : le palier (A0 → B2), ce qu'il reste pour le suivant, les compétences, l'évolution.
- * Chaque nombre est donné avec son total ; « acquis » ne baisse jamais, « à réviser » dit ce qui faiblit.
+ * Ma progression : le palier (A0 → B2), puis une seule liste des compétences où chaque ligne dit la valeur actuelle
+ * et ce qu'exige le palier suivant, l'évolution et le chemin. Chaque nombre est donné avec son total ; « acquis » ne
+ * baisse jamais, « à réviser » dit ce qui faiblit.
  */
 import { Link } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { useProgress } from '@/app/hooks';
-import { SKILL_META, TIER_MARK, TIER_STORY, TIERS, tierLine, type Progress } from '@/engine/progress';
+import { TIER_MARK, TIER_STORY, TIERS, tierLine, type Progress } from '@/engine/progress';
 import { frTypo } from '@/i18n';
 import { Icon } from '@/components/ui';
 import { ProgressSpark, SkillBars, TierLadder, TierRing } from '@/components/Progress';
-
-/** Pictogramme de chaque compétence dans « Pour atteindre… » (au lieu d'un même drapeau partout). */
-const SKILL_ICON: Record<string, string> = { cons: 'type', vowels: 'pen', reading: 'bookOpen', vocab: 'word', grammar: 'layers', tones: 'tone', listening: 'ear', speaking: 'mic', conversation: 'dialog' };
 
 /** Légende du repère dessiné sur les barres de compétences (le niveau à atteindre pour le palier suivant). */
 export function SkillMarkLegend({ p }: { p: Progress }) {
@@ -28,6 +26,7 @@ export function ProgressScreen() {
   const story = TIER_STORY[p.tier];
   const todo = p.skills.filter((s) => p.relevant.includes(s.id) && !s.ok);
   const nextStory = p.next ? TIER_STORY[p.next] : null;
+
   return (
     <>
       <div className="tierhead">
@@ -40,24 +39,19 @@ export function ProgressScreen() {
       </div>
       <TierLadder p={p} />
 
-      {nextStory && p.next !== 'B2' && (
+      {nextStory && p.next !== 'B2' ? (
         <>
           <div className="h2">Pour atteindre {p.next} <span className="sp" /><span className="sm mut">{Math.round(p.toNext * 100)} % du chemin</span></div>
-          <p className="note-under">{nextStory.text}</p>
-          {todo.length ? (
-            <div className="list">
-              {todo.map((s) => {
-                const meta = SKILL_META.find((m) => m.id === s.id)!;
-                return <div key={s.id} className="row"><span className="ico"><Icon name={SKILL_ICON[s.id] ?? 'flag'} size={18} /></span><span className="mid"><span className="t">{meta.label}</span><span className="s">Aujourd’hui&nbsp;: {s.detail}</span><span className="s">Objectif&nbsp;: {s.needLabel}</span></span><span className="end b">{s.value} %</span></div>;
-              })}
-            </div>
-          ) : <div className="note info sm">Toutes les compétences sont au niveau&nbsp;: le palier {p.next} est à vous dès la prochaine mise à jour.</div>}
+          <p className="note-under">{nextStory.text}{todo.length ? ` Encore ${todo.length} compétence${todo.length > 1 ? 's' : ''} à amener au niveau.` : ''}</p>
+          {!todo.length && <div className="note info sm">Toutes les compétences sont au niveau&nbsp;: le palier {p.next} est à vous dès la prochaine mise à jour.</div>}
+        </>
+      ) : (
+        <>
+          {p.next === 'B2' && <div className="note plain sm mt-4">{TIER_STORY.B2.text}</div>}
+          <div className="h2">Mes compétences <span className="sp" /><span className="sm mut">{p.overall} % en moyenne</span></div>
         </>
       )}
-      {p.next === 'B2' && <div className="note plain sm mt-4">{TIER_STORY.B2.text}</div>}
-
-      <div className="h2">Mes compétences <span className="sp" /><span className="sm mut">{p.overall} % en moyenne</span></div>
-      <SkillBars p={p} />
+      <SkillBars p={p} target />
       <SkillMarkLegend p={p} />
       <div className="statline inset mt-3">
         <span><b>{p.counts.wordsAcquired}</b> mots acquis</span>

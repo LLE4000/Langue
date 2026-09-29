@@ -28,7 +28,7 @@ function Unavailable() {
 
 /** Créer une salle ou rejoindre celle d'un proche. */
 export function OnlineHub() {
-  usePage('En ligne', { back: '/play' });
+  usePage('En ligne, en direct', { back: '/play' });
   const nav = useNavigate();
   const toast = useToast((s) => s.show);
   const [code, setCode] = useState('');
@@ -191,8 +191,8 @@ export function OnlineRoom() {
     nav('/play/online');
   };
 
-  if (!onlineAvailable) return <FullScreen title="En ligne" onBack={() => nav('/play')}><Unavailable /></FullScreen>;
-  if (!code) return <FullScreen title="En ligne" onBack={() => nav('/play/online')}><div className="note warn">Ce code de salle n’est pas valable.</div></FullScreen>;
+  if (!onlineAvailable) return <FullScreen title="En ligne, en direct" onBack={() => nav('/play')}><Unavailable /></FullScreen>;
+  if (!code) return <FullScreen title="En ligne, en direct" onBack={() => nav('/play/online')}><div className="note warn">Ce code de salle n’est pas valable.</div></FullScreen>;
   if (fatal) return <FullScreen title={`Salle ${code}`} onBack={() => nav('/play/online')}><div className="note warn">{fatal}</div><button className="btn" onClick={() => nav('/play/online')}>Créer ou rejoindre une autre salle</button></FullScreen>;
 
   const banner = status === 'reconnecting' ? <div className="note warn sm on-link">Connexion perdue, reconnexion…</div> : null;
@@ -237,7 +237,7 @@ export function OnlineRoom() {
 
   if (room.phase === 'countdown') {
     return (
-      <FullScreen title={room.label || 'En ligne'} onBack={leave}>
+      <FullScreen title={room.label || 'En ligne, en direct'} onBack={leave}>
         {banner}
         {versionIssue && <div className="note warn">{versionIssue}</div>}
         <div className="on-count" aria-live="assertive"><span>{Math.max(1, Math.ceil(left / 1000))}</span><small>{room.total} questions · {live} joueurs</small></div>
@@ -279,7 +279,7 @@ export function OnlineRoom() {
 
   // manche (question ou révélation)
   if (versionIssue || !q) {
-    return <FullScreen title={room.label || 'En ligne'} onBack={leave}><div className="note warn">{versionIssue || 'Question introuvable.'}</div><p className="sm mut">Mettez l’application à jour (fermez-la puis rouvrez-la), comme les autres joueurs.</p></FullScreen>;
+    return <FullScreen title={room.label || 'En ligne, en direct'} onBack={leave}><div className="note warn">{versionIssue || 'Question introuvable.'}</div><p className="sm mut">Mettez l’application à jour (fermez-la puis rouvrez-la), comme les autres joueurs.</p></FullScreen>;
   }
   const it = ITEMS[q.itemId];
   const myAnswer = room.answers.find((a) => a.id === room.you);

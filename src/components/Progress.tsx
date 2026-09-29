@@ -57,20 +57,24 @@ export function TierLadder({ p }: { p: P }) {
   );
 }
 
-const SKILL_LINK: Partial<Record<string, string>> = { cons: '/explore/alphabet', vowels: '/explore/vowels', vocab: '/explore/vocab', grammar: '/explore/grammar', tones: '/explore/tones', reading: '/explore/readings', listening: '/explore/comprehension', speaking: '/review', conversation: '/explore/dialogs' };
+const SKILL_LINK: Partial<Record<string, string>> = { cons: '/explore/alphabet', vowels: '/explore/vowels', vocab: '/explore/vocab', grammar: '/explore/grammar', tones: '/explore/tones', reading: '/explore/readings', listening: '/train/listening', speaking: '/talk', conversation: '/explore/dialogs' };
 
-/** Barres de compétences. `only` limite aux compétences concernées par l'objectif ; `mark` dessine le jalon du prochain palier. */
-export function SkillBars({ p, compact, limit }: { p: P; compact?: boolean; limit?: number }) {
+/**
+ * Barres de compétences, limitées à celles de l'objectif ; le repère dessine le jalon du prochain palier.
+ * `target` ajoute sur chaque ligne ce que ce palier exige (valeur actuelle → objectif), pour une liste unique.
+ */
+export function SkillBars({ p, compact, limit, target }: { p: P; compact?: boolean; limit?: number; target?: boolean }) {
   const mark = p.next && p.next !== 'B2' ? TIER_MARK[p.next] : 100;
   const list = p.skills.filter((s) => p.relevant.includes(s.id)).slice(0, limit);
+  const next = target && mark < 100 ? p.next ?? undefined : undefined;
   return (
-    <div className="skills">
-      {list.map((s) => <SkillRow key={s.id} s={s} mark={mark} compact={compact} />)}
+    <div className={`skills ${next ? 'with-target' : ''}`}>
+      {list.map((s) => <SkillRow key={s.id} s={s} mark={mark} compact={compact} next={next} />)}
     </div>
   );
 }
 
-function SkillRow({ s, mark, compact }: { s: SkillProgress; mark: number; compact?: boolean }) {
+function SkillRow({ s, mark, compact, next }: { s: SkillProgress; mark: number; compact?: boolean; next?: string }) {
   const meta = SKILL_META.find((m) => m.id === s.id)!;
   const to = SKILL_LINK[s.id] ?? '/profile/progress';
   return (
@@ -78,7 +82,7 @@ function SkillRow({ s, mark, compact }: { s: SkillProgress; mark: number; compac
       <span className="n">{meta.label}</span>
       <span className="v">{s.value} %</span>
       <div className="bar thin"><i style={{ width: `${s.value}%` }} />{mark < 100 && <em className="mk" style={{ left: `${mark}%` }} />}</div>
-      {!compact && <span className="d"><span>{s.detail}</span>{s.toReview > 0 && <span className="rev">{s.toReview} à réviser</span>}</span>}
+      {!compact && <span className="d"><span>{s.detail}{next && (s.ok ? <span className="tg ok-t"> · <Icon name="check" size={13} /> {next} atteint</span> : <span className="tg"> → Objectif&nbsp;: {s.needLabel}</span>)}</span>{s.toReview > 0 && <span className="rev">{s.toReview} à réviser</span>}</span>}
     </Link>
   );
 }

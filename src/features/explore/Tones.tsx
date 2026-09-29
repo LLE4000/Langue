@@ -29,7 +29,7 @@ function Menu() {
       <div className="h2">Comprendre</div>
       <div className="list"><Row ico="bulb" t="Syllabe vivante ou morte&#8239;?" s="La notion clé avant les règles" to="livedead" /><Row ico="compass" t="La méthode en 4 questions" s="Classe, marque, fin de syllabe, durée" to="method" /><Row ico="clipboard" t="Le tableau des règles" s="Tout sur un écran, avec exemples" to="table" /></div>
       <div className="h2">S’entraîner</div>
-      <div className="list"><Link className="row" to="/train/tones"><Ico name="target" /><span className="mid"><span className="t">S’entraîner aux tons</span><span className="s">Lire le ton, l’entendre, paires, vivante ou morte</span></span><span className="end"><span className="chev">›</span></span></Link></div>
+      <div className="list"><Link className="row" to="/train/tones" state={{ from: '/explore/tones' }}><Ico name="target" /><span className="mid"><span className="t">S’entraîner aux tons</span><span className="s">Lire le ton, l’entendre, paires, vivante ou morte</span></span><span className="end"><span className="chev">›</span></span></Link></div>
     </>
   );
 }
@@ -94,7 +94,7 @@ function LiveDead() {
       <p className="lead">Avant de chercher le ton, on regarde comment la syllabe se termine.</p>
       <TheoryBlockView b={{ kind: 'toneRule', ruleKey: 'rule:live-dead' }} />
       <div className="note info">Attention au son final, pas à la lettre&nbsp;: <Thai text="ส จ ช ด ต" />… en fin de syllabe se prononcent tous <b>t</b>, donc syllabe morte. <Thai text="ร ล ญ" /> se prononcent <b>n</b>, donc vivante. Les voyelles <Thai text="อำ ไอ ใอ เอา" /> comptent comme vivantes&nbsp;: elles finissent par m, i, o.</div>
-      <Link className="btn" to="/train/tones">Faire l’exercice</Link>
+      <Link className="btn" to="/train/tones" state={{ from: '/explore/tones' }}>Faire l’exercice</Link>
     </>
   );
 }
@@ -107,7 +107,7 @@ function Method() {
       <div className="step"><span className="num">2</span><div><h3>Y a-t-il une marque de ton&#8239;?</h3><p>Si oui, elle décide avec la classe, et c’est fini.</p><p><Thai text="◌่" />&nbsp;: bas — mais <b>descendant</b> en classe basse.<br /><Thai text="◌้" />&nbsp;: descendant — mais <b>haut</b> en classe basse.<br /><Thai text="◌๊" />&nbsp;: haut · <Thai text="◌๋" />&nbsp;: montant (classe moyenne uniquement).</p></div></div>
       <div className="step"><span className="num">3</span><div><h3>Sans marque&nbsp;: vivante ou morte&#8239;?</h3><p><b>Vivante</b>&nbsp;: ton moyen — sauf classe haute&nbsp;: <b>montant</b>.</p><p><b>Morte</b>&nbsp;: ton bas pour les classes moyenne et haute. Pour la classe basse, passer à la question 4.</p></div></div>
       <div className="step"><span className="num">4</span><div><h3>Classe basse + morte&nbsp;: voyelle courte ou longue&#8239;?</h3><p>Courte&nbsp;: ton <b>haut</b> — <Thai text="รัก" /> <Rom text="rák" />.<br />Longue&nbsp;: ton <b>descendant</b> — <Thai text="มาก" /> <Rom text="mâak" />.</p></div></div>
-      <div className="btns"><Link className="btn" to="/train/tones">M’entraîner</Link><Link className="btn ghost" to="/explore/tones/table">Voir le tableau</Link></div>
+      <div className="btns"><Link className="btn" to="/train/tones" state={{ from: '/explore/tones' }}>M’entraîner</Link><Link className="btn ghost" to="/explore/tones/table">Voir le tableau</Link></div>
     </>
   );
 }

@@ -7,7 +7,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { FullScreen, usePage } from '@/app/Shell';
+import { FullScreen, useBack, usePage } from '@/app/Shell';
 import { useStore, type ChallengeRecord } from '@/app/store';
 import { Empty, Icon, Ico, Segmented, useToast } from '@/components/ui';
 import { SourcePicker } from './PlaySetup';
@@ -191,7 +191,8 @@ export function ChallengeHub() {
   );
 }
 
+/** Lancer un défi : on y arrive de Mes défis ou d'ailleurs (Profil › Partager) ; le retour ramène d'où l'on vient. */
 export function ChallengeNew() {
-  const nav = useNavigate();
-  return <ChallengeCreate onBack={() => nav('/play/defi')} />;
+  const back = useBack('/play/defi');
+  return <ChallengeCreate onBack={back} />;
 }

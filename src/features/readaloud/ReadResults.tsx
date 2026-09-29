@@ -122,8 +122,8 @@ export function ReadResults({ state, title, sessionId, onAgain }: { state: RunSt
       ) : <p className="note info sm">Aucune erreur dans cette série.</p>}
 
       <div className="ra-actions">
-        {s.weak.some((w) => w.lastVerdict !== 'ok') && <button className="btn" onClick={() => nav('/read/errors?mode=read')}><Icon name="target" /> Reprendre mes erreurs</button>}
-        {nextS && pct >= 80 && <button className="btn" onClick={() => nav(`/read/${nextS.id}`)}>Séance suivante : {nextS.title} <Icon name="next" /></button>}
+        {s.weak.some((w) => w.lastVerdict !== 'ok') && <button className="btn" onClick={() => nav('/read/errors?mode=read', { replace: true })}><Icon name="target" /> Reprendre ces lectures</button>}
+        {nextS && pct >= 80 && <button className="btn" onClick={() => nav(`/read/${nextS.id}`, { replace: true })}>Séance suivante : {nextS.title} <Icon name="next" /></button>}
         <button className="btn soft" onClick={onAgain}><Icon name="rotate" /> Recommencer</button>
         <button className="btn ghost" onClick={() => nav('/read')}>Retour au programme</button>
       </div>

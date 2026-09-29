@@ -170,7 +170,7 @@ test('objectif « parler » : aucune leçon d’écriture dans le parcours, phon
   await expect(page.locator('.lrow').first()).toBeVisible();
   await expect(page.locator('.lrow.k-letters, .lrow.k-vowels, .lrow.k-tones')).toHaveCount(0);
   await expect(page.locator('.lrow.k-vocab').first()).toBeVisible();
-  await page.goto('/#/profile/settings?tab=exercises');
+  await page.goto('/#/profile/settings?tab=display');
   await expect(page.locator('.seg button.on', { hasText: 'Toujours' })).toBeVisible();
   // l'objectif se change dans Profil
   await page.goto('/#/profile/levels');
@@ -329,7 +329,10 @@ test('compréhension orale : écouter sans texte, répondre en français, voir l
 
 test('progression : pastille permanente, palier avec critères chiffrés, jauge de maîtrise sans total de leçons', async ({ page }) => {
   await onboard(page, [1, 1, 1, 1]);
-  // la pastille est visible sur l'accueil et mène à l'écran de progression
+  // l'accueil n'a que la série de jours ; la pastille complète est sur Réviser, et mène à l'écran de progression
+  await expect(page.getByTestId('streak-chip')).toBeVisible();
+  await expect(page.getByTestId('progress-pill')).toHaveCount(0);
+  await page.goto('/#/review');
   const pill = page.getByTestId('progress-pill');
   await expect(pill).toContainText('A0');
   await pill.click();
@@ -349,9 +352,9 @@ test('progression : pastille permanente, palier avec critères chiffrés, jauge 
   await page.goto('/#/profile/progress');
   await expect(page.getByRole('link', { name: /^Vocabulaire/ })).toBeVisible();
   await expect(page.getByRole('link', { name: /^Consonnes/ })).toHaveCount(0);
-  // réglages : trois onglets, dépannage replié
+  // réglages : quatre onglets (Moi · Voix · Exercices · Affichage), dépannage replié
   await page.goto('/#/profile/settings?tab=voice');
-  await expect(page.getByRole('tab')).toHaveCount(3);
+  await expect(page.getByRole('tab')).toHaveCount(4);
   await expect(page.getByText('Je préfère entendre')).toBeVisible();
   await expect(page.getByText('Copier le diagnostic')).toBeHidden();
   await page.getByText('La voix pose problème ?').click();
@@ -380,8 +383,9 @@ test('navigation : quatre onglets, le profil s’ouvre sur le prénom, le mot th
 
 test('lire à voix haute : programme, tapis de lecture (sans micro : un toucher avance), bilan', async ({ page }) => {
   await onboard(page);
-  await page.getByRole('link', { name: 'Lire à voix haute' }).click();
-  await expect(page).toHaveURL(/#\/read$/);
+  // débutant : la carte de l'accueil attend la leçon qui enseigne ces lettres ; le programme reste ouvert depuis le parcours
+  await expect(page.getByRole('link', { name: 'Lire à voix haute' })).toHaveCount(0);
+  await page.goto('/#/read');
   await expect(page.getByText('Le programme')).toBeVisible();
   await page.getByRole('button', { name: /Commencer la séance/ }).click();
   await expect(page).toHaveURL(/#\/read\/ra-01/);
@@ -397,6 +401,7 @@ test('lire à voix haute : programme, tapis de lecture (sans micro : un toucher 
 test('lecture longue : un texte entier, phrase par phrase, puis le bilan', async ({ page }) => {
   await onboard(page);
   await page.goto('/#/read');
+  await page.locator('.seg button', { hasText: /Textes entiers/ }).click();
   await page.getByRole('link', { name: /Grand-père et le crabe/ }).click();
   await page.getByRole('button', { name: /Commencer la lecture/ }).click();
   await expect(page.locator('.ra-count')).toHaveText('1 / 4');

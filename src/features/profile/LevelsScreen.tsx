@@ -1,4 +1,7 @@
-/** Objectif et niveaux : le parcours se recalcule quand on valide, la maîtrise acquise est conservée. */
+/**
+ * Objectif, rythme et niveaux : l'objectif (parler / lire…) et les niveaux recalculent le parcours quand on valide
+ * (la maîtrise acquise est conservée) ; le rythme (minutes par jour) s'enregistre aussitôt, sans toucher au parcours.
+ */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
@@ -6,10 +9,10 @@ import { useStore, goalsOf } from '@/app/store';
 import { useLevels } from '@/app/hooks';
 import { GoalPicker, LevelPicker } from '@/features/onboarding/Onboarding';
 import { goalSkills, SKILLS, type Goals } from '@/curriculum/types';
-import { useToast } from '@/components/ui';
+import { Segmented, useToast } from '@/components/ui';
 
 export function LevelsScreen() {
-  usePage('Objectif et niveaux', { back: '/profile' });
+  usePage('Objectif, rythme et niveaux', { back: '/profile' });
   const current = useLevels();
   const profile = useStore((s) => s.profile);
   const updateProfile = useStore((s) => s.updateProfile);
@@ -25,6 +28,9 @@ export function LevelsScreen() {
     <>
       <div className="h2 mt-0">Mon objectif</div>
       <GoalPicker value={goals} onChange={setGoals} />
+      <div className="h2">Mon rythme</div>
+      <p className="note-under">Minutes d’étude par jour, pour le compteur de l’accueil et le calendrier des Statistiques. Enregistré aussitôt, sans changer le parcours.</p>
+      <Segmented value={profile?.dailyGoalMinutes ?? 15} options={[5, 10, 15, 30].map((g) => ({ v: g, label: `${g} min` }))} onChange={(g) => updateProfile({ dailyGoalMinutes: g })} />
       <div className="h2">Mes niveaux</div>
       <p className="note-under">Soyez précis : le parcours saute ce que vous savez déjà.</p>
       <LevelPicker levels={levels} onChange={set} skills={goalSkills(goals)} />

@@ -1,4 +1,4 @@
-/** Profil : niveau et XP, compétences, badges (obtenus et prochains), activité et application. */
+/** Profil : niveau et XP (la carte mène à Ma progression), compétences, badges, suivi (progression, statistiques, partage) et application. */
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
@@ -43,6 +43,7 @@ export function Profile() {
           <div className="sm mut">{p.next && p.next !== 'B2' ? `${Math.round(p.toNext * 100)}\u00a0% du chemin vers ${p.next}` : 'palier atteint'}</div>
           <div className="tagline mt-2"><span className="tag gold"><Icon name="flame" size={13} /> {plural(streak, 'jour')} de suite</span></div>
           <div className="statline"><span><b>{nDays}</b> {nDays > 1 ? 'jours' : 'jour'} d’étude</span><span><b>{xp}</b>&nbsp;XP</span></div>
+          <span className="chead-more">Voir ma progression ›</span>
         </div>
       </Link>
       <div className="h2">Mes compétences <span className="sp" /><Link to="/profile/progress">Tout voir ›</Link></div>
@@ -52,15 +53,16 @@ export function Profile() {
       <div className="h2">{t.profile.badges} <span className="sp" /><span className="sm mut">{earned.length} / {BADGES.length}</span></div>
       <div className="badges">{shown.map((b) => <div key={b.id} className={`badge ${badges[b.id] ? 'on' : ''}`} title={b.desc}><span className="e" aria-hidden="true"><GlyphIcon name={b.icon} size={22} /></span>{b.title}<span className="xs mut d">{b.desc}</span></div>)}</div>
       {BADGES.length > shown.length || allBadges ? <button className="btn ghost sm mt-3" onClick={() => setAllBadges(!allBadges)}>{allBadges ? 'Voir moins' : `Voir tous les badges (${BADGES.length})`}</button> : null}
-      <div className="h2">Activité</div>
+      <div className="h2">Suivi</div>
       <div className="list">
-        <Row to="/profile/stats" ico="chart" t={t.profile.stats} s="Activité des derniers jours, historique" />
+        <Row to="/profile/progress" ico="trend" t="Ma progression" s={`Palier ${p.tier}, compétences, évolution`} />
+        <Row to="/profile/stats" ico="chart" t={t.profile.stats} s="Temps d’étude, calendrier, historique" />
         <Row to="/profile/share" ico="share" t={t.profile.share} s="Une carte à envoyer à vos proches" />
       </div>
       <div className="h2">Application</div>
       <div className="list">
-        <Row to="/profile/settings" ico="settings" t={t.profile.settings} s="Profil, voix, exercices" />
-        <Row to="/profile/levels" ico="sliders" t="Objectif et niveaux" s={`${goalLabel} · niveaux`} />
+        <Row to="/profile/settings" ico="settings" t={t.profile.settings} s="Moi, voix, exercices, affichage" />
+        <Row to="/profile/levels" ico="sliders" t="Objectif, rythme et niveaux" s={`${goalLabel} · ${profile.dailyGoalMinutes || 15}\u00a0min par jour · niveaux`} />
         <Row to="/profile/people" ico="users" t="Personnes sur cet appareil" s={people > 1 ? `${people} profils · changer ou ajouter` : 'Ajouter un autre profil'} />
         <Row to="/profile/data" ico="archive" t={t.profile.data} s="Sauvegarder, restaurer, réinitialiser" />
       </div>

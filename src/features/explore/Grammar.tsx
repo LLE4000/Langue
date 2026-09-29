@@ -63,24 +63,28 @@ export function GrammarScreen() {
   const toggleFav = useStore((s) => s.toggleFavorite);
   const toast = useToast((s) => s.show);
   const k = g ? th.GRAMMAR.findIndex((x) => x.id === g.id) : -1;
-  usePage(g ? `Fiche ${k + 1} / ${th.GRAMMAR.length}` : 'Grammaire', { back: '/explore/grammar' });
+  // le titre de l'écran est celui de la fiche touchée dans la liste ; le rang (6 / 34) passe en petit à côté du titre
+  const st = g ? splitTitle(L(g.title)) : null;
+  usePage(st ? st.t : 'Grammaire', { back: '/explore/grammar' });
   if (!g) return <Empty icon="search">Fiche introuvable.</Empty>;
   const prev = k > 0 ? th.GRAMMAR[k - 1] : null;
   const next = k + 1 < th.GRAMMAR.length ? th.GRAMMAR[k + 1] : null;
   const go = (gid: string) => nav(`/explore/grammar/${encodeURIComponent(gid)}`);
   return (
     <>
-      <h2 className="theory-title mt-1 mb-3">{L(g.title)}</h2>
+      <h2 className="theory-title mt-1 mb-3">{L(g.title)} <span className="gr-rank" aria-label={`fiche ${k + 1} sur ${th.GRAMMAR.length}`}>{k + 1}&nbsp;/&nbsp;{th.GRAMMAR.length}</span></h2>
       <p className="lead ink">{L(g.rule)}</p>
       <Pattern text={g.pattern} />
       <div className="list">{g.examples.map((e, i) => <div key={i} className="row"><span className="mid"><Thai text={e.thai} /><span className="s"><Rom text={e.rom} /><br /><Fr text={e.meaning} /></span></span><span className="end"><AudioButton text={e.thai} className="sm" /></span></div>)}</div>
       {g.tip && <div className="note">{L(g.tip)}</div>}
       {g.id === 'g:clf' && <Link className="btn soft mt-3" to="/explore/classifiers">Ouvrir le module Classificateurs</Link>}
       <div className="btns mt-4">
-        <button className={`ib fav ${fav ? 'on' : ''}`} onClick={() => toggleFav(g.id)} aria-label="Favori" aria-pressed={!!fav}><Icon name="star" /></button>
-        {prev && <button className="ib" onClick={() => go(prev.id)} aria-label="Fiche précédente"><Icon name="back" /></button>}
-        <button className="btn" aria-label={next ? 'Compris, fiche suivante' : 'Compris, retour aux fiches'} onClick={() => { rateItem(g.id, 3); if (next) go(next.id); else { toast('Toutes les fiches sont vues.'); nav('/explore/grammar'); } }}><Icon name="check" size={18} /> {next ? 'Fiche suivante' : 'Retour aux fiches'}</button>
+        <button className={`btn sm gr-fav ${fav ? 'soft on' : 'ghost'}`} onClick={() => toggleFav(g.id)} aria-pressed={!!fav}><Icon name="star" size={16} /> {fav ? 'Dans mes favoris' : 'Ajouter aux favoris'}</button>
       </div>
+      <nav className="gr-nav" aria-label="Fiches">
+        {prev ? <button className="btn ghost" onClick={() => go(prev.id)}>‹&nbsp;Fiche précédente</button> : <span />}
+        <button className="btn" aria-label={next ? 'Compris, fiche suivante' : 'Compris, retour aux fiches'} onClick={() => { rateItem(g.id, 3); if (next) go(next.id); else { toast('Toutes les fiches sont vues.'); nav('/explore/grammar'); } }}>{next ? <>Fiche suivante&nbsp;›</> : 'Retour aux fiches'}</button>
+      </nav>
     </>
   );
 }

@@ -8,7 +8,7 @@ import { usePage } from '@/app/Shell';
 import { useStore, streakDays } from '@/app/store';
 import { useProgress } from '@/app/hooks';
 import { tierLine } from '@/engine/progress';
-import { T } from '@/i18n';
+import { T, frTypo } from '@/i18n';
 import { Icon, useToast } from '@/components/ui';
 
 export function ShareScreen() {
@@ -75,7 +75,7 @@ export function ShareScreen() {
       <div className="btns mt-3"><button className="btn" onClick={share}><Icon name="share" size={18} /> Partager</button><button className="btn soft" onClick={download}><Icon name="download" size={18} /> Image</button></div>
       <pre className="note plain sm">{text}</pre>
       <div className="list mt-3">
-        <Link className="row" to="/play"><span className="ico plum"><Icon name="swords" size={18} /></span><span className="mid"><span className="t">Envie de vous mesurer à quelqu’un&#8239;?</span><span className="s">Comparez vos cartes chaque dimanche, ou lancez le même «&nbsp;Défi chrono&nbsp;» et comparez les scores.</span></span><span className="end"><span className="chev">›</span></span></Link>
+        <Link className="row" to="/play/defi/new"><span className="ico plum"><Icon name="swords" size={18} /></span><span className="mid"><span className="t">Envie de vous mesurer à quelqu’un&#8239;?</span><span className="s">{frTypo('Lancez un Défi à distance : même série, puis comparez vos scores.')}</span></span><span className="end"><span className="chev">›</span></span></Link>
       </div>
     </>
   );

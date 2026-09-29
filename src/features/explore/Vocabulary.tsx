@@ -60,7 +60,7 @@ export function VocabTheme() {
   const allUnread = unread > 0 && unread === items.length;
   return (
     <>
-      <div className="btns"><Link className="btn soft sm" to={`/train/flashcards?theme=${id}`}><Icon name="cards" size={16} /> Cartes</Link><Link className="btn soft sm" to={`/train/listening?theme=${id}`}><Icon name="headphones" size={16} /> Écoute</Link><Link className="btn soft sm" to={`/train/match?theme=${id}`}><Icon name="link" size={16} /> Associer</Link></div>
+      <div className="btns"><Link className="btn soft sm" to={`/train/flashcards?theme=${id}`} state={{ from: `/explore/vocab/${id}` }}><Icon name="cards" size={16} /> Cartes</Link><Link className="btn soft sm" to={`/train/listening?theme=${id}`} state={{ from: `/explore/vocab/${id}` }}><Icon name="headphones" size={16} /> Écoute</Link><Link className="btn soft sm" to={`/train/match?theme=${id}`} state={{ from: `/explore/vocab/${id}` }}><Icon name="link" size={16} /> Associer</Link></div>
       {unread > 0 ? <p className="note-under mt-3">{allUnread ? frTypo('Pas encore lisibles avec les lettres vues : écoutez-les d’abord.') : `${unread} sur ${items.length} pas encore lisibles avec les lettres vues.`}</p> : <div className="gap" />}
       <div className="list">{items.map((w, i) => <ItemRow key={w.id} it={w} onClick={() => setDetail(i)} showMissing={!allUnread} />)}</div>
       {detail != null && <ItemDetailSheet ids={ids} index={detail} onClose={() => setDetail(null)} onNav={setDetail} />}

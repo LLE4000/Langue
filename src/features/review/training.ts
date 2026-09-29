@@ -1,11 +1,14 @@
 /**
- * Séances d'entraînement (onglet Réviser). Huit modes, tous construits sur le moteur de leçon,
+ * Séances d'entraînement (onglet Réviser). Neuf modes, tous construits sur le moteur de leçon,
  * et qui n'utilisent que ce que l'apprenant a déjà rencontré (ou peut lire).
+ * Lancées depuis une fiche de la bibliothèque, elles se limitent à son contenu : un thème (?theme=), les nombres
+ * (?set=num), les classificateurs (?set=clf) ou mes favoris (?set=favs).
  */
 import type { LessonSession } from '@/app/store';
 import type { Ctx, Question, RuntimeStep } from '@/features/lesson/engine';
 import { qDictation, qForItem, qListen, qMeaning, qRead, qTone, qTonePair, qSyllable } from '@/features/lesson/engine';
-import { ITEMS, CONS_ITEMS, TAUGHT_VOWELS, TONE_ITEMS, WORD_ITEMS, CONS_BY_CHAR, th, type LearnItem } from '@/content/th';
+import { ITEMS, CONS_ITEMS, TAUGHT_VOWELS, TONE_ITEMS, WORD_ITEMS, NUM_ITEMS, CLF_ITEMS, CONS_BY_CHAR, th, type LearnItem } from '@/content/th';
+import { useStore } from '@/app/store';
 import { isReadable } from '@/engine/thai/reading';
 import { isDue } from '@/engine/srs';
 import { shuffle, sample } from '@/engine/util';
@@ -36,12 +39,31 @@ function syllables(ctx: Ctx): { thai: string; rom: string }[] {
   return out;
 }
 
-export function buildTraining(mode: TrainingMode, ctx: Ctx, opts: { theme?: string } = {}): LessonSession | null {
+/** Contenu ciblé d'une fiche de la bibliothèque (?set=) : nombres, classificateurs, favoris. */
+export type TrainingSet = 'num' | 'clf' | 'favs';
+const SET_TITLE: Record<TrainingSet, string> = { num: 'Nombres', clf: 'Classificateurs', favs: 'Mes favoris' };
+export const isTrainingSet = (s: string | null | undefined): s is TrainingSet => s === 'num' || s === 'clf' || s === 'favs';
+
+/** Les favoris qui se révisent en cartes (les fiches de grammaire se relisent, elles ne se tirent pas en cartes). */
+export function favoriteItems(favorites: Record<string, number>): LearnItem[] {
+  return Object.keys(favorites).sort((a, b) => favorites[b] - favorites[a]).map((id) => ITEMS[id]).filter((x): x is LearnItem => !!x && x.kind !== 'rule' && x.kind !== 'grammar');
+}
+
+function setItems(set: TrainingSet | undefined, favorites?: Record<string, number>): LearnItem[] | null {
+  if (set === 'num') return NUM_ITEMS;
+  if (set === 'clf') return CLF_ITEMS;
+  if (set === 'favs') return favoriteItems(favorites ?? useStore.getState().favorites);
+  return null;
+}
+
+export function buildTraining(mode: TrainingMode, ctx: Ctx, opts: { theme?: string; set?: string; favorites?: Record<string, number> } = {}): LessonSession | null {
   const now = Date.now();
   const pool = learned(ctx);
-  const title: Record<TrainingMode, string> = { flashcards: 'Cartes', listening: 'Écoute', speed: 'Lecture rapide', match: 'Associer', dictation: 'Dictée', tones: 'Tons', quiz: 'Quiz', timed: 'Défi chrono', pronunciation: 'Prononciation', review: 'Révision', weak: 'Points faibles' };
+  const title: Record<TrainingMode, string> = { flashcards: 'Cartes', listening: 'Écoute', speed: 'Lecture rapide', match: 'Associer', dictation: 'Dictée', tones: 'Tons', quiz: 'Quiz', timed: 'Contre la montre', pronunciation: 'Prononciation', review: 'Révision', weak: 'Points faibles' };
   let steps: RuntimeStep[] = [];
-  const themeWords = opts.theme ? WORD_ITEMS.filter((w) => w.ref.themes.includes(opts.theme!)) : null;
+  const set = isTrainingSet(opts.set) ? opts.set : undefined;
+  // vivier ciblé : un thème de vocabulaire, ou un ensemble de la bibliothèque (nombres, classificateurs, favoris)
+  const themeWords: LearnItem[] | null = opts.theme ? WORD_ITEMS.filter((w) => w.ref.themes.includes(opts.theme!)) : setItems(set, opts.favorites);
   switch (mode) {
     case 'review': {
       const due = pool.filter((it) => isDue(ctx.srs[it.id], now)).sort((a, b) => ctx.srs[a.id].q - ctx.srs[b.id].q || ctx.srs[a.id].due - ctx.srs[b.id].due).slice(0, 20);
@@ -64,7 +86,7 @@ export function buildTraining(mode: TrainingMode, ctx: Ctx, opts: { theme?: stri
       break;
     }
     case 'listening': {
-      const letters = sample(knownLetters(ctx).filter((c) => !c.ref.obsolete), 4);
+      const letters = set ? [] : sample(knownLetters(ctx).filter((c) => !c.ref.obsolete), 4);
       const words = sample(themeWords ?? pool.filter((p) => p.kind === 'word' || p.kind === 'num'), themeWords ? 10 : 6);
       const qs = [...letters.map((l) => qListen(l, ctx)), ...words.map((w) => qListen(w, ctx, themeWords?.map((x) => x.id)))];
       if (qs.length < 4) return null;
@@ -122,10 +144,10 @@ export function buildTraining(mode: TrainingMode, ctx: Ctx, opts: { theme?: stri
       const picks = sample(pool, 25);
       const qs = picks.map((it) => (it.kind === 'word' ? qMeaning(it, 'thaiToMeaning', ctx) : qForItem(it, ctx))).filter((q): q is Question => !!q);
       if (qs.length < 6) return null;
-      steps = [Q('Défi chrono', qs)];
+      steps = [Q('Contre la montre', qs)];
       break;
     }
   }
   steps.push({ type: 'recap' });
-  return { lessonId: 'training', title: title[mode], steps, index: 0, ok: 0, total: 0, xp: 0, wrong: [], startedAt: now, training: true, mode };
+  return { lessonId: 'training', title: set ? `${SET_TITLE[set]} · ${title[mode]}` : title[mode], steps, index: 0, ok: 0, total: 0, xp: 0, wrong: [], startedAt: now, training: true, mode };
 }

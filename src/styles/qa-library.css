@@ -39,3 +39,35 @@
 
 /* ---------- Voyelles : les consonnes de référence du sélecteur à taille lisible, sans agrandir le segment ---------- */
 .seg .th-m { line-height: 1; }
+
+/* ---------- Bibliothèque : en tête, la recherche et Mes favoris, côte à côte ---------- */
+.lib-top { display: flex; gap: var(--s-2); margin: var(--s-1) 0 var(--s-4); }
+.lib-top a { display: flex; align-items: center; gap: var(--s-2); min-height: 48px; padding: 0 14px; border-radius: var(--r-md); border: 1.5px solid var(--line2); background: var(--surface); color: var(--ink2); text-decoration: none; font-size: var(--fs-2); }
+.lib-top svg { flex: none; }
+.lib-search { flex: 1 1 auto; min-width: 0; }
+.lib-search span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-fav { flex: none; font-weight: 650; color: var(--ink) !important; }
+.lib-fav svg { stroke: var(--acc-deep); fill: var(--acc-soft); }
+.lib-fav b { min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--r-pill); background: var(--acc-soft); color: var(--acc-deep); font-size: var(--fs-1); display: grid; place-items: center; }
+@media (max-width: 360px) { .lib-fav span { display: none; } }
+
+/* Alphabet, Voyelles : les deux actions passent l'une sous l'autre quand elles ne tiennent pas côte à côte */
+.btns.lib-acts { flex-wrap: wrap; }
+.btns.lib-acts > * { flex: 1 1 190px; }
+
+/* ---------- Listes de conversations (Conversations, Compréhension, Conversation parlée) ---------- */
+.dl-random { margin-bottom: var(--s-2); }
+.h2 .dl-advised { align-self: center; font-size: var(--fs-1); padding: 2px 8px; }
+.fold.dl-fold { margin-top: var(--s-3); }
+.fold.dl-fold .list { margin-top: var(--s-1); }
+
+/* ---------- Fiche de grammaire : rang discret à côté du titre, fiches précédente / suivante côte à côte ---------- */
+.theory-title .gr-rank { font-family: var(--f-ui); font-size: var(--fs-2); font-weight: 600; color: var(--ink3); letter-spacing: 0; white-space: nowrap; vertical-align: .3em; }
+.gr-nav { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); margin-top: var(--s-4); }
+.gr-nav .btn { min-width: 0; padding-left: var(--s-2); padding-right: var(--s-2); white-space: nowrap; }
+.gr-fav.on svg { fill: currentColor; }
+
+/* ---------- Mes favoris (vide) : deux raccourcis sous le message ---------- */
+.fav-empty { max-width: 420px; margin: 0 auto; }
+.h2.dl-h { flex-wrap: wrap; row-gap: var(--s-1); }
+.dl-note { margin: calc(-1 * var(--s-2)) 2px var(--s-3); font-size: var(--fs-1); color: var(--ink2); }

@@ -1,31 +1,29 @@
 /**
- * Réglages, volontairement courts : trois onglets, seulement les choix qui changent vraiment l'expérience.
- * Tout ce qui relève du dépannage est replié en bas de l'onglet Voix.
+ * Réglages, volontairement courts : quatre onglets (Moi · Voix · Exercices · Affichage), seulement les choix qui
+ * changent vraiment l'expérience. L'objectif, le rythme quotidien et les niveaux ont leur propre écran
+ * (Profil › Objectif, rythme et niveaux). Tout ce qui relève du dépannage est replié en bas de l'onglet Voix, avec
+ * l'explication de l'évaluation de la lecture à voix haute (ouverte d'office par `?fold=eval`).
  */
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { tts, clips, useSpeaker, useVoices, recognizer, recorder } from '@/app/services/speech';
 import { WebSpeechProvider, type VoiceGender } from '@/engine/audio/tts';
 import { azureSource, personalAzure, saveAzureConfig, testAzure } from '@/engine/audio/azure';
 import { T, frTypo } from '@/i18n';
-import { useGoals } from '@/app/hooks';
-import { GOAL_OPTIONS, goalKey } from '@/features/onboarding/Onboarding';
 import { Icon, Segmented, Thai, useToast } from '@/components/ui';
 
-type Tab = 'profile' | 'voice' | 'exercises';
-const TABS: { id: Tab; label: string }[] = [{ id: 'profile', label: 'Profil' }, { id: 'voice', label: 'Voix' }, { id: 'exercises', label: 'Exercices' }];
+type Tab = 'me' | 'voice' | 'exercises' | 'display';
+const TABS: { id: Tab; label: string }[] = [{ id: 'me', label: 'Moi' }, { id: 'voice', label: 'Voix' }, { id: 'exercises', label: 'Exercices' }, { id: 'display', label: 'Affichage' }];
 const SAMPLE = 'สวัสดี{P} ยินดีที่ได้รู้จัก';
 
-function ProfileTab() {
+function MeTab() {
   const profile = useStore((s) => s.profile)!;
   const updateProfile = useStore((s) => s.updateProfile);
   const [name, setName] = useState(profile.name);
   const [thaiName, setThaiName] = useState(profile.thaiName ?? '');
   const sp = useSpeaker();
-  const goals = useGoals();
-  const goalLabel = GOAL_OPTIONS.find((o) => o.key === goalKey(goals))?.title ?? '';
   return (
     <>
       <label className="f mt-0" htmlFor="pname">Prénom</label>
@@ -35,11 +33,6 @@ function ProfileTab() {
       <p className="foot-note">{frTypo('C’est ce prénom que la voix dit dans les dialogues (« ผมชื่อ… ») ; sans lui, une courte pause le remplace.')}</p>
       <label className="f">Je suis</label>
       <Segmented value={profile.gender} options={[{ v: 'm', label: <>Un homme · <Thai text="ครับ" /></> }, { v: 'f', label: <>Une femme · <Thai text="ค่ะ" /></> }]} onChange={(g) => updateProfile({ gender: g })} />
-      <label className="f">Objectif par jour</label>
-      <Segmented value={profile.dailyGoalMinutes} options={[5, 10, 15, 30].map((g) => ({ v: g, label: `${g} min` }))} onChange={(g) => updateProfile({ dailyGoalMinutes: g })} />
-      <div className="list mt-5">
-        <Link className="row" to="/profile/levels"><span className="mid"><span className="t">Objectif et niveaux</span><span className="s">{goalLabel} · niveaux</span></span><span className="end"><span className="chev">›</span></span></Link>
-      </div>
     </>
   );
 }
@@ -106,10 +99,11 @@ function VoiceTroubleshooting() {
 }
 
 /**
- * Évaluation Azure de la lecture à voix haute : facultative, avec la clé personnelle de l'apprenant, gardée sur cet
- * appareil uniquement (hors sauvegardes). Repliée : la plupart des gens n'en ont pas besoin.
+ * Comment la lecture à voix haute est évaluée (micro, reconnaissance vocale, courbe du ton), puis l'évaluation Azure
+ * facultative, avec la clé personnelle de l'apprenant, gardée sur cet appareil uniquement (hors sauvegardes).
+ * Repliée : la plupart des gens n'en ont pas besoin ; `open` la déplie d'office (lien « Comment la lecture est évaluée »).
  */
-function AzureAssessment() {
+function ReadingAssessment({ open }: { open?: boolean }) {
   const toast = useToast((s) => s.show);
   const cur = personalAzure();
   const service = azureSource() !== null && !cur; // jetons fournis par l'application (serveur), sans clé personnelle
@@ -126,10 +120,13 @@ function AzureAssessment() {
     toast('Clé Azure vérifiée : la lecture à voix haute l’utilisera.');
   };
   return (
-    <details className="fold sm mt-5">
-      <summary>Évaluation Azure de la lecture {cur ? '· clé personnelle' : service ? '· incluse' : '(facultatif)'}</summary>
-      {service && <p className="sm mt-1"><b>Incluse dans l’application</b> : rien à faire, la lecture à voix haute est évaluée par Azure (précision par syllabe, lectures omises ; pas les tons). Une clé personnelle ci-dessous reste possible et passe alors en priorité.</p>}
-      <p className="sm mut mt-1">Avec votre propre clé <b>Azure Speech</b> (niveau gratuit F0), chaque bloc de six lectures du tapis de lecture est comparé au texte attendu : précision par syllabe, lectures omises. Azure ne note pas les tons en thaï. La clé reste sur cet appareil, hors des sauvegardes.</p>
+    <details id="eval" className="fold sm mt-5" open={open}>
+      <summary>Comment la lecture à voix haute est évaluée{cur ? ' · Azure, clé personnelle' : service ? ' · Azure inclus' : ''}</summary>
+      <p className="sm mt-1">{frTypo('Le micro reste ouvert pendant la série : le tapis avance dès que vous vous arrêtez de parler. En arrière-plan, la ')}<b>reconnaissance vocale de l’appareil</b>{frTypo(' (thaï) dit ce qu’elle a compris : si elle entend la même syllabe avec un autre ton, une autre longueur ou une consonne voisine, le bilan l’indique précisément.')}</p>
+      <p className="sm mt-2">Le <b>ton</b>{frTypo(' d’une syllabe est aussi estimé d’après la courbe de votre voix, sur l’appareil : c’est une indication, pas une mesure de laboratoire.')}</p>
+      <div className="fold-sub">Évaluation Azure{cur || service ? '' : <span className="xs mut"> · facultative</span>}</div>
+      {service && <p className="sm mt-1"><b>Incluse dans l’application</b>{frTypo(' : rien à faire, la lecture à voix haute est évaluée par Azure (précision par syllabe, lectures omises ; pas les tons). Une clé personnelle ci-dessous reste possible et passe alors en priorité.')}</p>}
+      <p className="sm mut mt-1">Avec votre propre clé <b>Azure Speech</b>{frTypo(' (niveau gratuit F0), chaque bloc de six lectures du tapis de lecture est comparé au texte attendu : précision par syllabe, lectures omises. Azure ne note pas les tons en thaï. La clé reste sur cet appareil, hors des sauvegardes.')}</p>
       <label className="f" htmlFor="azkey">Clé</label>
       <input id="azkey" className="field" type="password" autoComplete="off" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Clé 1 de la ressource Speech" />
       <label className="f" htmlFor="azreg">Région</label>
@@ -142,7 +139,7 @@ function AzureAssessment() {
 const SLOW_OPTIONS = [{ v: 0.7, label: 'Un peu' }, { v: 0.6, label: 'Lente' }, { v: 0.5, label: 'Très lente' }];
 const nearestSlow = (r: number) => SLOW_OPTIONS.reduce((a, o) => (Math.abs(o.v - r) < Math.abs(a - r) ? o.v : a), SLOW_OPTIONS[0].v);
 
-function VoiceTab() {
+function VoiceTab({ openEval }: { openEval?: boolean }) {
   const settings = useStore((s) => s.settings);
   const update = useStore((s) => s.updateSettings);
   const profile = useStore((s) => s.profile)!;
@@ -158,14 +155,13 @@ function VoiceTab() {
       <label className="f">Lire à voix haute automatiquement</label>
       <Segmented value={settings.autoAudio} options={[{ v: true, label: 'Oui' }, { v: false, label: 'Non' }]} onChange={(v) => update({ autoAudio: v })} />
       <NativeVoices />
-      <AzureAssessment />
+      <ReadingAssessment open={openEval} />
       <VoiceTroubleshooting />
     </>
   );
 }
 
 function ExercisesTab() {
-  const t = T();
   const settings = useStore((s) => s.settings);
   const update = useStore((s) => s.updateSettings);
   const strict = settings.pronStrictness === 'strict' ? 'strict' : 'normal';
@@ -173,11 +169,21 @@ function ExercisesTab() {
     <>
       <label className="f mt-0">Passer à la suite après une bonne réponse</label>
       <Segmented value={settings.autoAdvance !== false} options={[{ v: true, label: 'Automatiquement' }, { v: false, label: 'Quand je touche' }]} onChange={(v) => update({ autoAdvance: v })} />
-      <label className="f">Phonétique sous le thaï</label>
-      <Segmented value={settings.translit} options={[{ v: 'always', label: 'Toujours' }, { v: 'learning', label: 'Au début' }, { v: 'hidden', label: 'Jamais' }]} onChange={(v) => update({ translit: v })} />
-      <p className="foot-note">«&nbsp;Au début&nbsp;»&nbsp;: la phonétique disparaît quand vous lisez le thaï seul.</p>
       <label className="f">Contrôle de prononciation</label>
       <Segmented value={strict} options={[{ v: 'normal' as const, label: 'Normal' }, { v: 'strict' as const, label: 'Strict' }]} onChange={(v) => update({ pronStrictness: v })} />
+    </>
+  );
+}
+
+function DisplayTab() {
+  const t = T();
+  const settings = useStore((s) => s.settings);
+  const update = useStore((s) => s.updateSettings);
+  return (
+    <>
+      <label className="f mt-0">Phonétique sous le thaï</label>
+      <Segmented value={settings.translit} options={[{ v: 'always', label: 'Toujours' }, { v: 'learning', label: 'Au début' }, { v: 'hidden', label: 'Jamais' }]} onChange={(v) => update({ translit: v })} />
+      <p className="foot-note">«&nbsp;Au début&nbsp;»&nbsp;: la phonétique disparaît quand vous lisez le thaï seul.</p>
       <label className="f">{t.profile.theme}</label>
       <Segmented value={settings.theme} options={[{ v: 'auto', label: 'Automatique' }, { v: 'light', label: 'Clair' }, { v: 'dark', label: 'Sombre' }]} onChange={(v) => update({ theme: v })} />
       <label className="f">{t.profile.thaiSize}</label>
@@ -192,15 +198,16 @@ export function Settings() {
   const t = T();
   usePage(t.profile.settings, { back: '/profile' });
   const [params, setParams] = useSearchParams();
-  const raw = params.get('tab') === 'display' ? 'exercises' : params.get('tab');
-  const tab: Tab = (TABS.some((x) => x.id === raw) ? raw : 'profile') as Tab;
+  const raw = params.get('tab') === 'profile' ? 'me' : params.get('tab');
+  const tab: Tab = (TABS.some((x) => x.id === raw) ? raw : 'me') as Tab;
   return (
     <>
       <div className="seg tabs" role="tablist" aria-label="Réglages">{TABS.map((x) => <button key={x.id} role="tab" aria-selected={tab === x.id} className={tab === x.id ? 'on' : ''} onClick={() => setParams({ tab: x.id }, { replace: true })}>{x.label}</button>)}</div>
       <div className="tabpane" role="tabpanel">
-        {tab === 'profile' && <ProfileTab />}
-        {tab === 'voice' && <VoiceTab />}
+        {tab === 'me' && <MeTab />}
+        {tab === 'voice' && <VoiceTab openEval={params.get('fold') === 'eval'} />}
         {tab === 'exercises' && <ExercisesTab />}
+        {tab === 'display' && <DisplayTab />}
       </div>
     </>
   );

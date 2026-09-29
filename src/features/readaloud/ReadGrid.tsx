@@ -8,8 +8,8 @@
  * Après : la grille colorée, les cases à reprendre, et le bilan détaillé du tapis.
  */
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FullScreen } from '@/app/Shell';
+import { useSearchParams } from 'react-router-dom';
+import { FullScreen, useBack } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { useSpeaker } from '@/app/services/speech';
 import { ITEMS } from '@/content/th';
@@ -64,7 +64,8 @@ function GridTable({ grid, showRom, heads, current, marks, onCell }: { grid: Gri
 }
 
 export function ReadGrid() {
-  const nav = useNavigate();
+  // retour là d'où l'on vient (Alphabet, Voyelles, Bibliothèque, parcours…), le programme si l'on arrive directement
+  const back = useBack('/read');
   const sp = useSpeaker();
   const srs = useStore((s) => s.srs);
   const record = useStore((s) => s.recordReadAloud);
@@ -132,7 +133,7 @@ export function ReadGrid() {
   const missed = state?.phase === 'done' ? [...marks].filter(([, v]) => v === 'ko' || v === 'near').map(([k]) => k) : [];
 
   return (
-    <FullScreen title="Grille de lecture" onBack={() => { runRef.current?.release(); nav('/read'); }} right={<button className={`tb ${showRom ? 'on' : ''}`} aria-pressed={showRom} aria-label="Afficher la phonétique" onClick={() => setShowRom(!showRom)}><Icon name="eye" /></button>}>
+    <FullScreen title="Grille de lecture" onBack={() => { runRef.current?.release(); back(); }} right={<button className={`tb ${showRom ? 'on' : ''}`} aria-pressed={showRom} aria-label="Afficher la phonétique" onClick={() => setShowRom(!showRom)}><Icon name="eye" /></button>}>
       {!running && state?.phase !== 'done' && (
         <details className="rg-settings" open={!fromUrl}>
           <summary><span className="t">Réglages</span><span className="s">{CONS_LABEL[cfg.cons].split(' · ')[0]} · {VOWEL_LABEL[cfg.vowels].split(' · ')[0]}{cfg.marks ? ' · marques' : ''}{cfg.finals !== 'none' ? ` · finales ${cfg.finals === 'live' ? 'vivantes' : 'mortes'}` : ''} · {cfg.size}×{cfg.size}</span></summary>

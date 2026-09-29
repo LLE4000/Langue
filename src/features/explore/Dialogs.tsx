@@ -2,10 +2,11 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
-import { DIALOG_BY_ID, th } from '@/content/th';
+import { DIALOG_BY_ID } from '@/content/th';
 import { L, T } from '@/i18n';
 import { DialogView } from '@/components/DialogView';
-import { Empty, Icon, GlyphIcon } from '@/components/ui';
+import { DialogList, withWhom } from '@/components/DialogList';
+import { Empty, Icon } from '@/components/ui';
 
 export function Dialogs() {
   const t = T();
@@ -16,7 +17,7 @@ export function Dialogs() {
     <>
       <p className="lead">Des situations réelles. La traduction est masquée au départ&nbsp;: essayez d’abord de comprendre seul.</p>
       <div className="btns mb-3"><Link className="btn soft sm" to="/explore/comprehension"><Icon name="headphones" size={16} /> Tester ma compréhension orale</Link><Link className="btn soft sm" to="/talk"><Icon name="mic" size={16} /> Jouer mon rôle au micro</Link></div>
-      <div className="list">{th.DIALOGS.map((d) => <Link key={d.id} className={`row ${done.has(d.id) ? 'done' : ''}`} to={`/explore/dialogs/${encodeURIComponent(d.id)}`}><span className="ico">{done.has(d.id) ? <Icon name="check" /> : <GlyphIcon name={d.icon} />}</span><span className="mid"><span className="t">{L(d.title)}</span><span className="s">{d.lines.length} répliques · avec : {L(d.other).toLowerCase()}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div>
+      <DialogList skill="listening" href={(d) => `/explore/dialogs/${encodeURIComponent(d.id)}`} row={(d) => ({ sub: `${d.lines.length} répliques · ${withWhom(d)}`, done: done.has(d.id) })} />
     </>
   );
 }

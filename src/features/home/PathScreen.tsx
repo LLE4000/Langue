@@ -1,22 +1,73 @@
-/** Le parcours complet, par étapes de huit leçons (la dernière peut en compter jusqu'à onze), avec l'état de chaque leçon ; on arrive sur la leçon en cours. */
-import { useEffect, useRef } from 'react';
+/**
+ * Le parcours complet, par étapes de huit leçons (la dernière peut en compter jusqu'à onze), avec l'état de chaque leçon ;
+ * on arrive sur la leçon en cours. Les séances « Lire à voix haute » (et la grille de lecture) se rangent juste après la
+ * leçon qui enseigne leurs dernières lettres, verrouillées jusque-là. En haut à droite, la série de jours seule : le
+ * palier est déjà dans le grand bandeau.
+ */
+import { Fragment, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { usePage } from '@/app/Shell';
-import { useNextLesson, usePath, useProgress } from '@/app/hooks';
+import { useKnown, useNextLesson, usePath, useProgress } from '@/app/hooks';
+import { useStore, emptyReadAloud } from '@/app/store';
 import { curriculum } from '@/content/packs';
-import { L, T } from '@/i18n';
-import { Bar, Icon } from '@/components/ui';
-import { LessonRow } from '@/components/LessonCard';
+import { L, T, frTypo } from '@/i18n';
+import { Bar, Icon, ThInl } from '@/components/ui';
+import { LessonRow, PathActivityRow } from '@/components/LessonCard';
 import { TierHero } from '@/components/Progress';
+import { raProgram, type RaSession } from '@/engine/readaloud/program';
+import { isUnlocked, PASS, unlockIndex, unlockLesson } from '@/features/readaloud/data';
+import { StreakChip } from './Home';
+
+const STREAK = <StreakChip />;
+const range = (a: number, b: number) => (a === b ? `séance ${a}` : b === a + 1 ? `séances ${a} et ${b}` : `séances ${a} à ${b}`);
 
 export function PathScreen() {
   const t = T();
-  usePage(t.home.path, { back: '/' });
+  usePage(t.home.path, { back: '/', right: STREAK });
   const path = usePath();
   const next = useNextLesson();
   const cur = curriculum();
   const prog = useProgress();
+  const known = useKnown().concepts;
+  const ra = useStore((s) => s.readAloud) ?? emptyReadAloud();
   const visible = path.filter((p) => p.status !== 'granted');
   const granted = path.length - visible.length;
+
+  // Lire à voix haute : les séances regroupées par leçon qui les débloque, rangées après la dernière leçon visible
+  // à cette place du parcours (ou en tête si elle est déjà acquise d'après le profil).
+  const lessons = useMemo(() => path.map((p) => p.lesson), [path]);
+  const raAfter = useMemo(() => {
+    const at = unlockIndex(lessons);
+    const byIdx = new Map<number, RaSession[]>();
+    for (const s of raProgram()) { const i = at.get(s.id) ?? -1; if (i >= 0) byIdx.set(i, [...(byIdx.get(i) ?? []), s]); }
+    const out = new Map<string, RaSession[][]>(); // id de la leçon visible (ou '' : en tête) → groupes de séances
+    let lastVisible = '';
+    path.forEach((p, i) => {
+      if (p.status !== 'granted') lastVisible = p.lesson.id;
+      const g = byIdx.get(i);
+      if (g) out.set(lastVisible, [...(out.get(lastVisible) ?? []), g]);
+    });
+    return out;
+  }, [path, lessons]);
+  const firstGroup = [...raAfter.values()].flat()[0];
+  const raRows = (key: string): ReactNode => raAfter.get(key)?.map((g) => {
+    const target = g.find((s) => (ra.sessions[s.id]?.best ?? 0) < PASS) ?? g[0];
+    const firstOpen = isUnlocked(g[0], known);
+    const locked = g.find((s) => !isUnlocked(s, known));
+    const until = locked && unlockLesson(locked, lessons, known);
+    const after = until ? [<ThInl key="after" text={frTypo(`après « ${L(until.title)} »`)} />] : [];
+    const passedN = g.filter((s) => (ra.sessions[s.id]?.best ?? 0) >= PASS).length;
+    const best = ra.sessions[target.id]?.best;
+    const meta = !firstOpen ? after : g.length > 1 ? [`${passedN} / ${g.length} réussie${passedN > 1 ? 's' : ''}`, ...after] : best != null ? [`meilleur ${best} %`] : [`${target.items.length} lectures`];
+    return (
+      <Fragment key={g[0].id}>
+        <PathActivityRow to={`/read/${target.id}`} icon="mic" title="Lire à voix haute" part={range(g[0].n, g[g.length - 1].n)} sub={<ThInl text={`${target.title} · ${target.sub}`} />}
+          label="Lecture au micro" meta={meta} minutes={target.minutes} state={passedN === g.length ? 'done' : !firstOpen ? 'lock' : undefined} />
+        {g === firstGroup && (
+          <PathActivityRow to="/read/grid" icon="grid" title="Grille de lecture" sub={<>Consonnes × voyelles au hasard : <ThInl text="ขา ขี ขู เข…" /></>} label="Lecture au micro" meta={!firstOpen ? after : ['à volonté']} state={!firstOpen ? 'lock' : undefined} />
+        )}
+      </Fragment>
+    );
+  });
   const curRef = useRef<HTMLAnchorElement>(null);
   useEffect(() => { curRef.current?.scrollIntoView({ block: 'center' }); }, []);
   // Le parcours entrelace les pistes : on le découpe en étapes de huit leçons, chacune nommée par les unités qu'elle parcourt
@@ -41,6 +92,7 @@ export function PathScreen() {
       {/* En tête : le palier et sa jauge, calculés sur la maîtrise réelle ; pas de total de leçons (il grandit avec les mises à jour) */}
       <TierHero p={prog} />
       {granted > 0 && <p className="note-under mt-2">{granted} leçon{granted > 1 ? 's' : ''} déjà acquise{granted > 1 ? 's' : ''} d’après votre niveau. Suivez l’ordre conseillé, ou piochez librement.</p>}
+      {raAfter.has('') && <div className="list mt-3">{raRows('')}</div>}
       {groups.map((g) => {
         const unitDoneN = g.items.filter((p) => p.status === 'done').length;
         const unitDone = unitDoneN === g.items.length;
@@ -53,7 +105,12 @@ export function PathScreen() {
               {g.items.map((p) => {
                 const isNext = p.lesson.id === next?.lesson.id;
                 const state = p.status === 'done' ? 'done' : isNext ? 'cur' : p.status === 'locked' ? 'lock' : undefined;
-                return <LessonRow key={p.lesson.id} lesson={p.lesson} state={state} current={isNext} rowRef={isNext ? curRef : undefined} extra={p.knownOrally ? 'déjà connu à l’oral' : undefined} />;
+                return (
+                  <Fragment key={p.lesson.id}>
+                    <LessonRow lesson={p.lesson} state={state} current={isNext} rowRef={isNext ? curRef : undefined} extra={p.knownOrally ? 'déjà connu à l’oral' : undefined} />
+                    {raRows(p.lesson.id)}
+                  </Fragment>
+                );
               })}
             </div>
           </section>

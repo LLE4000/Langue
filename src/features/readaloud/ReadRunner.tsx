@@ -5,8 +5,9 @@
  */
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { FullScreen } from '@/app/Shell';
+import { FullScreen, useBack } from '@/app/Shell';
 import { useStore, emptyReadAloud } from '@/app/store';
+import { useKnown } from '@/app/hooks';
 import { useSpeaker } from '@/app/services/speech';
 import { activePack } from '@/content/packs';
 import { ITEMS } from '@/content/th';
@@ -18,7 +19,7 @@ import { PitchBaseline } from '@/engine/audio/pitch';
 import { ContinuousRecognizer } from '@/engine/audio/mic';
 import { assessPronunciation, azureConfig } from '@/engine/audio/azure';
 import { visualLength } from '@/engine/thai/script';
-import { Icon, Segmented, Rom } from '@/components/ui';
+import { Icon, Segmented, Rom, ThInl } from '@/components/ui';
 import { RaRun, type RaMode, type RunState, type Tempo } from './run';
 import { chronoSeries, errorsSeries, raPrefs, saveRaPrefs } from './data';
 import { MODE_INFO } from './ReadHub';
@@ -56,13 +57,21 @@ export function newRaRun(items: RaItem[], mode: RaMode, sp: { speak: (t: string,
   }, { tempo, chronoMs: 60000 });
 }
 
+/** Une série par adresse : passer d'une série à l'autre (« Séance suivante », « Reprendre ces lectures ») repart de zéro. */
 export function ReadRunner() {
   const { id = '' } = useParams();
+  return <ReadRunnerView key={id} id={id} />;
+}
+
+function ReadRunnerView({ id }: { id: string }) {
   const [qs] = useSearchParams();
   const nav = useNavigate();
   const sp = useSpeaker();
   const ra = useStore((s) => s.readAloud) ?? emptyReadAloud();
   const record = useStore((s) => s.recordReadAloud);
+  const known = useKnown().concepts;
+  // retour là d'où l'on vient (programme, parcours, Réviser…), le programme si l'on est arrivé directement ici
+  const back = useBack('/read');
   const session = raSession(id);
   const [prefs, setPrefs] = useState(raPrefs());
   const initialMode = (qs.get('mode') as RaMode) || (id === 'chrono' ? 'chrono' : prefs.mode);
@@ -72,11 +81,11 @@ export function ReadRunner() {
   const items = useMemo(() => {
     const seed = `${id}-${Date.now()}`;
     if (id === 'errors') return errorsSeries(ra, seed);
-    if (id === 'chrono') return chronoSeries(ra, seed);
+    if (id === 'chrono') return chronoSeries(ra, seed, known);
     return session?.items ?? [];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, runKey]);
-  const title = id === 'errors' ? 'Mes erreurs' : id === 'chrono' ? 'Chrono' : session ? `Séance ${session.n} · ${session.title}` : 'Lecture';
+  const title = id === 'errors' ? 'Lectures à reprendre' : id === 'chrono' ? 'Lecture chrono · 1 min' : session ? `Séance ${session.n} · ${session.title}` : 'Lecture';
 
   const runRef = useRef<RaRun | null>(null);
   const [run, setRun] = useState<RaRun | null>(null);
@@ -111,11 +120,11 @@ export function ReadRunner() {
     return () => clearTimeout(t);
   }, [run, state?.phase, record, session?.id, title]);
 
-  const leave = () => { runRef.current?.release(); nav('/read'); };
+  const leave = () => { runRef.current?.release(); back(); };
 
   if (!items.length) {
     return (
-      <FullScreen title={title} onBack={() => nav('/read')}>
+      <FullScreen title={title} onBack={back}>
         <div className="empty mt-6"><span className="e" aria-hidden="true"><Icon name="checkCircle" /></span>{id === 'errors' ? 'Aucune lecture à reprendre pour l’instant : les syllabes ratées apparaîtront ici après une séance.' : 'Cette série est introuvable.'}</div>
         <button className="btn soft mt-4" onClick={() => nav('/read')}>Retour au programme</button>
       </FullScreen>
@@ -126,10 +135,10 @@ export function ReadRunner() {
   if (!state || state.phase === 'ready' || state.phase === 'starting') {
     const setP = (p: Partial<typeof prefs>) => { saveRaPrefs(p); setPrefs({ ...prefs, ...p }); };
     return (
-      <FullScreen title={title} onBack={() => nav('/read')}>
+      <FullScreen title={title} onBack={back}>
         <div className="ra-intro">
           <span className="eyebrow">{session ? session.stage : 'Lire à voix haute'}</span>
-          <h2 className="theory-title">{id === 'errors' ? 'Mes erreurs' : id === 'chrono' ? 'Une minute chrono' : session?.title}</h2>
+          <h2 className="theory-title">{id === 'errors' ? 'Lectures à reprendre' : id === 'chrono' ? 'Lecture chrono · 1 min' : <ThInl text={session?.title ?? ''} />}</h2>
           <p className="theory-sub">{id === 'errors' ? 'Les syllabes qui vous ont posé problème, jusqu’à ce qu’elles passent.' : id === 'chrono' ? 'Lisez le plus de syllabes possible en une minute, sans sacrifier la justesse.' : session?.focus}</p>
           <div className="ra-sample" lang="th" aria-hidden="true">{items.slice(0, 5).map((it, k) => <span key={k} className={k ? '' : 'first'}>{it.thai}</span>)}</div>
           {mode !== 'chrono' && (

@@ -14,6 +14,8 @@ import { PeekBar } from './Alphabet';
 import type { VowelGroup } from '@/content/types';
 
 const GROUPS: [VowelGroup, string][] = [['simple', 'Simples'], ['diph', 'Diphtongues'], ['special', 'Particulières'], ['combo', 'Avec ย / ว']];
+/** Voyelles de la grille de lecture pour le groupe affiché (la grille connaît les longues, les courtes et les composées). */
+const GRID_VOWELS: Record<VowelGroup, 'long' | 'short' | 'compound'> = { simple: 'long', diph: 'compound', special: 'compound', combo: 'compound' };
 
 export function Vowels() {
   const t = T();
@@ -38,7 +40,7 @@ export function Vowels() {
     <>
       <p className="lead">Une voyelle thaïe s’écrit autour de la consonne&nbsp;: avant, après, au-dessus, en dessous, ou plusieurs à la fois. Le son, lui, vient toujours après la consonne.</p>
       <div className="chips">{GROUPS.map(([k, lab]) => <button key={k} className={`chip ${g === k ? 'on' : ''}`} onClick={() => setG(k)}>{lab}</button>)}</div>
-      <div className="btns mb-3"><button className="btn soft sm" onClick={() => nav('/explore/listen?set=vow')}><Icon name="repeat" size={18} /> Écouter les voyelles en boucle</button></div>
+      <div className="btns lib-acts mb-3"><button className="btn soft sm" onClick={() => nav(`/read/grid?c=all&v=${GRID_VOWELS[g]}&m=0&f=none&n=5&o=rows&s=${Math.random().toString(36).slice(2, 8)}`)}><Icon name="grid" size={18} /> Lire ces voyelles avec des consonnes</button><button className="btn soft sm" onClick={() => nav('/explore/listen?set=vow')}><Icon name="repeat" size={18} /> Écouter les voyelles en boucle</button></div>
       <p className="xs mut mt-n1 mb-3">Touchez une voyelle pour l’entendre&#8239;; touchez-la encore pour ouvrir sa fiche.</p>
       <div className="row-flex mb-3"><span className="sm mut nowrap">Autour de</span><div className="grow"><Segmented value={ref} options={['ก', 'อ', 'น', 'บ'].map((c) => ({ v: c, label: <span lang="th" className="th th-m">{c}</span> }))} onChange={setRef} /></div></div>
       <div className="lgrid wide">

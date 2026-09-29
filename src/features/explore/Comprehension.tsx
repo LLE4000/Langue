@@ -7,57 +7,40 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { useSpeaker } from '@/app/services/speech';
-import { DIALOG_BY_ID, th } from '@/content/th';
+import { DIALOG_BY_ID } from '@/content/th';
 import { dialogOtherGender } from '@/engine/speakers';
 import { L } from '@/i18n';
 import { Icon, Empty, GlyphIcon } from '@/components/ui';
 import { DialogView } from '@/components/DialogView';
+import { DialogList } from '@/components/DialogList';
 import { StepFooter, ContinueButton, useDigitKeys } from '@/components/StepFooter';
 import { buildComprehensionQuiz, dialogSeconds, type CQuestion } from './comprehension';
 
 const KIND = 'comprehension';
-const LEVELS = ['A1', 'A2', 'B1'] as const;
-const LEVEL_NOTE: Record<(typeof LEVELS)[number], string> = { A1: 'questions en français', A2: 'réponses en thaï', B1: 'tout en thaï' };
+/** Précision en bout d'intertitre : la langue des questions selon le niveau. */
+const SECTION_NOTE = { short: 'questions en français', A1: 'questions en français', A2: 'réponses en thaï', B1: 'tout en thaï' } as const;
 
-/** Liste des conversations à écouter, avec le meilleur score. */
+/** Liste des conversations à écouter (même liste que Conversations et Conversation parlée), avec le meilleur score. */
 export function ComprehensionHub() {
   usePage('Compréhension orale', { back: '/review' });
   const hist = useStore((s) => s.history);
-  const nav = useNavigate();
   const best = useMemo(() => { const m: Record<string, string> = {}; for (const h of hist) if (h.kind === KIND && h.score != null && h.total) { const v = `${h.score}/${h.total}`; if (!m[h.label] || h.score / h.total > +m[h.label].split('/')[0] / +m[h.label].split('/')[1]) m[h.label] = v; } return m; }, [hist]);
-  const random = () => { const pool = th.DIALOGS.filter((d) => !best[d.id]); const d = (pool.length ? pool : th.DIALOGS)[Math.floor(Math.random() * (pool.length ? pool : th.DIALOGS).length)]; nav(`/explore/comprehension/${encodeURIComponent(d.id)}`); };
   return (
     <>
       <p className="lead">Une conversation, deux voix, pas de texte. Écoutez autant de fois que vous voulez, puis répondez en français&nbsp;: qui a dit quoi, combien, quand. Le texte s’affiche seulement à la fin.</p>
-      <button className="btn" onClick={random}><Icon name="play" size={18} /> Une conversation au hasard</button>
-      {LEVELS.map((lv) => {
-        const list = th.DIALOGS.filter((d) => d.level === lv);
-        if (!list.length) return null;
-        return (
-          <section key={lv} aria-label={`Écoute longue ${lv}`}>
-            <div className="h2">Écoute longue · {lv} <span className="sp" /><span className="sm mut">{LEVEL_NOTE[lv]}</span></div>
-            <div className="list">
-              {list.map((d) => (
-                <Link key={d.id} className="row" to={`/explore/comprehension/${encodeURIComponent(d.id)}`}>
-                  <span className="ico jade"><Icon name={d.icon} /></span>
-                  <span className="mid"><span className="t">{L(d.title)}</span><span className="s">≈ {Math.max(1, Math.round(dialogSeconds(d) / 60))} min · {d.lines.length} répliques · {d.questions?.length ?? 0} questions</span></span>
-                  <span className="end">{best[d.id] ? <span className="tag ok">{best[d.id]}</span> : <span className="chev">›</span>}</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-        );
-      })}
-      <div className="h2">Conversations courtes</div>
-      <div className="list">
-        {th.DIALOGS.filter((d) => !d.level).map((d) => (
-          <Link key={d.id} className="row" to={`/explore/comprehension/${encodeURIComponent(d.id)}`}>
-            <span className="ico"><GlyphIcon name={d.icon} /></span>
-            <span className="mid"><span className="t">{L(d.title)}</span><span className="s">≈ {dialogSeconds(d)} s · {d.lines.length} répliques · {(d.questions?.length ?? 0) + 2} questions</span></span>
-            <span className="end">{best[d.id] ? <span className="tag ok">{best[d.id]}</span> : <span className="chev">›</span>}</span>
-          </Link>
-        ))}
-      </div>
+      <DialogList
+        skill="listening"
+        tone="jade"
+        notes={SECTION_NOTE}
+        href={(d) => `/explore/comprehension/${encodeURIComponent(d.id)}`}
+        row={(d) => ({
+          sub: d.level
+            ? `≈ ${Math.max(1, Math.round(dialogSeconds(d) / 60))} min · ${d.lines.length} répliques · ${d.questions?.length ?? 0} questions`
+            : `≈ ${dialogSeconds(d)} s · ${d.lines.length} répliques · ${(d.questions?.length ?? 0) + 2} questions`,
+          end: best[d.id] ? <span className="tag ok">{best[d.id]}</span> : undefined,
+          done: !!best[d.id],
+        })}
+      />
     </>
   );
 }

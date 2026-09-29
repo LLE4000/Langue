@@ -32,6 +32,7 @@ import { Phrasebook, PhrasebookSection } from '@/features/explore/Phrasebook';
 import { Writing } from '@/features/explore/Writing';
 import { Transcription } from '@/features/explore/Transcription';
 import { Search } from '@/features/explore/Search';
+import { Favorites } from '@/features/explore/Favorites';
 import { Profile } from '@/features/profile/Profile';
 import { Settings } from '@/features/profile/Settings';
 import { DataScreen } from '@/features/profile/DataScreen';
@@ -119,6 +120,7 @@ export function App() {
           <Route path="explore/writing" element={<Writing />} />
           <Route path="explore/transcription" element={<Transcription />} />
           <Route path="explore/search" element={<Search />} />
+          <Route path="explore/favorites" element={<Favorites />} />
           <Route path="profile" element={<Profile />} />
           <Route path="profile/settings" element={<Settings />} />
           <Route path="profile/data" element={<DataScreen />} />

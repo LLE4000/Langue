@@ -41,3 +41,29 @@ select.field { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://ww
 .lrow .t { display: flex; align-items: baseline; min-width: 0; white-space: normal; overflow: visible; }
 .lrow .t .tt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lrow .t .part { flex: none; white-space: nowrap; }
+
+/* Accueil et parcours : la série de jours seule, à la place de la pastille de progression (le palier est déjà affiché). */
+.streak-chip { display: inline-flex; align-items: center; gap: 4px; height: 36px; padding: 0 12px 0 10px; border-radius: var(--r-pill); background: var(--surface); border: 1px solid var(--line); color: var(--acc-deep); text-decoration: none; font-size: var(--fs-1); flex: none; font-variant-numeric: tabular-nums; }
+.streak-chip b { font-weight: 700; }
+.streak-chip svg { width: 16px; height: 16px; flex: none; }
+.streak-chip.zero { color: var(--ink3); }
+.streak-chip:active { background: var(--surface2); }
+
+/* Parcours : séances « Lire à voix haute » et grille de lecture entre les leçons ; le badge porte une icône. */
+.lrow.pact .lbadge > svg { width: 22px; height: 22px; }
+.lrow.pact .s .thi { font-size: 1.05em; }
+
+/* Lire à voix haute : séance verrouillée (lettres pas encore enseignées), ligne « Comment la lecture est évaluée ». */
+.ra-hero .ra-lockline { display: flex; align-items: flex-start; gap: 6px; margin: 0; font-size: var(--fs-1); line-height: 1.4; color: var(--ink2); }
+.ra-hero .ra-lockline svg { flex: none; margin-top: 2px; }
+.ra-row.lock .mid { opacity: .75; }
+.ra-row.lock .ico { color: var(--ink3); }
+.ra-evalrow .ico { background: var(--surface2); color: var(--ink2); }
+
+/* Réviser : une séance rapide pas encore ouverte (pas assez d'éléments appris) est grisée, sans toucher possible ;
+   sa description dit ce qui l'ouvrira. « À l'oral » : des lignes hautes, une activité par ligne. */
+.mode.off { background: var(--surface2); border-style: dashed; cursor: default; }
+.mode.off .ico { background: var(--surface3); color: var(--ink3); }
+.mode.off .t { color: var(--ink2); } .mode.off .s { color: var(--ink3); }
+.row.tall { min-height: 76px; }
+.chips button.chip { font: inherit; font-weight: 600; font-size: var(--fs-2); cursor: pointer; }

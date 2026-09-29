@@ -1,26 +1,32 @@
-/** Phrases de voyage : à montrer en très grand à son interlocuteur, avec audio et numéros d'urgence. */
+/** Phrases à montrer (phrases de voyage) : en très grand à son interlocuteur, avec audio et numéros d'urgence. */
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
-import { WORD_BY_THAI, th, type LearnItem } from '@/content/th';
+import { ITEMS, WORD_BY_THAI, th, type LearnItem } from '@/content/th';
 import { L, T } from '@/i18n';
 import { AudioButton, AudioPair, Empty, Fr, Icon, Rom, Thai } from '@/components/ui';
 import { WordByWord } from '@/components/WordByWord';
 import { MicPanel } from '@/components/MicPanel';
 
+/** Les mots et phrases mis en favori (les lettres, voyelles, fiches… sont dans Bibliothèque › Mes favoris). */
+function favPhrases(favs: Record<string, number>): LearnItem[] {
+  return Object.keys(favs).sort((a, b) => favs[b] - favs[a]).map((k) => ITEMS[k]).filter((it): it is LearnItem => it?.kind === 'word');
+}
+
 export function Phrasebook() {
   const t = T();
   usePage(t.explore.phrasebook, { back: '/explore' });
   const favs = useStore((s) => s.favorites);
-  const nFav = Object.keys(favs).filter((k) => WORD_BY_THAI[k.slice(2)]).length;
+  const nFav = favPhrases(favs).length;
   return (
     <>
       <p className="lead">Choisissez une situation, puis touchez une phrase pour l’afficher en très grand et la montrer à votre interlocuteur.</p>
       <div className="tiles">
         {th.PHRASEBOOK.map((s) => { const n = s.keys.filter((k) => WORD_BY_THAI[k]).length; return <Link key={s.id} to={`/explore/phrasebook/${s.id}`} className="tile ctr"><span className="e">{s.icon}</span><span className="t">{L(s.title)}</span><span className="s">{n} phrase{n > 1 ? 's' : ''}</span></Link>; })}
-        <Link to="/explore/phrasebook/favs" className="tile ctr"><span className="e fav"><Icon name="star" size={38} /></span><span className="t">Mes favoris</span><span className="s">{nFav} phrase{nFav > 1 ? 's' : ''}</span></Link>
+        <Link to="/explore/phrasebook/favs" className="tile ctr"><span className="e fav"><Icon name="star" size={38} /></span><span className="t">Phrases favorites</span><span className="s">{nFav} phrase{nFav > 1 ? 's' : ''}</span></Link>
       </div>
+      <p className="xs mut mt-3">Lettres, voyelles et fiches favorites&#8239;: <Link to="/explore/favorites">Mes favoris</Link>.</p>
     </>
   );
 }
@@ -43,10 +49,10 @@ export function PhrasebookSection() {
   const { id = '' } = useParams();
   const favs = useStore((s) => s.favorites);
   const sec = th.PHRASEBOOK.find((s) => s.id === id);
-  const title = id === 'favs' ? 'Mes favoris' : sec ? L(sec.title) : 'Phrases';
+  const title = id === 'favs' ? 'Phrases favorites' : sec ? L(sec.title) : 'Phrases';
   usePage(title, { back: '/explore/phrasebook' });
   const [big, setBig] = useState<LearnItem | null>(null);
-  const items = id === 'favs' ? Object.keys(favs).sort((a, b) => favs[b] - favs[a]).map((k) => WORD_BY_THAI[k.slice(2)]).filter(Boolean) : (sec?.keys ?? []).map((k) => WORD_BY_THAI[k]).filter(Boolean);
+  const items = id === 'favs' ? favPhrases(favs) : (sec?.keys ?? []).map((k) => WORD_BY_THAI[k]).filter(Boolean);
   if (!sec && id !== 'favs') return <Empty icon="search">Section introuvable.</Empty>;
   return (
     <>

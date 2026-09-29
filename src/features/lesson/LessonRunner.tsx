@@ -3,11 +3,14 @@
  * après un rechargement, on reprend exactement où on en était.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { FullScreen } from '@/app/Shell';
-import { useStore, type LessonSession } from '@/app/store';
+import { useStore, emptyReadAloud, type LessonSession } from '@/app/store';
 import { useKnown, useLevels, useNextLesson } from '@/app/hooks';
 import { curriculum } from '@/content/packs';
+import { THEME_BY_ID } from '@/content/th';
+import { lessonKind } from '@/curriculum/card';
+import { isUnlocked, nextSession } from '@/features/readaloud/data';
 import { recognizer, recorder } from '@/app/services/speech';
 import { planLesson } from './engine';
 import { StepProgressCtx, lessonProgress } from './progress';
@@ -30,9 +33,53 @@ export interface StepResult { ok?: number; total?: number; wrong?: string[]; xp?
 /** Étapes dont la barre d'action se cale en bas de l'écran (colonne flexible + espaceur `.sp`). */
 const FIT_STEPS = new Set(['questions', 'flashcards', 'match', 'build', 'repeat']);
 
+/** État de navigation d'une leçon : `from` (page d'origine, posé par le lien d'entrée), `again` (relancer le même entraînement). */
+export interface LessonNavState { from?: string; again?: string }
+interface NavEntry { url: string | null; index: number }
+interface NavigationApi { currentEntry: NavEntry | null; entries(): NavEntry[] }
+
+/**
+ * Page d'où l'on a ouvert la leçon ou l'entraînement : `state.from` si le lien l'a posé, sinon l'entrée d'historique
+ * précédente (API Navigation, quand le navigateur l'offre), sinon inconnue. Les entrées de même adresse (feuille du bas
+ * ouverte) sont sautées.
+ */
+function originPath(state: LessonNavState | null): string | null {
+  if (typeof state?.from === 'string' && state.from.startsWith('/')) return state.from;
+  try {
+    const n = (window as unknown as { navigation?: NavigationApi }).navigation;
+    const cur = n?.currentEntry;
+    if (!n || !cur?.url) return null;
+    const list = n.entries();
+    for (let i = cur.index - 1; i >= 0; i--) {
+      const u = list[i]?.url;
+      if (!u) return null;
+      if (u === cur.url) continue;
+      return new URL(u).hash.replace(/^#/, '') || '/';
+    }
+  } catch { /* navigateur sans API Navigation */ }
+  return null;
+}
+
+/** Libellé du bouton de retour du bilan, d'après la page d'origine (null : page inconnue). */
+function originLabel(path: string | null): string | null {
+  if (path == null) return null;
+  const p = path.split('?')[0].replace(/\/+$/, '') || '/';
+  const theme = /^\/explore\/vocab\/([^/]+)$/.exec(p);
+  if (theme) { const c = THEME_BY_ID[decodeURIComponent(theme[1])]; return c ? `Retour au thème ${L(c.name)}` : 'Retour au vocabulaire'; }
+  const table: [RegExp, string][] = [
+    [/^\/$/, 'Retour à l’accueil'], [/^\/path$/, 'Retour au parcours'], [/^\/read/, 'Retour à la lecture à voix haute'],
+    [/^\/(review|talk)/, 'Retour aux révisions'], [/^\/explore\/vocab$/, 'Retour au vocabulaire'], [/^\/explore\/tones/, 'Retour aux tons'],
+    [/^\/explore\/numbers/, 'Retour aux nombres'], [/^\/explore\/classifiers/, 'Retour aux classificateurs'], [/^\/explore\/grammar/, 'Retour à la grammaire'],
+    [/^\/explore\/alphabet/, 'Retour à l’alphabet'], [/^\/explore\/vowels/, 'Retour aux voyelles'], [/^\/explore\/comprehension/, 'Retour à la compréhension orale'],
+    [/^\/explore\/search/, 'Retour à la recherche'], [/^\/explore/, 'Retour à la bibliothèque'], [/^\/profile/, 'Retour au profil'], [/^\/play/, 'Retour aux défis'],
+  ];
+  return table.find(([re]) => re.test(p))?.[1] ?? null;
+}
+
 export function LessonRunner() {
   const { id = '' } = useParams();
   const nav = useNavigate();
+  const loc = useLocation();
   const t = T();
   const session = useStore((s) => s.session);
   const startSession = useStore((s) => s.startSession);
@@ -45,8 +92,34 @@ export function LessonRunner() {
   const next = useNextLesson();
   const lesson = useMemo(() => curriculum().lessons.find((l) => l.id === id) ?? null, [id]);
   const [quitAsk, setQuitAsk] = useState(false);
-  const startedAt = useRef(Date.now());
   const isTraining = id === 'training';
+
+  // Sortie : retour à la page d'origine (historique), repli sur l'origine connue, sinon Réviser / l'Accueil.
+  const navState = (loc.state as LessonNavState | null) ?? null;
+  const again = navState?.again;
+  const [origin] = useState(() => originPath(navState));
+  const hasHistory = loc.key !== 'default' && window.history.length > 1;
+  const fallback = navState?.from ?? (isTraining ? '/review' : '/');
+  const backLabel = hasHistory ? (originLabel(origin) ?? 'Retour') : (originLabel(fallback) ?? 'Retour');
+  const leaving = useRef(false);
+  const leave = useCallback(() => {
+    if (leaving.current) return;
+    leaving.current = true;
+    // Feuille « Quitter » ouverte : son entrée d'historique est dépilée avec celle de la leçon. On retire d'abord sa
+    // marque, sinon la feuille, démontée par la fin de séance, ferait elle aussi un retour arrière.
+    const hs = window.history.state as { sheet?: boolean } | null;
+    const sheet = !!hs?.sheet;
+    if (sheet) { try { window.history.replaceState({ ...hs, sheet: false }, ''); } catch { /* ignore */ } }
+    if (hasHistory) nav(sheet ? -2 : -1);
+    else nav(fallback, { replace: true });
+  }, [hasHistory, fallback, nav]);
+  // Bilan d'une leçon d'alphabet ou de voyelles : lire tout de suite à voix haute la séance que ces lettres ouvrent
+  const ra = useStore((s) => s.readAloud) ?? emptyReadAloud();
+  const kind = lesson ? lessonKind(lesson) : null;
+  const raSess = kind === 'letters' || kind === 'vowels' ? nextSession(ra, known.concepts) : null;
+  const readTo = raSess && isUnlocked(raSess, known.concepts) ? `/read/${raSess.id}` : null;
+  /** Navigation qui remplace la leçon courante en gardant l'origine (leçon suivante, nouvelle tentative, autre entraînement). */
+  const replaceTo = (to: string) => nav(to, { replace: true, state: { from: navState?.from, again } satisfies LessonNavState });
 
   // Une autre leçon est en pause : on demande avant de l'écraser
   const [conflict, setConflict] = useState<LessonSession | null>(null);
@@ -60,7 +133,7 @@ export function LessonRunner() {
   }, [lesson?.id]);
   // Démarre (ou reprend) la séance
   useEffect(() => {
-    if (isTraining) { if (!session || !session.training) nav('/review', { replace: true }); return; }
+    if (isTraining) { if (!session || !session.training) leave(); return; }
     if (!lesson) return;
     // même leçon en cours : on reprend ; déjà terminée (bilan affiché puis quitté) : on recommence une tentative
     if (session && session.lessonId === lesson.id && !session.training && session.steps[session.index]?.type !== 'recap') return;
@@ -107,21 +180,21 @@ export function LessonRunner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step?.type, session?.index]);
 
-  const quit = () => { endSession(); nav(isTraining ? '/review' : '/', { replace: true }); };
+  const quit = () => { endSession(); leave(); };
 
-  if (!isTraining && !lesson) return <FullScreen title="Leçon introuvable" onBack={() => nav('/')}><div className="empty">Cette leçon n’existe pas.</div></FullScreen>;
+  if (!isTraining && !lesson) return <FullScreen title="Leçon introuvable" onBack={leave}><div className="empty">Cette leçon n’existe pas.</div></FullScreen>;
   if (conflict && lesson) {
     return (
-      <FullScreen title={L(lesson.title)} onBack={() => nav(-1)}>
+      <FullScreen title={L(lesson.title)} onBack={leave}>
         <div className="recap mt-5"><div className="medal"><Icon name="pause" /></div><div className="title-xl">« {conflict.title} » est en pause</div><p className="mut sm mt-2">Étape {conflict.index + 1} sur {conflict.steps.length}. Commencer une autre leçon abandonne cette tentative.</p></div>
         <div className="stack mt-4">
-          <button className="btn" onClick={() => nav(`/lesson/${conflict.lessonId}`, { replace: true })}>Reprendre « {conflict.title} »</button>
+          <button className="btn" onClick={() => replaceTo(`/lesson/${conflict.lessonId}`)}>Reprendre « {conflict.title} »</button>
           <button className="btn ghost" onClick={() => { setConflict(null); endSession(); start(); }}>Abandonner et commencer « {L(lesson.title)} »</button>
         </div>
       </FullScreen>
     );
   }
-  if (!session || !step) return <FullScreen title={lesson ? L(lesson.title) : ''} onBack={() => nav(-1)}><div className="ctr mut empty">{t.common.loading}</div></FullScreen>;
+  if (!session || !step) return <FullScreen title={lesson ? L(lesson.title) : ''} onBack={leave}><div className="ctr mut empty">{t.common.loading}</div></FullScreen>;
 
   const key = stepKey;
   const progress = lessonProgress(session.steps, session.index, sub.key === key ? sub.f : 0);
@@ -141,12 +214,16 @@ export function LessonRunner() {
       {step.type === 'dialog' && <div key={key}><DialogView id={step.id} onDone={() => finish({ xp: 5 })} doneLabel={t.common.continue} /></div>}
       {step.type === 'reading' && <div key={key}><ReadingView id={step.id} onDone={() => finish({ xp: 5 })} doneLabel={t.common.continue} /></div>}
       {step.type === 'repeat' && <RepeatStep key={key} step={step} onDone={finish} />}
-      {step.type === 'recap' && <RecapStep key={key} session={session} lesson={lesson} next={next} onClose={quit} onNext={(nid) => { endSession(); nav(`/lesson/${nid}`, { replace: true }); }} onRetry={() => { endSession(); nav(`/lesson/${session.lessonId}`, { replace: true }); }} startedAt={startedAt.current} />}
+      {step.type === 'recap' && <RecapStep key={key} session={session} lesson={lesson} next={next} backLabel={backLabel} onClose={quit}
+        onNext={(nid) => { endSession(); replaceTo(`/lesson/${nid}`); }} onRetry={() => { endSession(); replaceTo(`/lesson/${session.lessonId}`); }}
+        onOther={isTraining && !(origin && /^\/review(\?|$)/.test(origin)) ? () => { endSession(); nav('/review', { replace: true }); } : undefined}
+        onAgain={isTraining && again ? () => { endSession(); replaceTo(again); } : undefined}
+        onRead={readTo ? () => { endSession(); replaceTo(readTo); } : undefined} readLabel={kind === 'vowels' ? 'Lire ces voyelles à voix haute' : 'Lire ces lettres à voix haute'} />}
       </StepProgressCtx.Provider>
       <Sheet open={quitAsk} onClose={() => setQuitAsk(false)} title={t.common.quit} footer={null}>
         <p className="lead">{session.training ? 'Quitter l’entraînement ?' : t.lesson.quitConfirm}</p>
         <div className="stack">
-          {!session.training && <button className="btn" onClick={() => nav('/')}>Mettre en pause · je reprendrai ici</button>}
+          {!session.training && <button className="btn" onClick={leave}>Mettre en pause · je reprendrai ici</button>}
           <button className="btn danger" onClick={quit}>{session.training ? 'Quitter' : 'Abandonner · cette tentative est perdue'}</button>
           <button className="btn ghost" onClick={() => setQuitAsk(false)}>{t.common.cancel}</button>
         </div>

@@ -1,11 +1,11 @@
 /**
  * Lecture longue à voix haute — un texte entier. La phrase en cours en grand, ses mots se colorent au fil de la
  * reconnaissance ; les phrases lues au-dessus, les suivantes en dessous. Le bilan donne les mots justes, déformés et
- * manqués, le débit et les pauses, et renvoie les mots difficiles vers « Mes erreurs » du tapis de lecture.
+ * manqués, le débit et les pauses, et renvoie les mots difficiles vers « Lectures à reprendre » du tapis de lecture.
  */
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FullScreen } from '@/app/Shell';
+import { FullScreen, useBack } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { useSpeaker } from '@/app/services/speech';
 import { activePack } from '@/content/packs';
@@ -26,7 +26,8 @@ export const longTexts = () => [...th.READINGS].sort((a, b) => a.level - b.level
 
 export function LongReadRunner() {
   const { id = '' } = useParams();
-  const nav = useNavigate();
+  // Quitter ou terminer : retour à la page d'où le texte a été ouvert (repli : Lire à voix haute)
+  const goBack = useBack('/read');
   const sp = useSpeaker();
   const r = th.READINGS.find((x) => x.id === decodeURIComponent(id));
   const recordActivity = useStore((s) => s.recordActivity);
@@ -69,12 +70,12 @@ export function LongReadRunner() {
     return () => clearTimeout(t);
   }, [run, state?.phase, r, record, recordActivity]);
 
-  if (!r) return <FullScreen title="Lecture" onBack={() => nav('/read')}><div className="empty mt-6">Texte introuvable.</div></FullScreen>;
+  if (!r) return <FullScreen title="Lecture" onBack={goBack}><div className="empty mt-6">Texte introuvable.</div></FullScreen>;
   const title = L(r.title);
 
   if (!state || state.phase === 'ready' || state.phase === 'starting') {
     return (
-      <FullScreen title={title} onBack={() => nav(-1)}>
+      <FullScreen title={title} onBack={goBack}>
         <div className="ra-intro">
           <span className="eyebrow">Lecture à voix haute · niveau {r.level}</span>
           <h2 className="theory-title">{title}</h2>
@@ -91,13 +92,13 @@ export function LongReadRunner() {
     );
   }
 
-  if (state.phase === 'done') return <FullScreen title={title} onBack={() => nav('/read')}><LongResults state={state} rTitle={title} onAgain={() => setRun(null)} /></FullScreen>;
+  if (state.phase === 'done') return <FullScreen title={title} onBack={goBack}><LongResults state={state} rTitle={title} onAgain={() => setRun(null)} onBack={goBack} /></FullScreen>;
 
   const pct = Math.round((100 * state.si) / state.sentences.length);
   return (
     <div className={`app lr-app ${state.phase === 'paused' ? 'paused' : ''}`}>
       <header className="ltop">
-        <button className="tb" aria-label="Quitter" onClick={() => { runRef.current?.release(); nav('/read'); }}><Icon name="close" /></button>
+        <button className="tb" aria-label="Quitter" onClick={() => { runRef.current?.release(); goBack(); }}><Icon name="close" /></button>
         <div className="lbar" role="progressbar" aria-label={`Progression : ${title}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}><i style={{ width: `${pct}%` }} /></div>
         <span className="ra-count">{state.si + 1} / {state.sentences.length}</span>
         <button className={`tb ${rom ? 'on' : ''}`} aria-pressed={rom} aria-label="Afficher la phonétique" onClick={() => setRom(!rom)}><Icon name="eye" /></button>
@@ -128,7 +129,7 @@ export function LongReadRunner() {
   );
 }
 
-function LongResults({ state, rTitle, onAgain }: { state: LrState; rTitle: string; onAgain: () => void }) {
+function LongResults({ state, rTitle, onAgain, onBack }: { state: LrState; rTitle: string; onAgain: () => void; onBack: () => void }) {
   const nav = useNavigate();
   const sp = useSpeaker();
   const s = useMemo(() => summarizeText(state.sentences), [state.sentences]);
@@ -168,7 +169,7 @@ function LongResults({ state, rTitle, onAgain }: { state: LrState; rTitle: strin
       <div className="ra-actions">
         {s.problems.length > 0 && <button className="btn" onClick={() => nav('/read/errors?mode=listen')}><Icon name="target" /> S’entraîner sur ces mots</button>}
         <button className="btn soft" onClick={onAgain}><Icon name="rotate" /> Relire le texte</button>
-        <button className="btn ghost" onClick={() => nav('/read')}>Retour</button>
+        <button className="btn ghost" onClick={onBack}>Retour</button>
       </div>
     </div>
   );

@@ -4,7 +4,7 @@
  */
 import { ThInl } from '@/components/ui';
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import type { LessonDef } from '@/curriculum/types';
 import { lessonCard, type LessonCard } from '@/curriculum/card';
 import { Icon } from './ui';
@@ -32,8 +32,9 @@ export const CardTitle = ({ card }: { card: LessonCard }) => <><ThInl text={card
  */
 export function LessonRow({ lesson, state, end, extra, rowRef, current }: { lesson: LessonDef; state?: 'done' | 'lock' | 'cur'; end?: ReactNode; extra?: string; rowRef?: React.Ref<HTMLAnchorElement>; current?: boolean }) {
   const c = lessonCard(lesson);
+  const loc = useLocation(); // la leçon revient ici (accueil ou parcours) quand on la quitte
   return (
-    <Link ref={rowRef} to={`/lesson/${lesson.id}`} className={`row lrow ${kindClass(c)} ${state ?? ''}`} aria-current={current ? 'step' : undefined}>
+    <Link ref={rowRef} to={`/lesson/${lesson.id}`} state={{ from: loc.pathname + loc.search }} className={`row lrow ${kindClass(c)} ${state ?? ''}`} aria-current={current ? 'step' : undefined}>
       <span className="lcol"><LessonBadge card={c} state={state} /><span className="min">{lesson.minutes} min</span></span>
       <span className="mid">
         <span className="t"><span className="tt">{c.title}</span>{c.part && <span className="part">{c.part}</span>}</span>
@@ -41,6 +42,26 @@ export function LessonRow({ lesson, state, end, extra, rowRef, current }: { less
         <span className="meta">{current && <span className="now">Conseillée</span>}<span className="kl">{c.label}</span><span>{c.count}</span>{extra && <span>{extra}</span>}</span>
       </span>
       {end && <span className="end">{end}</span>}
+    </Link>
+  );
+}
+
+/**
+ * Une activité rangée dans le parcours entre deux leçons (lecture à voix haute, grille de lecture) : même présentation
+ * qu'une leçon, avec une icône pour badge. `lock` : ses lettres ne sont pas encore enseignées (`meta` dit après quelle leçon).
+ */
+export function PathActivityRow({ to, icon, title, part, sub, label, meta, state, minutes }: { to: string; icon: string; title: string; part?: string; sub: ReactNode; label: string; meta?: ReactNode[]; state?: 'done' | 'lock' | 'cur'; minutes?: number }) {
+  return (
+    <Link to={to} className={`row lrow pact k-reading ${state ?? ''}`}>
+      <span className="lcol">
+        <span className="lbadge k-reading" aria-hidden="true"><Icon name={icon} />{state && <span className={`st ${state}`}><Icon name={state === 'done' ? 'check' : state === 'lock' ? 'lock' : 'play'} size={11} /></span>}</span>
+        {minutes != null && <span className="min">{minutes} min</span>}
+      </span>
+      <span className="mid">
+        <span className="t"><span className="tt">{title}</span>{part && <span className="part">{part}</span>}</span>
+        <span className="s">{sub}</span>
+        <span className="meta"><span className="kl">{label}</span>{meta?.map((m, i) => <span key={i}>{m}</span>)}</span>
+      </span>
     </Link>
   );
 }

@@ -45,7 +45,7 @@ export const fr = {
   review: {
     title: 'Réviser', due: 'à réviser', nothingDue: 'Rien à réviser pour l’instant', startReview: 'Lancer la révision', train: 'S’entraîner',
     modes: {
-      flashcards: 'Cartes', listening: 'Écoute', speed: 'Lecture rapide', match: 'Associer', dictation: 'Dictée', tones: 'Tons', quiz: 'Quiz', timed: 'Défi chrono', pronunciation: 'Prononciation',
+      flashcards: 'Cartes', listening: 'Écoute', speed: 'Lecture rapide', match: 'Associer', dictation: 'Dictée', tones: 'Tons', quiz: 'Quiz', timed: 'Contre la montre', pronunciation: 'Prononciation',
     },
     modesDesc: {
       flashcards: 'Revoir et noter ce que vous savez', listening: 'Lettres, mots et phrases à l’oreille', speed: 'Lire vite, sans phonétique', match: 'Relier thaï et sens',
@@ -55,8 +55,8 @@ export const fr = {
   },
   explore: {
     title: 'Bibliothèque', alphabet: 'Alphabet', vowels: 'Voyelles', tones: 'Tons', numbers: 'Nombres', vocabulary: 'Vocabulaire', conversations: 'Conversations',
-    readings: 'Lectures', grammar: 'Grammaire', classifiers: 'Classificateurs', phrasebook: 'Phrases de voyage', writing: 'Écriture', transcription: 'Transcription',
-    search: 'Recherche',
+    readings: 'Lectures', grammar: 'Grammaire', classifiers: 'Classificateurs', phrasebook: 'Phrases à montrer', writing: 'Tracer les lettres', transcription: 'Lire la phonétique',
+    search: 'Recherche', favorites: 'Mes favoris', readGrid: 'Grille de lecture', listen: 'Écoute en boucle', talk: 'Pratiquer les conversations',
   },
   profile: {
     title: 'Profil', levels: 'Mes niveaux', settings: 'Réglages', data: 'Mes données', share: 'Partager ma progression', badges: 'Badges', stats: 'Statistiques',

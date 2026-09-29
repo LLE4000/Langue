@@ -47,3 +47,16 @@
 /* ---------- Réglages : boutons à long libellé centrés et équilibrés ; icône d'un libellé sur la ligne de base ---------- */
 .tabpane .btn { text-align: center; text-wrap: balance; }
 .tabpane label.f svg { vertical-align: -3px; margin-left: 2px; }
+
+/* ---------- Profil : la carte d'en-tête dit où elle mène ---------- */
+.chead-more { display: inline-block; margin-top: var(--s-2); font-size: var(--fs-2); font-weight: 700; color: var(--acc-deep); }
+
+/* ---------- Ma progression : une seule liste, chaque ligne dit ce qu'exige le palier suivant ---------- */
+.skills.with-target .skill .d { align-items: baseline; }
+.skills.with-target .skill .d > span:first-child { text-wrap: pretty; }
+.skill .tg { color: var(--ink); font-weight: 600; }
+.skill .tg.ok-t { color: var(--ok); }
+.skill .tg svg { vertical-align: -2px; }
+
+/* ---------- Réglages › Voix : sous-titre dans le repli « Comment la lecture à voix haute est évaluée » ---------- */
+.fold-sub { margin-top: var(--s-4); font-weight: 700; font-size: var(--fs-2); color: var(--ink); }

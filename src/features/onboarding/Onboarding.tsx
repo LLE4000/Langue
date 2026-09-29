@@ -94,6 +94,7 @@ export function Onboarding() {
       <main className="view no-tabs welcome">
         {step === 0 && (
           <>
+            <Dots />
             <div className="logo" lang="th">ภาษาไทย</div>
             <h2>{t.app.tagline}</h2>
             <p className="lead">{t.onboarding.intro}</p>
@@ -153,7 +154,7 @@ export function Onboarding() {
               {[5, 10, 15, 30].map((g) => <button key={g} className={goal === g ? 'on' : ''} onClick={() => setGoal(g)}>{g} min</button>)}
             </div>
             <div className="note info mt-5">
-              <b>Ce que l’application fait de vos réponses.</b> Elle construit un parcours à partir de votre objectif{hasBases ? ' et de vos niveaux' : ''} : {hasBases ? 'ce que vous savez déjà est considéré acquis, ' : ''}ce qui manque vient dans l’ordre logique (on ne vous demandera jamais de lire une lettre qui n’a pas été enseignée). Tout est modifiable dans Profil.
+              <b>Ce que l’application fait de vos réponses.</b> Elle construit un parcours à partir de votre objectif{hasBases ? ' et de vos niveaux' : ''} : {hasBases ? 'ce que vous savez déjà est considéré acquis, ' : ''}ce qui manque vient dans l’ordre logique (on ne vous demandera jamais de lire une lettre qui n’a pas été enseignée). Tout est modifiable dans Profil › Objectif, rythme et niveaux.
             </div>
             <div className="sp gap" />
             <div className="btns">

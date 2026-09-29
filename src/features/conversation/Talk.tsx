@@ -4,18 +4,19 @@
  * Trois niveaux d'aide : la réplique affichée (lire), une amorce (les premiers mots), rien que l'intention en français.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { FullScreen, usePage } from '@/app/Shell';
 import { useStore } from '@/app/store';
 import { useSpeaker, recognizer } from '@/app/services/speech';
-import { DIALOG_BY_ID, ITEMS, th } from '@/content/th';
+import { DIALOG_BY_ID, ITEMS } from '@/content/th';
 import type { Dialog } from '@/content/types';
 import { L } from '@/i18n';
 import { dialogOtherGender } from '@/engine/speakers';
 import { resolveTokens } from '@/engine/tokens';
 import { judgeReply, replyStarter, type Reply, type ReplyJudgement } from '@/engine/conversation';
 import { REPLY_VARIANTS } from './variants';
-import { Icon, Segmented, GlyphIcon } from '@/components/ui';
+import { Icon, Segmented } from '@/components/ui';
+import { DialogList, withWhom } from '@/components/DialogList';
 
 type Aid = 'full' | 'hint' | 'none';
 const AID: Record<Aid, { label: string; desc: string }> = {
@@ -33,28 +34,24 @@ export function acceptedReplies(d: Dialog, i: number, tok: { gender: 'm' | 'f'; 
   return [base, ...(REPLY_VARIANTS[d.id]?.[i] ?? [])].map((r) => ({ thai: resolveTokens(r.thai, tok).replace(/…/g, ''), rom: resolveTokens(r.rom, tok), fr: r.fr }));
 }
 
-/** Liste des conversations à jouer, longues par niveau puis courtes, avec le meilleur score. */
+/** Liste des conversations à jouer (même liste que Conversations et Compréhension orale), avec le meilleur score. */
 export function TalkHub() {
   usePage('Conversation parlée', { back: '/review', thai: { th: 'สนทนา', rom: 'sǒn-thá-naa' } });
   const acts = useStore((s) => s.activities);
-  const row = (d: Dialog) => {
-    const best = acts['talk:' + d.id]?.best;
-    const mine = d.lines.filter((l) => l.who === 'me').length;
-    return (
-      <Link key={d.id} className="row" to={`/talk/${encodeURIComponent(d.id)}`}>
-        <span className="ico jade"><GlyphIcon name={d.icon} /></span>
-        <span className="mid"><span className="t">{L(d.title)}</span><span className="s">{mine} répliques à dire · avec {L(d.other).toLowerCase()}</span></span>
-        <span className="end">{best != null ? <span className={`tag ${best >= 80 ? 'ok' : ''}`}>{best} %</span> : <span className="chev">›</span>}</span>
-      </Link>
-    );
-  };
   return (
     <>
-      <p className="lead">Vous jouez votre rôle, au micro. L’interlocuteur répond avec une voix native ; plusieurs formulations sont acceptées pour chaque réplique.</p>
-      {!recognizer.supported && <div className="note warn sm">Ce navigateur ne propose pas la reconnaissance vocale : vous pourrez dire vos répliques et les comparer au modèle, sans jugement automatique.</div>}
-      {(['A1', 'A2', 'B1'] as const).map((lv) => { const list = th.DIALOGS.filter((d) => d.level === lv); return list.length ? <section key={lv}><div className="h2">Conversations longues · {lv}</div><div className="list">{list.map(row)}</div></section> : null; })}
-      <div className="h2">Conversations courtes</div>
-      <div className="list">{th.DIALOGS.filter((d) => !d.level).map(row)}</div>
+      <p className="lead">Vous jouez votre rôle, au micro. L’interlocuteur répond avec une voix native&#8239;; plusieurs formulations sont acceptées pour chaque réplique.</p>
+      {!recognizer.supported && <div className="note warn sm">Ce navigateur ne propose pas la reconnaissance vocale&#8239;: vous pourrez dire vos répliques et les comparer au modèle, sans jugement automatique.</div>}
+      <DialogList
+        skill="speaking"
+        tone="jade"
+        href={(d) => `/talk/${encodeURIComponent(d.id)}`}
+        row={(d) => {
+          const best = acts['talk:' + d.id]?.best;
+          const mine = d.lines.filter((l) => l.who === 'me').length;
+          return { sub: `${mine} répliques à dire · ${withWhom(d)}`, end: best != null ? <span className={`tag ${best >= 80 ? 'ok' : ''}`}>{best}&nbsp;%</span> : undefined, done: best != null };
+        }}
+      />
     </>
   );
 }

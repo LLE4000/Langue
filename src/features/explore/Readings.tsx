@@ -21,7 +21,7 @@ export function Readings() {
     <>
       <p className="lead">{'Lisez d’abord sans aide. Les textes marqués «\u00a0lisible\u00a0» n’utilisent que des signes déjà vus dans votre parcours.'}</p>
       {[...new Set(th.READINGS.map((r) => r.level))].sort((x, y) => x - y).map((lvl) => (
-        <Fragment key={lvl}><div className="h2">{lvl >= 6 ? 'Niveau A2' : `Niveau ${lvl}`}</div><div className="list">{th.READINGS.filter((r) => r.level === lvl).map((r) => <Link key={r.id} className={`row ${done.has(r.id) ? 'done' : ''}`} to={`/explore/readings/${encodeURIComponent(r.id)}`}><Ico name={done.has(r.id) ? 'check' : 'bookOpen'} /><span className="mid"><span className="t">{L(r.title)}</span><span className="s">{r.sentences.length} phrases{readable(r.id) ? ' · lisible avec ce que vous savez' : ''}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></Fragment>
+        <Fragment key={lvl}><div className="h2">{lvl >= 6 ? 'A2' : `A1 · étape ${lvl}`}</div><div className="list">{th.READINGS.filter((r) => r.level === lvl).map((r) => <Link key={r.id} className={`row ${done.has(r.id) ? 'done' : ''}`} to={`/explore/readings/${encodeURIComponent(r.id)}`}><Ico name={done.has(r.id) ? 'check' : 'bookOpen'} /><span className="mid"><span className="t">{L(r.title)}</span><span className="s">{r.sentences.length} phrases{readable(r.id) ? ' · lisible avec ce que vous savez' : ''}</span></span><span className="end"><span className="chev">›</span></span></Link>)}</div></Fragment>
       ))}
     </>
   );

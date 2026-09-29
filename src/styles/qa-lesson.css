@@ -98,3 +98,10 @@
 .recap-new .chip { align-items: baseline; }
 .recap-new .chip .rom { font-size: var(--fs-2); font-weight: 650; }
 .recap-new .chip .xs { font-size: var(--fs-2); color: var(--ink2); }
+/* Nouveauté ratée : petite pastille « à revoir » dans sa puce */
+.recap-new .chip .rv-tag { padding: 1px 8px; font-size: var(--fs-1); line-height: 1.4; align-self: center; white-space: nowrap; }
+/* Barre d'action fixée en bas (comme « À retenir ») : l'action principale en pleine largeur, les retours dessous, côte à côte */
+.recap-bar { display: flex; flex-direction: column; gap: var(--s-2); }
+.recap-bar > .btn { width: 100%; }
+.recap-alt { display: flex; gap: var(--s-2); }
+.recap-alt > .btn { flex: 1 1 0; min-width: 0; padding-inline: var(--s-3); text-align: center; white-space: normal; line-height: 1.25; }
