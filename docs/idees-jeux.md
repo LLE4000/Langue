@@ -2,6 +2,8 @@
 
 *Mis de côté le 29 septembre 2026, à reprendre au moment voulu. Rien n'est encore développé.*
 
+Les jeux 1 à 3 sont des jeux courts à plusieurs ; le 4 est un jeu d'aventure, plus ambitieux.
+
 Ces trois jeux se jouent chacun sur son téléphone, dans une salle en ligne. Ils utilisent tous le serveur déjà écrit
 dans `server/` : une salle avec un code de 5 lettres, 2 à 6 joueurs, des manches cadencées par le serveur,
 la reconnexion et la revanche. Ce serveur n'est pas encore en service ; voir `server/README.md`.
@@ -101,6 +103,61 @@ La revanche est immédiate avec une nouvelle grille.
 
 ---
 
+## 4. Missions en Thaïlande (jeu d'aventure, idée du 29 septembre 2026)
+
+*Idée de départ, à creuser : « un jeu style jeu vidéo, avec un petit personnage, des conversations, des choix ; il faut comprendre ce qu'on nous dit ; si on se trompe, on perd la mission ; uniquement en Thaïlande ; à plusieurs, on se lance des missions ; quelque chose d'addictif ».*
+
+**Le principe.** On incarne un petit personnage qui voyage en Thaïlande. Chaque mission est une scène de la vie réelle :
+- acheter un billet de train pour Chiang Mai ;
+- retrouver son hôtel en demandant son chemin ;
+- négocier au marché flottant ;
+- commander sans piment ;
+- aller à la pharmacie ;
+- rendre visite à un chantier.
+
+Les personnages parlent **en thaï, avec la voix native**. À chaque réplique, on choisit sa réponse parmi plusieurs, ou on la **dit au micro** (moteur de la conversation parlée). Il faut **comprendre** ce qu'on nous dit pour choisir la bonne action : le vendeur annonce un prix, le chauffeur propose un détour, l'employé donne un quai et une heure.
+
+**Si on se trompe.**
+- On perd une vie (par exemple 3 par mission).
+- Plus de vies : **mission ratée**, on la recommence.
+- Les erreurs ont des conséquences dans l'histoire : un mauvais quai, et on rate le train ; un mauvais chiffre, et on paie trop cher.
+
+**La carte.** Une carte de la Thaïlande qui se débloque, du plus simple au plus difficile :
+Bangkok (A0–A1) → Ayutthaya → Chiang Mai → Isan → les îles du Sud (A2–B1).
+Chaque mission rapporte 1 à 3 étoiles, et des **souvenirs à collectionner** : photos, objets, recettes, avec leur mot thaï.
+
+**À plusieurs.**
+- **Se lancer des missions** : « Fais mieux que moi au marché de Chatuchak » ; on rejoue la même mission et on compare étoiles, temps et erreurs. Même principe que le défi à distance actuel, sans serveur.
+- **Mission de la semaine** : la même pour tout le monde, avec un classement entre amis.
+- **Missions à deux (coopération)**, la plus originale : chacun n'a que la moitié de l'information. Par exemple, l'un voit le plan du métro et l'autre parle au guichetier. Il faut se transmettre les infos… en thaï. Ce mode demande le serveur des salles en ligne.
+
+**Pourquoi ce serait addictif.**
+- Une histoire qui avance.
+- Une carte à compléter, des étoiles et des souvenirs à collectionner.
+- Le risque de perdre la mission.
+- Des missions courtes (3 à 5 minutes).
+- La comparaison avec les amis.
+- Et l'utilité réelle : ce sont les situations qu'on vivra vraiment en Thaïlande.
+
+**Ce qui existe déjà et servirait.**
+- 50 conversations écrites et relues.
+- Les voix natives.
+- Le moteur qui juge une réponse dite au micro, avec 801 formulations acceptées.
+- La compréhension orale et ses questions.
+- Les nombres et les prix.
+- Le défi à distance par lien.
+
+**Points durs, à trancher avant de se lancer (regard critique).**
+- **Le contenu coûte cher.** Une mission avec des choix, c'est un dialogue *ramifié* : plusieurs suites possibles, toutes à écrire, faire relire en thaï et faire générer en voix. Compter plusieurs fois le travail d'un dialogue actuel. Commencer par 8–10 missions à Bangkok pour tester l'intérêt avant d'en écrire d'autres.
+- **Les images.** Personnages, décors et carte demandent une direction artistique cohérente. C'est un budget d'illustration, ou un style très simple (silhouettes, icônes) au début.
+- **« Perdre la mission » peut décourager un débutant.** Il faut des points de reprise, une aide limitée (réécouter au ralenti, afficher la phonétique contre une étoile), et un niveau de difficulté qui suit le niveau de l'apprenant.
+- **Ne pas en faire un jeu de hasard.** Les mauvais choix doivent être plausibles et instructifs (un ton qui change le sens, un nombre mal compris), pas des pièges gratuits.
+- **La coopération à deux** dépend du serveur (voir `server/`). Le reste (missions solo, défis par lien, mission de la semaine) peut fonctionner sans.
+
+**Première étape suggérée, le moment venu.** Un prototype de 3 missions à Bangkok (le taxi, le marché, le restaurant) avec la carte, les vies et les étoiles, à partir des dialogues existants, pour vérifier que c'est amusant avant d'investir dans le contenu.
+
+---
+
 ## Pour décider le moment venu
 
 | Jeu | Ce qu'il entraîne | Travail restant (estimation) | Dépend de |
@@ -108,5 +165,6 @@ La revanche est immédiate avec une nouvelle grille.
 | Loto thaï | oreille, lien son ↔ écriture | faible | serveur en service |
 | « Tu m'as compris ? » | prononciation et tons, jugés par des humains | moyen (audio relayé, vie privée) | serveur en service |
 | Course de lecture | fluidité et justesse de lecture | faible | serveur en service, micro de chacun |
+| Missions en Thaïlande | compréhension orale, réponses en situation, nombres | élevé (dialogues ramifiés, illustrations) | rien pour le solo et les défis par lien ; serveur pour la coopération |
 
 Ordre suggéré : **Loto** d'abord (le plus simple, pour tous les niveaux), puis la **Course de lecture**, puis **« Tu m'as compris ? »**, le plus riche mais le plus délicat.
