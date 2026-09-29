@@ -19,7 +19,19 @@ import './styles/qa-profile.css';
 import './styles/talk.css';
 import './styles/online.css';
 import './styles/grid.css';
+import './styles/variants.css';
 import { App } from './app/App';
+
+// Pistes de style (maquettes) : ?style=nuit|pop|zen|jeu dans l'adresse, mémorisé sur l'appareil ; ?style=aucun pour revenir.
+(() => {
+  const q = new URLSearchParams(location.search || location.hash.split('?')[1] || '');
+  const asked = q.get('style');
+  try {
+    if (asked) { if (['nuit', 'pop', 'zen', 'jeu'].includes(asked)) localStorage.setItem('langue.style', asked); else localStorage.removeItem('langue.style'); }
+    const st = localStorage.getItem('langue.style');
+    if (st) document.documentElement.dataset.style = st;
+  } catch { /* stockage indisponible */ }
+})();
 import { useStore } from './app/store';
 
 // Accès au magasin d'état depuis la console et les tests de bout en bout.

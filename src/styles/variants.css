@@ -1,0 +1,121 @@
+/* =====================================================================
+   Pistes de style (maquettes) : le même contenu, quatre identités visuelles.
+   Activées seulement par ?style=nuit|pop|zen|jeu dans l'adresse (mémorisé sur l'appareil ; ?style=aucun pour revenir).
+   Rien ne change pour l'utilisateur normal. Chaque piste redéfinit les jetons de app.css, puis quelques formes.
+   ===================================================================== */
+
+/* ---------- 1. Nuit et or : sombre, précieux, titres en serif (soie, laque, temples la nuit) ---------- */
+:root[data-style="nuit"] {
+  --bg: #100e1c; --bg2: #151226; --surface: #1b1830; --surface2: #25213f; --surface3: #2f2a4d;
+  --ink: #f5ecd6; --ink2: #b9ae97; --ink3: #7e7564; --line: #2e2947; --line2: #3e3760;
+  --acc: #d9a94e; --acc-deep: #f0c776; --acc-soft: #3a2e17; --on-acc: #1a1206;
+  --jade: #7fd1c2; --jade-deep: #b0e6dc; --jade-soft: #173532;
+  --ok: #6fd39a; --ok-soft: #173424; --on-ok: #07210f; --ko: #f08a7c; --ko-soft: #3e1d1a; --on-ko: #2a0b07;
+  --red: #f08a7c; --red-soft: #3e1d1a; --indigo: #a8b6ff; --indigo-soft: #232a4d; --plum: #d7a8f0; --plum-soft: #33224a; --orange: #f2a66a; --orange-soft: #3d2514;
+  --t-mid: #a09cb0; --t-low: #a8b6ff; --t-fall: #f08a7c; --t-high: #f0c776; --t-rise: #7fd1c2;
+  --hero-1: #2a1f4a; --hero-2: #3c2a5e; --hero-3: #6a4a2a; --hero-ink: #fbf3df; --hero-acc: #f0c776; --hero-line: rgba(240, 199, 118, .35);
+  --k-letters: #f0b35a; --k-vowels: #f095b6; --k-tones: #bba6ff; --k-read: #e0b184; --k-vocab: #66d6ac; --k-dialog: #9ab8ff; --k-num: #72d4ea;
+  --seg-on: #35305a; --dim-op: .55;
+  --e1: 0 0 0 1px rgba(217, 169, 78, .14), 0 14px 30px -20px rgba(0, 0, 0, .9); --e2: 0 0 0 1px rgba(217, 169, 78, .2), 0 24px 50px -22px rgba(0, 0, 0, .95);
+  --r-sm: 10px; --r-md: 14px; --r-lg: 20px;
+  color-scheme: dark;
+}
+:root[data-style="nuit"] .topbar h1, :root[data-style="nuit"] .h2, :root[data-style="nuit"] .row .t, :root[data-style="nuit"] .tile .t { font-family: var(--f-display); font-weight: 400; letter-spacing: .01em; }
+:root[data-style="nuit"] .topbar h1 { font-size: 24px; }
+:root[data-style="nuit"] .h2 { font-size: 26px; color: var(--acc-deep); }
+:root[data-style="nuit"] .row .t { font-size: 19px; }
+:root[data-style="nuit"] .list, :root[data-style="nuit"] .tile { border-color: rgba(217, 169, 78, .22); }
+:root[data-style="nuit"] .btn:not(.ghost):not(.soft):not(.quiet) { background: linear-gradient(180deg, #f0c776, #c9923a); color: #1a1206; box-shadow: 0 8px 22px -10px rgba(240, 199, 118, .6); }
+:root[data-style="nuit"] .tabbar { background: rgba(16, 14, 28, .92); border-top: 1px solid rgba(217, 169, 78, .25); }
+:root[data-style="nuit"] .tabbar a.on .pill { background: rgba(217, 169, 78, .18); color: var(--acc-deep); }
+:root[data-style="nuit"] .cta { box-shadow: 0 0 0 1px rgba(240, 199, 118, .35), 0 22px 44px -22px rgba(0, 0, 0, .9); }
+
+/* ---------- 2. Bangkok pop : couleurs vives, traits noirs épais, ombres « autocollant » (tuk-tuk, street food) ---------- */
+:root[data-style="pop"] {
+  --bg: #fff3d6; --bg2: #fff8e6; --surface: #ffffff; --surface2: #ffe9b8; --surface3: #ffdf95;
+  --ink: #141414; --ink2: #3d3a33; --ink3: #7c776c; --line: #141414; --line2: #141414;
+  --acc: #ff3d7f; --acc-deep: #c4004f; --acc-soft: #ffd9e6; --on-acc: #ffffff;
+  --jade: #008f8c; --jade-deep: #00605e; --jade-soft: #c9f3ef;
+  --ok: #0a9c4a; --ok-soft: #caf5d9; --ko: #e5261d; --ko-soft: #ffd6d2;
+  --indigo: #3052ff; --indigo-soft: #d8deff; --plum: #9b2bd6; --plum-soft: #f0d6ff; --orange: #ff7a00; --orange-soft: #ffe2c2;
+  --hero-1: #ff3d7f; --hero-2: #ff5f5f; --hero-3: #ffb300; --hero-ink: #ffffff; --hero-acc: #fff200; --hero-line: #141414;
+  --kd-letters: #d55c00; --kd-vowels: #d6006a; --kd-tones: #6a2bd6; --kd-vocab: #00875f; --kd-dialog: #2350ff; --kd-num: #007f99;
+  --seg-on: #fff200; --dim-op: .4;
+  --e1: 4px 4px 0 #141414; --e2: 6px 6px 0 #141414;
+  --r-sm: 10px; --r-md: 14px; --r-lg: 18px;
+  color-scheme: light;
+}
+:root[data-style="pop"] .list, :root[data-style="pop"] .tile, :root[data-style="pop"] .cta, :root[data-style="pop"] .stage, :root[data-style="pop"] .choice, :root[data-style="pop"] .seg, :root[data-style="pop"] .note, :root[data-style="pop"] .field { border: 2.5px solid #141414 !important; box-shadow: var(--e1); }
+:root[data-style="pop"] .row { border-top: 2px solid #141414; }
+:root[data-style="pop"] .row .ico, :root[data-style="pop"] .tile .ic { border: 2px solid #141414; background: #fff200; color: #141414; }
+:root[data-style="pop"] .btn { border: 2.5px solid #141414; box-shadow: 4px 4px 0 #141414; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; }
+:root[data-style="pop"] .btn:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 #141414; }
+:root[data-style="pop"] .h2, :root[data-style="pop"] .topbar h1 { font-weight: 800; letter-spacing: -.01em; }
+:root[data-style="pop"] .h2 { font-size: 24px; text-transform: uppercase; }
+:root[data-style="pop"] .topbar { background: #fff200; border-bottom: 2.5px solid #141414; }
+:root[data-style="pop"] .tabbar { background: #ffffff; border-top: 2.5px solid #141414; }
+:root[data-style="pop"] .tabbar a.on .pill { background: #ff3d7f; color: #fff; border: 2px solid #141414; }
+:root[data-style="pop"] .chip { border: 2px solid #141414; }
+:root[data-style="pop"] .chip.on { background: #141414; color: #fff200; }
+
+/* ---------- 3. Papier et encre : minimal, zen, une seule couleur (le rouge d'un sceau) ---------- */
+:root[data-style="zen"] {
+  --bg: #f6f4ef; --bg2: #f9f8f4; --surface: #fbfaf7; --surface2: #efece5; --surface3: #e5e1d8;
+  --ink: #111111; --ink2: #5d5a55; --ink3: #9c988f; --line: #dcd8cf; --line2: #c9c4b9;
+  --acc: #c8382a; --acc-deep: #a3281c; --acc-soft: #f6e3df; --on-acc: #ffffff;
+  --jade: #3c5a56; --jade-deep: #243835; --jade-soft: #e3e9e7;
+  --ok: #2f6d46; --ok-soft: #e1ece4; --ko: #b3261e; --ko-soft: #f5e1de;
+  --indigo: #34466e; --indigo-soft: #e2e6ee; --plum: #5e3d6b; --plum-soft: #ebe3ee; --orange: #9b5a2a; --orange-soft: #f1e5da;
+  --hero-1: #fbfaf7; --hero-2: #fbfaf7; --hero-3: #fbfaf7; --hero-ink: #111111; --hero-acc: #c8382a; --hero-line: #111111;
+  --kd-letters: #111; --kd-vowels: #111; --kd-tones: #111; --kd-read: #111; --kd-vocab: #111; --kd-dialog: #111; --kd-num: #111;
+  --k-letters: #111; --k-vowels: #111; --k-tones: #111; --k-read: #111; --k-vocab: #111; --k-dialog: #111; --k-num: #111;
+  --seg-on: #111111; --dim-op: .38;
+  --e1: none; --e2: none; --shadow: none;
+  --r-sm: 2px; --r-md: 3px; --r-lg: 4px; --r-pill: 3px;
+  color-scheme: light;
+}
+:root[data-style="zen"] .list { background: transparent; border-left: 0; border-right: 0; border-radius: 0; }
+:root[data-style="zen"] .tile { background: transparent; }
+:root[data-style="zen"] .row .ico, :root[data-style="zen"] .tile .ic { background: transparent; border: 1px solid var(--line2); color: var(--ink); }
+:root[data-style="zen"] .btn:not(.ghost):not(.soft):not(.quiet) { background: #111; color: #fff; }
+:root[data-style="zen"] .btn.soft { background: transparent; border: 1px solid #111; color: #111; }
+:root[data-style="zen"] .h2 { font-family: var(--f-display); font-weight: 400; font-size: 28px; letter-spacing: 0; }
+:root[data-style="zen"] .topbar h1 { font-weight: 500; letter-spacing: .08em; text-transform: uppercase; font-size: 14px; }
+:root[data-style="zen"] .cta { border: 1px solid #111; }
+:root[data-style="zen"] .cta .btn { background: #c8382a !important; color: #fff !important; }
+:root[data-style="zen"] .seg button.on { color: #fff; }
+:root[data-style="zen"] .tabbar { background: #f6f4ef; border-top: 1px solid #111; }
+:root[data-style="zen"] .tabbar a.on .pill { background: transparent; color: #c8382a; }
+:root[data-style="zen"] .tabbar a.on { color: #c8382a; }
+:root[data-style="zen"] .chip.on { background: #111; color: #fff; }
+
+/* ---------- 4. Jeu : ludique, boutons épais en relief, couleurs franches, très arrondi ---------- */
+:root[data-style="jeu"] {
+  --bg: #eef5ff; --bg2: #f5f9ff; --surface: #ffffff; --surface2: #e3eeff; --surface3: #d3e3ff;
+  --ink: #1d2b4f; --ink2: #56648a; --ink3: #93a0c0; --line: #d6e2f7; --line2: #bfd0ef;
+  --acc: #3ec15f; --acc-deep: #1f8a3b; --acc-soft: #dcf7e3; --on-acc: #ffffff;
+  --jade: #1a9bd6; --jade-deep: #0f6d99; --jade-soft: #d9f0fb;
+  --ok: #3ec15f; --ok-soft: #dcf7e3; --ko: #ff5a5f; --ko-soft: #ffe1e2;
+  --indigo: #5b6cff; --indigo-soft: #e3e6ff; --plum: #b45cff; --plum-soft: #f1e2ff; --orange: #ff9f1c; --orange-soft: #ffeccf;
+  --hero-1: #2f8cff; --hero-2: #4a6cff; --hero-3: #8a5cff; --hero-ink: #ffffff; --hero-acc: #ffd84a; --hero-line: transparent;
+  --seg-on: #ffffff; --dim-op: .45;
+  --e1: 0 4px 0 #cfdcf3; --e2: 0 6px 0 #bccde9;
+  --r-sm: 14px; --r-md: 20px; --r-lg: 28px;
+  color-scheme: light;
+}
+:root[data-style="jeu"] .btn { font-weight: 800; border-radius: 18px; box-shadow: 0 5px 0 #1f8a3b; letter-spacing: .02em; }
+:root[data-style="jeu"] .btn.soft { box-shadow: 0 5px 0 #b9d7c2; }
+:root[data-style="jeu"] .btn.ghost { box-shadow: 0 4px 0 var(--line2); }
+:root[data-style="jeu"] .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #1f8a3b; }
+:root[data-style="jeu"] .list, :root[data-style="jeu"] .tile, :root[data-style="jeu"] .choice, :root[data-style="jeu"] .stage { border: 2px solid var(--line); box-shadow: var(--e1); }
+:root[data-style="jeu"] .row .ico, :root[data-style="jeu"] .tile .ic { border-radius: 14px; background: #ffd84a; color: #1d2b4f; }
+:root[data-style="jeu"] .h2, :root[data-style="jeu"] .topbar h1, :root[data-style="jeu"] .row .t, :root[data-style="jeu"] .tile .t { font-weight: 800; }
+:root[data-style="jeu"] .h2 { font-size: 22px; }
+:root[data-style="jeu"] .cta { box-shadow: 0 8px 0 #2c3fb8; }
+:root[data-style="jeu"] .tabbar { background: #ffffff; border-top: 2px solid var(--line); }
+:root[data-style="jeu"] .tabbar a.on .pill { background: #dcf7e3; color: #1f8a3b; border: 2px solid #3ec15f; }
+:root[data-style="jeu"] .chip.on { background: #1a9bd6; color: #fff; }
+:root[data-style="zen"] .cta .pills > span, :root[data-style="zen"] .cta .pills > .kl { background: transparent; color: #111; box-shadow: inset 0 0 0 1px #111; }
+:root[data-style="zen"] .cta .dur, :root[data-style="zen"] .cta .where, :root[data-style="zen"] .cta .t .part { color: #5d5a55; }
+:root[data-style="zen"] .cta > .lbadge { background: #111; color: #fff; box-shadow: none; }
+:root[data-style="zen"] .cta .go { border-radius: 3px; }
