@@ -16,8 +16,12 @@ describe('cartes de leçon', () => {
     }
   });
 
-  it('aucune suite de signes thaïs dans les textes de la carte (le thaï vit dans le badge)', () => {
-    for (const { id, c } of cards) for (const text of [c.title, c.sub, c.count, ...c.extras]) expect(THAI.test(text), `${id} : ${text}`).toBe(false);
+  it('les lettres sont écrites en thaï (ก ด ต), jamais par leur son en français ; indicateurs sans thaï', () => {
+    for (const { id, c } of cards) for (const text of [c.count, ...c.extras]) expect(THAI.test(text), `${id} : ${text}`).toBe(false);
+    for (const { id, c } of cards.filter((x) => x.c.kind === 'letters' || x.c.kind === 'vowels')) {
+      expect(THAI.test(c.title + c.sub), `${id} : ${c.sub}`).toBe(true);
+      expect(/« ?[a-zɔɛʉə]{1,3} ?»|\b(k|d|t|b|p|kh|th|ph|ch|ng)\b,/.test(c.sub), `${id} : ${c.sub}`).toBe(false);
+    }
   });
 
   it('un badge par leçon : un glyphe court ou une icône', () => {

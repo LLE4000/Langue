@@ -275,6 +275,11 @@ export const MasteryDot = ({ m }: { m: number }) => {
   const label = m > 0 ? `Maîtrise ${Math.round(m * 100)}\u00a0%` : 'Pas encore travaillé';
   return <i className={`dot mdot ${m >= 0.8 ? 'm3' : m >= 0.5 ? 'm2' : m > 0 ? 'm1' : 'm0'}`} role="img" aria-label={label} title={label} />;
 };
+/** Texte français contenant des lettres thaïes (« ก ด ต et la voyelle อา ») : les passages thaïs prennent la police thaïe. */
+export function ThInl({ text }: { text: string }) {
+  const parts = text.split(/([\u0e00-\u0e7f◌]+(?:[ /·]+[\u0e00-\u0e7f◌]+)*)/);
+  return <>{parts.map((p, i) => (/[\u0e00-\u0e7f]/.test(p) ? <span key={i} className="thi" lang="th">{p}</span> : p))}</>;
+}
 /**
  * Pictogramme d'un badge, d'un thème… : un nom du jeu d'icônes (SVG), sinon un glyphe thaï (ก, า),
  * sinon le texte tel quel (repli pour un ancien émoji).

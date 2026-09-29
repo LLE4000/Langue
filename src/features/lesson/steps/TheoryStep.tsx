@@ -8,7 +8,7 @@ import { toneRule, classNameFr, toneNameFr, ruleLabel } from '@/engine/thai/tone
 import { useSpeaker } from '@/app/services/speech';
 import { useStore } from '@/app/store';
 import { L } from '@/i18n';
-import { AudioButton, Fr, Icon, Thai, Rom, MasteryDot, useShowRom } from '@/components/ui';
+import { AudioButton, Fr, Icon, Thai, Rom, MasteryDot, useShowRom, ThInl } from '@/components/ui';
 import { StepFooter, ContinueButton } from '@/components/StepFooter';
 import { ToneCurve } from '@/components/ToneCurve';
 import { useMastery } from '@/app/hooks';
@@ -138,7 +138,7 @@ export function TheoryStep({ step, onDone, title, subtitle, lesson }: { step: Ru
       {/* Le type de la leçon, tel que sur sa carte : badge, libellé, indicateur */}
       {card && <div className={`lkind ${kindClass(card)}`}><LessonBadge card={card} /><span>{card.label}</span><span className="sep" aria-hidden="true">·</span><span className="n">{card.count}</span></div>}
       <h2 className="theory-title">{step.title ? L(step.title) : card ? <CardTitle card={card} /> : title}</h2>
-      {subtitle && <p className="theory-sub">{subtitle}</p>}
+      {subtitle && <p className="theory-sub"><ThInl text={subtitle} /></p>}
       {step.blocks.map((b, i) => <div className="theory-block" key={i}><TheoryBlockView b={b} /></div>)}
       <div className="gap" />
       <StepFooter meta={<span>Parcourez, écoutez : les exercices suivent tout de suite.</span>}>

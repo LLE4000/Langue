@@ -8,7 +8,7 @@ import { usePage } from '@/app/Shell';
 import { useStore, emptyReadAloud } from '@/app/store';
 import { raProgram } from '@/engine/readaloud/program';
 import { azureConfig } from '@/engine/audio/azure';
-import { Icon, Segmented } from '@/components/ui';
+import { Icon, Segmented, ThInl } from '@/components/ui';
 import { nextSession, PASS, raPrefs, saveRaPrefs, weakItems, type RaPrefs } from './data';
 import { longTexts } from './LongReadRunner';
 import { L } from '@/i18n';
@@ -63,7 +63,7 @@ export function ReadHub() {
               return (
                 <button key={s.id} className={`row ra-row ${cur ? 'cur' : ''}`} onClick={() => go(s.id)}>
                   <span className={`ico ${ok ? 'ok' : cur ? 'acc' : ''}`}>{ok ? <Icon name="check" /> : <b>{s.n}</b>}</span>
-                  <span className="mid"><span className="t">{s.title}</span><span className="s">{s.sub}</span>
+                  <span className="mid"><span className="t"><ThInl text={s.title} /></span><span className="s"><ThInl text={s.sub} /></span>
                     <span className="meta"><span>{s.items.length} lectures</span><span>{s.minutes} min</span>{rec && <span className={ok ? 'okc' : ''}>meilleur {rec.best} %</span>}</span></span>
                   {cur && <span className="tag gold">Conseillée</span>}
                 </button>

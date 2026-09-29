@@ -9,7 +9,7 @@ import { useStore } from '@/app/store';
 import { useDueItems, useNextLesson, usePath, useGoals, useProgress, progressContent } from '@/app/hooks';
 import { curriculum } from '@/content/packs';
 import { T } from '@/i18n';
-import { Bar, Icon, Ico, VoiceStatusNote } from '@/components/ui';
+import { Bar, Icon, Ico, VoiceStatusNote, ThInl } from '@/components/ui';
 import { ProgressPill, TierRing } from '@/components/Progress';
 import { CardTitle, LessonBadge, LessonRow, kindClass } from '@/components/LessonCard';
 import { lessonCard } from '@/curriculum/card';
@@ -69,7 +69,7 @@ export function Home() {
           <span className="body">
             <span className="k">{t.home.nextLesson}{lessonNo > 0 ? ` · n° ${lessonNo}` : ''}{next.status === 'locked' ? ' · à débloquer' : ''}</span>
             <span className={`t ${card.title.length > 19 ? 'long' : ''}`}><CardTitle card={card} /></span>
-            <span className="s">{card.sub}</span>
+            <span className="s"><ThInl text={card.sub} /></span>
             <span className="pills"><span className="kl">{card.label}</span><span>{card.count}</span>{card.extras.map((x) => <span key={x}>{x}</span>)}{next.knownOrally && <span>à lire</span>}</span>
           </span>
           <span className="foot"><span className="go">{t.common.start} <Icon name="next" /></span><span className="dur"><Icon name="clock" size={16} />{next.lesson.minutes} {t.common.minutes}</span></span>

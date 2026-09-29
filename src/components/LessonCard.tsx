@@ -2,6 +2,7 @@
  * Présentation d'une leçon, la même partout : un badge à la couleur de son type (le signe étudié ou une icône),
  * un titre court, un sous-titre en français et un indicateur de contenu. Voir curriculum/card.
  */
+import { ThInl } from '@/components/ui';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { LessonDef } from '@/curriculum/types';
@@ -23,7 +24,7 @@ export function LessonBadge({ card, state, size }: { card: LessonCard; state?: '
 }
 
 /** Titre d'une carte : court, sur une ligne ; la partie d'une série (« 1/2 ») en petit à côté. */
-export const CardTitle = ({ card }: { card: LessonCard }) => <>{card.title}{card.part && <span className="part">{card.part}</span>}</>;
+export const CardTitle = ({ card }: { card: LessonCard }) => <><ThInl text={card.title} />{card.part && <span className="part">{card.part}</span>}</>;
 
 /**
  * Une leçon dans une liste (accueil « Ensuite », parcours) : badge et durée, titre, sous-titre, puis le type et l'indicateur.
@@ -36,7 +37,7 @@ export function LessonRow({ lesson, state, end, extra, rowRef, current }: { less
       <span className="lcol"><LessonBadge card={c} state={state} /><span className="min">{lesson.minutes} min</span></span>
       <span className="mid">
         <span className="t"><span className="tt">{c.title}</span>{c.part && <span className="part">{c.part}</span>}</span>
-        <span className="s">{c.sub}</span>
+        <span className="s"><ThInl text={c.sub} /></span>
         <span className="meta">{current && <span className="now">Conseillée</span>}<span className="kl">{c.label}</span><span>{c.count}</span>{extra && <span>{extra}</span>}</span>
       </span>
       {end && <span className="end">{end}</span>}
