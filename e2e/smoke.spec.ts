@@ -438,3 +438,19 @@ test('conversation parlée : jouer son rôle au micro, réplique comprise, bilan
   await expect(page.getByText('Conversation réussie')).toBeVisible({ timeout: 60_000 });
   await expect(page.locator('.ra-line.ok').first()).toBeVisible();
 });
+
+test('grille de lecture : consonnes × voyelles tirées au sort, réglages, nouveau tirage', async ({ page }) => {
+  await onboard(page);
+  await page.goto('/#/read');
+  await page.getByRole('link', { name: /Grille de lecture/ }).click();
+  await expect(page.locator('.rg-cell')).toHaveCount(25);
+  await page.getByRole('button', { name: /Hautes/ }).click();
+  const first = await page.locator('.rg-head.row').allTextContents();
+  expect(first.every((c) => 'ขฉถผฝสห'.includes(c))).toBe(true);
+  await page.locator('.seg button', { hasText: '4 × 4' }).click();
+  await expect(page.locator('.rg-cell')).toHaveCount(16);
+  const before = await page.locator('.rg-cell .g').allTextContents();
+  await page.getByRole('button', { name: /Tirer au sort/ }).click();
+  await expect.poll(async () => (await page.locator('.rg-cell .g').allTextContents()).join()).not.toBe(before.join());
+  await expect(page.getByRole('button', { name: /Lire la grille · 16 cases/ })).toBeVisible();
+});

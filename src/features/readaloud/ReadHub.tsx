@@ -46,6 +46,7 @@ export function ReadHub() {
         <button className="btn" onClick={() => go(next.id)}><Icon name="mic" /> Commencer la séance</button>
       </section>
 
+      <Link to="/read/grid" className="row ra-gridrow"><span className="ico acc"><Icon name="grid" /></span><span className="mid"><span className="t">Grille de lecture</span><span className="s">Consonnes et voyelles tirées au sort, comme au tableau : lisez toute la grille (<span lang="th" className="thi">ขา ขี ขู เข…</span>)</span></span><span className="end"><span className="chev"><Icon name="next" size={18} /></span></span></Link>
       <div className="ra-quick">
         <Link to="/read/errors?mode=read" className={`tile ${weak ? '' : 'muted'}`}><span className="ic"><Icon name="target" /></span><span className="t">Mes erreurs</span><span className="s">{weak ? `${weak} lecture${weak > 1 ? 's' : ''} à reprendre` : 'Rien à reprendre'}</span></Link>
         <Link to="/read/chrono?mode=chrono" className="tile"><span className="ic"><Icon name="clock" /></span><span className="t">Chrono</span><span className="s">Une minute, le plus possible, juste</span></Link>

@@ -8,6 +8,7 @@ import { TONES } from './th/tones';
 import { speakable, hasTokens } from '@/engine/tokens';
 import { normalizeClipText } from '@/engine/audio/clipKey';
 import { raVoiceTexts } from '@/engine/readaloud/program';
+import { gridVoiceTexts } from '@/engine/readaloud/grid';
 
 export const SAMPLE_SENTENCE = 'สวัสดี{P} ยินดีที่ได้รู้จัก';
 export const TONE_TONGUE_TWISTER = 'ไม้ใหม่ไม่ไหม้ไหม';
@@ -30,6 +31,7 @@ export function collectVoiceTexts(): string[] {
   add(SAMPLE_SENTENCE); add(TONE_TONGUE_TWISTER);
   // lecture à voix haute : chaque syllabe, mot et phrase du programme (modèle « Écouter puis lire »)
   for (const t of raVoiceTexts()) add(t);
+  for (const t of gridVoiceTexts()) add(t); // grille de lecture : toutes les syllabes qu'un tirage peut contenir
   const out = new Set<string>();
   for (const s of raw) {
     // réplique avec le prénom : on synthétise les morceaux autour, joués bout à bout (le prénom vient entre eux)

@@ -19,7 +19,7 @@ import { ContinuousRecognizer } from '@/engine/audio/mic';
 import { assessPronunciation, azureConfig } from '@/engine/audio/azure';
 import { visualLength } from '@/engine/thai/script';
 import { Icon, Segmented, Rom } from '@/components/ui';
-import { RaRun, type RaMode, type RunState } from './run';
+import { RaRun, type RaMode, type RunState, type Tempo } from './run';
 import { chronoSeries, errorsSeries, raPrefs, saveRaPrefs } from './data';
 import { MODE_INFO } from './ReadHub';
 import { ReadResults } from './ReadResults';
@@ -31,7 +31,7 @@ function bigSize(it: RaItem): number {
   return Math.round(Math.max(48, Math.min(it.kind === 'word' ? 96 : 128, 270 / Math.max(1.8, n * 0.62))));
 }
 
-function useWakeLock(on: boolean) {
+export function useWakeLock(on: boolean) {
   useEffect(() => {
     if (!on) return;
     let lock: { release(): Promise<void> } | null = null, gone = false;
@@ -39,6 +39,21 @@ function useWakeLock(on: boolean) {
     nav.wakeLock?.request('screen').then((l) => { lock = l; if (gone) l.release(); }).catch(() => {});
     return () => { gone = true; lock?.release().catch(() => {}); };
   }, [on]);
+}
+
+/** Une série de lecture branchée sur le vrai micro, la reconnaissance, la courbe de la voix et Azure (s'il est là). */
+export function newRaRun(items: RaItem[], mode: RaMode, sp: { speak: (t: string, o: { onend?: () => void }) => boolean; cancel: () => void }, tempo: Tempo): RaRun {
+  const baseline = new PitchBaseline(); // registre de la voix, appris pendant la série
+  return new RaRun(items, mode, {
+    speak: (t, onend) => sp.speak(t, { onend }),
+    cancelSpeak: () => sp.cancel(),
+    mic: MicStream.supported ? new MicStream() : null,
+    asr: new ContinuousRecognizer(activePack().speechLang).supported ? new ContinuousRecognizer(activePack().speechLang) : null,
+    azure: azureConfig(),
+    assess: assessPronunciation,
+    pitch: (samples, it) => toneOfSegment(samples, it.tone, baseline),
+    now: () => performance.now(),
+  }, { tempo, chronoMs: 60000 });
 }
 
 export function ReadRunner() {
@@ -67,17 +82,7 @@ export function ReadRunner() {
   const [run, setRun] = useState<RaRun | null>(null);
   const create = () => {
     runRef.current?.release();
-    const baseline = new PitchBaseline(); // registre de la voix, appris pendant la série
-    const r = new RaRun(items, mode, {
-      speak: (t, onend) => sp.speak(t, { onend }),
-      cancelSpeak: () => sp.cancel(),
-      mic: MicStream.supported ? new MicStream() : null,
-      asr: new ContinuousRecognizer(activePack().speechLang).supported ? new ContinuousRecognizer(activePack().speechLang) : null,
-      azure: azureConfig(),
-      assess: assessPronunciation,
-      pitch: (samples, it) => toneOfSegment(samples, it.tone, baseline),
-      now: () => performance.now(),
-    }, { tempo: prefs.tempo, chronoMs: 60000 });
+    const r = newRaRun(items, mode, sp, prefs.tempo);
     runRef.current = r;
     setRun(r);
     return r;

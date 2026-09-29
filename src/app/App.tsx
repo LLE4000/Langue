@@ -15,6 +15,7 @@ import { Alphabet } from '@/features/explore/Alphabet';
 import { Vowels } from '@/features/explore/Vowels';
 import { Listen } from '@/features/explore/Listen';
 import { ReadHub } from '@/features/readaloud/ReadHub';
+import { ReadGrid } from '@/features/readaloud/ReadGrid';
 import { ReadRunner } from '@/features/readaloud/ReadRunner';
 import { LongReadRunner } from '@/features/readaloud/LongReadRunner';
 import { TalkHub, TalkRun } from '@/features/conversation/Talk';
@@ -140,6 +141,7 @@ export function App() {
         <Route path="/train/:mode" element={<RequireProfile><TrainingStart /></RequireProfile>} />
         <Route path="/talk/:id" element={<RequireProfile><TalkRun /></RequireProfile>} />
         <Route path="/read/text/:id" element={<RequireProfile><LongReadRunner /></RequireProfile>} />
+        <Route path="/read/grid" element={<RequireProfile><ReadGrid /></RequireProfile>} />
         <Route path="/read/:id" element={<RequireProfile><ReadRunner /></RequireProfile>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

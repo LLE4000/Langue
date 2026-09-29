@@ -64,7 +64,7 @@ export function Alphabet() {
   return (
     <>
       <div className="chips">{([['all', 'Toutes · 44'], ['M', 'Classe moyenne · 9'], ['H', 'Classe haute · 11'], ['L', 'Classe basse · 24']] as const).map(([f, lab]) => <button key={f} className={`chip ${filter === f ? 'on' : ''} ${f !== 'all' ? 'cls-' + f : ''}`} onClick={() => setFilter(f)}>{f !== 'all' && <i className="dot" aria-hidden="true" />}{lab}</button>)}</div>
-      <div className="btns mb-3"><button className="btn soft sm" onClick={() => nav('/explore/listen?set=cons')}><Icon name="repeat" size={18} /> Écouter l’alphabet en boucle</button></div>
+      <div className="btns mb-3"><button className="btn soft sm" onClick={() => nav('/explore/listen?set=cons')}><Icon name="repeat" size={18} /> Écouter l’alphabet en boucle</button><button className="btn soft sm" onClick={() => nav('/read/grid')}><Icon name="grid" size={18} /> Lire une grille</button></div>
       <p className="xs mut mt-n1 mb-3">Touchez une lettre pour l’entendre&#8239;; touchez-la encore pour ouvrir sa fiche.</p>
       <div className="lgrid">{list.map((c) => <LetterCell key={c.id} it={c} locked={!known.concepts.has(c.id)} active={peekItem?.id === c.id} onClick={() => tap(c, ids)} />)}</div>
       <p className="foot-note">Les lettres estompées n’ont pas encore été enseignées dans votre parcours&#8239;; vous pouvez tout de même les écouter et les consulter.</p>
