@@ -23,6 +23,16 @@ export function usePage(title: string, opts: { back?: boolean | string; right?: 
   useEffect(() => { set({ title, back, right, hidden, avatar, thai: th && rom ? { th, rom } : undefined }); document.title = title ? `${title} · Langue` : 'Langue'; }, [title, back, right, hidden, avatar, th, rom, set]);
 }
 
+/**
+ * Retour « là d'où l'on vient » : la page précédente de l'application s'il y en a une (on garde ainsi l'onglet, la
+ * fiche ou la liste d'origine), sinon `fallback` (application ouverte directement sur cette page, lien partagé…).
+ */
+export function useBack(fallback = '/') {
+  const nav = useNavigate();
+  const loc = useLocation();
+  return () => (loc.key !== 'default' && window.history.length > 1 ? nav(-1) : nav(fallback, { replace: true }));
+}
+
 /** Le mot thaï d'un titre : petit, à côté du français ; un toucher le prononce. */
 export function ThaiKicker({ label }: { label: ThaiLabel }) {
   const sp = useSpeaker();
@@ -41,11 +51,12 @@ export function ProfileChip({ withName, greeting }: { withName?: boolean; greeti
 }
 
 export function TopBar({ state }: { state: TopBarState }) {
-  const nav = useNavigate();
+  // `back: '/x'` : retour à la page d'origine, '/x' seulement si l'on est arrivé directement ici
+  const goBack = useBack(typeof state.back === 'string' ? state.back : '/');
   if (state.hidden) return null;
   return (
     <header className="topbar">
-      {state.back ? <button className="tb" aria-label="Retour" onClick={() => (typeof state.back === 'string' ? nav(state.back) : nav(-1))}><Icon name="back" /></button> : state.avatar ? <ProfileChip /> : <span className="tb-pad" />}
+      {state.back ? <button className="tb" aria-label="Retour" onClick={goBack}><Icon name="back" /></button> : state.avatar ? <ProfileChip /> : <span className="tb-pad" />}
       <h1>{state.title}{state.thai && <ThaiKicker label={state.thai} />}</h1>
       {state.right ?? <ProgressPill />}
     </header>
@@ -59,10 +70,18 @@ export function TopBar({ state }: { state: TopBarState }) {
  */
 const TABS = [
   { to: '/', icon: 'lessons', key: 'learn' as const, tone: 'acc', end: true, also: ['/path', '/read'] },
-  { to: '/review', icon: 'review', key: 'review' as const, tone: 'jade', also: ['/train'] },
+  { to: '/review', icon: 'review', key: 'review' as const, tone: 'jade', also: ['/train', '/talk', '/explore/comprehension'] },
   { to: '/play', icon: 'challenge', key: 'play' as const, tone: 'plum', also: [] },
   { to: '/explore', icon: 'library', key: 'explore' as const, tone: 'indigo', also: [] },
 ];
+
+/** Un seul onglet allumé : d'abord les rattachements explicites (la compréhension orale se pratique dans Réviser), puis le préfixe. */
+function activeTab(path: string): (typeof TABS)[number]['key'] | null {
+  const byAlso = TABS.find((t) => t.also.some((p) => path.startsWith(p)));
+  if (byAlso) return byAlso.key;
+  if (path === '/') return 'learn';
+  return TABS.find((t) => !t.end && path.startsWith(t.to))?.key ?? null;
+}
 
 export function Shell() {
   const [bar, setBar] = useState<TopBarState>({ title: '' });
@@ -81,7 +100,7 @@ export function Shell() {
         <main className="view"><Outlet /></main>
         <nav className="tabbar" aria-label="Navigation principale">
           {TABS.map((tab) => (
-            <NavLink key={tab.to} to={tab.to} end={tab.end} className={({ isActive }) => `t-${tab.tone} ${isActive || (!tab.end && loc.pathname.startsWith(tab.to)) || tab.also.some((p) => loc.pathname.startsWith(p)) ? 'on' : ''}`}>
+            <NavLink key={tab.to} to={tab.to} end={tab.end} className={() => `t-${tab.tone} ${activeTab(loc.pathname) === tab.key ? 'on' : ''}`}>
               <span className="pill"><TabIcon name={tab.icon} /></span>{t.nav[tab.key]}
             </NavLink>
           ))}
