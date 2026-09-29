@@ -158,7 +158,7 @@ Changer ses niveaux (Profil › Mes niveaux) recalcule le parcours sans effacer 
 
 ## En pause
 
-- **Jeu (chantier 7)** : mis de côté, sa pertinence reste à décider.
+- **Jeu (chantier 7)** : mis de côté, sa pertinence reste à décider. Trois idées de jeux en ligne à plusieurs (loto thaï, « Tu m’as compris ? », course de lecture) sont décrites dans `docs/idees-jeux.md`.
 
 ## Jeu en ligne et jetons Azure (serveur)
 
